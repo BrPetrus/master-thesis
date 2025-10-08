@@ -123,10 +123,15 @@ as pillars for simplicity. These belong to the [FINISH] part of the wings. How
 such data can be acquired and for more information of the process I recommend
 looking into the \parencite{Tran2024Programmed} paper.
 
+\section{Acquired Datasets}
+
 The data was captured using fluorescence microscopy. [TODO simple explanation]
 and four distinct datasets were acquired. Three of these datasets were captured
 with two different channels, larger volume and smaller spatial resolution. All
-the datasets are actually part of a time series. The 
+the datasets are actually part of a time series as it is of quite interest in
+looking at the temporal properties of the biological phenomena i.e. do tunnels
+stay for multiple steps or are they short-lived? Does their properties change in
+time? But that was not the main point of our current research.
 
 The last dataset contains just one channel. The fluorescent dye was selected to
 highligh both the pillars and the tunnels as can be seen in Figure [TODO]. As we
@@ -150,6 +155,8 @@ they were kind enough to help us.
     \label{fig:biologistpreprocessing}
 \end{figure}
 
+\section{Labelling and preprocessing}
+
 The biologist created a protocol which they followed by annotating the samples.
 They decided to preprocess the data by converting the images from 16bit
 grayscale image into 8bit grayscale images, then a 1\%-percentile stretch was
@@ -158,13 +165,25 @@ visible in Figure \ref{fig:biologistpreprocessing}. As can be seen on the figure
 this makes the tunnels easier to see at the cost making noise more visible.
 
 After the preprocessing is done, the protocol states that picking random time
-slots at least 100 instances of tunnels must be fully annotated and 
+slots at least 100 instances of tunnels must be annotated, and each frame has to
+be fully annotated. According to this protocol the biologists picked two time
+steps --- the 0th and 17th step --- and gave us uniquelly labeled data, an
+example can be seen in Figure [TODO] also with an overlay of the labeles, over
+the data. In this case however, I removed the unique labels for better
+visualisation.
+
+The labels were manually checked by me and a single case of label duplicity was
+found at time step [TODO], where two different tunnels were assigned the same id
+of 33. I manually fixed this and assigned a new unique label. In Figure [TODO] a
+maximum projection across the depth can be seen visualising the two problematic
+tunnels.
+
+\chapter{Architectures}
+This chapter deals with what neural network architectures were used in
+developing the solution.
 
 \chapter{Processing data}
 splitting and stuff
-
-\chapter{Architectures}
-introduce the various arch
 
 \chapter{Training}
 how the neural networks were trained.
@@ -175,6 +194,11 @@ how we evaluate the networks
 \chapter{Ablation studies}
 
 \chapter{Implementation}
+
+\section{Used technologies}
+Python, mlflow, Bash, uv
+
+\section{Use case modelling and expected usage}
 
 \chapter{Discussion}
 what to do next
