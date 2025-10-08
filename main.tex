@@ -132,7 +132,33 @@ The last dataset contains just one channel. The fluorescent dye was selected to
 highligh both the pillars and the tunnels as can be seen in Figure [TODO]. As we
 can see unlike the previous datasets this was capture at much higher spatial
 resolution; therefore, we can see that the dye react mostly in the cell membrane
-and they appear hollow.
+and they appear hollow. Moreover, the tunnels are much more visible compared to
+the previous three datasets, but it only contains a single channel now.
+
+As said before the data was captured by our Estonian partners at [TODO], to
+further propel the research they promised us to annotate the three large
+datasets, but after several months no labels were given which complicated the
+research and work. Hence, we approached our collegues at [TODO what fac.] and
+they were kind enough to help us.
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.6\linewidth]{resources/t017z0_saturated1percent.png}
+    \end{center}
+    \caption{First slice of the data at time step 17, after the biologist
+    preprocessing pipeline}.
+    \label{fig:biologistpreprocessing}
+\end{figure}
+
+The biologist created a protocol which they followed by annotating the samples.
+They decided to preprocess the data by converting the images from 16bit
+grayscale image into 8bit grayscale images, then a 1\%-percentile stretch was
+applied to further enhance the images. The result of the preprocessing is
+visible in Figure \ref{fig:biologistpreprocessing}. As can be seen on the figure,
+this makes the tunnels easier to see at the cost making noise more visible.
+
+After the preprocessing is done, the protocol states that picking random time
+slots at least 100 instances of tunnels must be fully annotated and 
 
 \chapter{Processing data}
 splitting and stuff
@@ -145,6 +171,10 @@ how the neural networks were trained.
 
 \chapter{Evaluation}
 how we evaluate the networks
+
+\chapter{Ablation studies}
+
+\chapter{Implementation}
 
 \chapter{Discussion}
 what to do next
