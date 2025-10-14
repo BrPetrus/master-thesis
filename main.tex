@@ -185,12 +185,14 @@ developing the solution.
 \section{Preliminary research}
 We began by researching similar papers dealing with segmenting nanotubular
 structures. Two promising papers we found are ..[TODO]. In
+
 \parencite{Hodneland2006Automated} the researchers are similar to use dealing
 with tunnels between cells, but in their case the tunnels form a long straight
 lines. In the paper they describe a multistep algorithm which takes employ two
 channels, one is for segmenting cell borders and tunnels, while in the other
 channel the cells inside are much more visible, hence, this can be used to
 better separate cells and tunnel.
+
 As our data has different modality, this approach could not be used. They also
 assume that the tunnels are straight which is not true in our case.
 The other paper which specificaly mentiones tunneling nanotubes is
@@ -199,9 +201,109 @@ They describe how to improve the labels and make it easier
 
 \section{U-Net}
 
+In 2015 a seminal paper by Rossenberger et al. \parencite{Ronneberger2015} was
+published dealing with semantic segmentation of medicine data. The paper
+achieved impressive results with very limited dataset. The neural network
+architecture is called U-Net and has been behind many models later to come.
+[TODO citation]
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.6\linewidth]{resources/placeholder.png}
+    \end{center}
+    \caption{A UNet architecure diagram}.
+    \label{fig:unetdiagram}
+\end{figure}
+
+The key architectural part of the U-Net lays in the introduction of transposed
+convolution layers which upsample the result of the encoder. This is placed
+after what traditionally like in the neck in VGGNet [TODO citation] was followed
+by a classification head now follows the decoder. A diagram can be seen in
+Figure \ref{fig:unetdiagram}. As can be seen in the figure, on input it takes an
+image and it is followed by a horizontal block formed of two convolutions,
+followed by a max pool operation which downsamples the image by a factor of 2.
+After this is done numerous times, which depends on the depth of the network set
+by the user, additional convolution is applied. The results of the neural
+network before the downsample operation is taken is also saved. After the neck
+part a series of upsampling operations take place. This is achieved using a
+transposed convolution operation and the weights are learned automatically by
+the network. Note that other possibilities, like using interpolation in [TODO
+citation] was not researched in this work. This upsampling operation doubles the
+spatial resolution at the cost of halving the number of channels. Each time such
+operation takes place the result of relevant encoder layer is concatonated,
+followed by two additional convolutions. Finally we do a final convolution
+operation to ouput the right amiunt of classes, which in our case is equal to
+two (tunnel or BG/pillar).
+
+The two main reasons for choosing this architecture compared to other was that
+the U-Net architecure is well estabilished, widely used, achieves good
+performance [TODO citation], but mainly due its nice property that Rossenberger
+et al. \parencite{Ronneberger2015} demonstrated that you do not need a huge
+dataset to teach the neural network. As our data is quite limited in terms of
+size this is a very usefull feature.
+
+The Figure \ref{fig:unetdiagram} is visualising how the UNet architecure can be
+used to train a 2D model, but there is not reason why we could not use 3D
+versions of convolution, maxpool and transposed upconvolution. 
+
 \subsection{Anisotropic U-Net}
 
+In machine learning it is often tried to increase the model depth to improve the
+perfomance of the neural network. This is of course not true universaly as this
+can make the network harder to train can cause the network to overtrain [TODO
+citation needed]. Since our data is heavily anisotropic we are limited in how
+much we can downsample in the z direction, as we have only 7 voxel inside the z
+dimension, it is possible to downsample just two times before reaching depth
+equal to 2. Moreover, it would probably be reasonable to assert that compressing
+all the depth information into a single channel is asking the neural network to
+do a lot of work compressing the info.
+
+This problem motivated us to create a new version of the U-Net which uses
+anisotropic kernels instead of isotropic kernels for both convolution and the
+maxpool operation.
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.6\linewidth]{resources/placeholder.png}
+    \end{center}
+    \caption{Visualisation of 3D convolution and maxpool operation}.
+    \label{fig:visanisooperations}
+\end{figure}
+
+As is ilustrated in Figure \ref{fig:visanisooperations} a 3D convolution
+uses a 3D kernel to look into a 3D part of the input. By appriopriately padding
+the output, we can keep the same dimension in the z axis. Moreover, to prevent
+early downsampling in the z dimension we can use anisotropic versions of these
+operators. Instead of downsampling by a factor of 2 in all directions, we can
+ignore downsampling in the z dimension by setting the kernel size in that
+direction equal to 1 [TODO or 0?].
+
 \section{The CSAM module}
+
+This section talks about the channel and spatial attention module (further
+refered to as the CSAM) mentioned in the CS-Net paper \parencite{Mou2021}. In
+this paper the author tried to improve the performance of UNet architecture by
+incorporating attention into the model. This was motivated by using the
+architecture for segmenting blood vessels and related biological features and
+seeing that one of the problems which was often encoutnered is the fact that
+these network had trouble connecting faint blood vessels leading to a
+connectivity issues. The attention models helps with connecting them together.
+
+Even though we are not dealing with vessels in our case, the tunnels do visually
+resemble some curvilinear structures. We also encountered some of these issues
+with connectivity, and as such this might also alleviate the our problems [TODO
+reference].
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.6\linewidth]{resources/placeholder.png}
+    \end{center}
+    \caption{The CSAM module from Paper [TODO CITE]}.
+    \label{fig:csammodule}
+\end{figure}
+
+The Figure \parencite{
+
 
 \section{Squeeze and excitation block}
 
