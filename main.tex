@@ -109,9 +109,9 @@
 Theses are rumoured to be \enquote{the capstones of education}, so
 I decided to write one of my own. If all goes well, I will soon
 have a diploma under my belt. Wish me luck!
+[TODO: explain semantic segmentation] 
 
 \chapter{Data}
-
     Our work begun when the Estonian partners send us the four different datasets of
 the wanted to study phenomena. To study the effects of tunneling nanotubes which
 are these thin, long and often time curved structures, they deciced to use wings
@@ -436,17 +436,52 @@ Figure [TODO] where a possible split is shown in two colours.
 The decision if a particular tunnel belongs in test or train subset is made by
 the following decision. [TODO check the numbers and finalise this section.]
 
+\section{Training}
 
-[TODO mention inside the intro chapter or architecture]
-When training
-networks using supervised learning approach we usualy have hundreds or more
-images [TODO CITE SOME classification papers], which we unfortunately do not
-have. But, one of the nice 
 
-it is not possible to simply use one timeframe for training
-and one for testing 
+\subsection{Loss funtions}
+For the loss function we were inspired by [TODO cite
+the loss paper] and by CS-Net \parencite{Mou2021} to try a mix of Dice loss and
+binary cross-entropy loss. Since we were not sure about how to weight these
+losses we went by setting their weights to be equal. To somewhat alleviate the
+issue with the uneven positive and negative labels in the labels, we counted how
+many positive and how negative pixels are in the whole dataset, and arrived at
+a 50 [TODO check] ratio of these two classes.
 
-splitting and stuff
+[TODO defi. of CE]
+[TODO defi. of Dice]
+[TODO defi. of Jaccard]
+
+\subsection{Optimizers, learning rates, regularization}
+The neural network was trained using Adam optimzizer as described in [TODO cite
+ADAM]. [TODO replace with ADamW]. As we are also using weight decay, equal to
+1e-4, it is commonly advised to use the AdamW variant as it correctly decouples
+the weight decay from the gradient updates [TODO cite].However, in practice no
+vast effect was observed.
+
+During the development of the training loop we observed that setting the
+learning rate to 0.001 [TODO check] and weight decay to [TODO check] achieved a
+very stable learning. This was when using smaller windows size, and the overall
+loop was not quite as robust; however, as the development progress the learning
+stayed well behaved and no experimentation on the values was done. Since the
+Adam family of optimizers change the learning rate adaptively per neuron we did
+not see the benefit of rerunning all evaluations also for different learning
+strategies.
+
+\subsection{Training loop}
+As was mentioned in Section [TODO missing cite] the 
+
+
+% [TODO mention inside the intro chapter or architecture]
+% When training
+%networks using supervised learning approach we usualy have hundreds or more
+%images [TODO CITE SOME classification papers], which we unfortunately do not
+%have. But, one of the nice 
+
+%it is not possible to simply use one timeframe for training
+%and one for testing 
+
+%splitting and stuff
 how the neural networks were trained.
 
 \chapter{Evaluation}
@@ -457,7 +492,9 @@ how we evaluate the networks
 \chapter{Implementation}
 
 \section{Used technologies}
-Python, mlflow, Bash, uv
+Python, mlflow, Bash, uv, the shuffling, setting explicit seeds, issues with
+batch vs loss, implementing the loss functions in pytorch
+implementing the squeeze and excitation.
 
 \section{Use case modelling and expected usage}
 
