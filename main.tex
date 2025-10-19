@@ -405,7 +405,36 @@ tunnels with a set of minimum size. For the minimum size we decided to go for a
 7x90x90 shape as that confortably fits majority of tunnels and provides a decent
 context around it. [TODO mention expansion after explaining the splits]
 
-It is still important to be somehow able to split the dataset into  
+\begin{figure}
+    % TODO: replace with nicer image.
+    \begin{center}
+        \includegraphics[width=0.6\linewidth]{resources/tmp/t017_upperright.png}
+    \end{center}
+    \caption{}
+    \label{fig:upperright}
+\end{figure}
+
+It is still important to be somehow able to split the dataset into the train,
+test and evalution subset. As the dataset is quite limited choosing a random
+sybpart to evaluate the perfomance is not ideal. The various parts of the
+dataset do not have the same number of tunnels, tunnels of the same morphology
+and the same amount of noise and irrelevant structures. For example in the upper
+right corner in Figure \ref{fig:upperright} we can find some irrelevant
+structures which are not present in the rest of the dataset.
+
+%As somehowe quantifying the ideal split would be a very demanding task we 
+Somehow quantifying the ideal split would be a very challenging and unclear task
+so we are always doing something similar to a leave one out [TODO cite] cross
+validation. Each time four different models are trained and in each run a
+different quadrant is considered to be the testing subset and the remaining
+three quandarnt are used for training the model.
+
+This is still quite challenging to do properly as not every tunnel lies neatly
+inside one of the quadrants. A split that is used in training is visualised in
+Figure [TODO] where a possible split is shown in two colours.
+
+The decision if a particular tunnel belongs in test or train subset is made by
+the following decision. [TODO check the numbers and finalise this section.]
 
 
 [TODO mention inside the intro chapter or architecture]
