@@ -112,7 +112,7 @@ have a diploma under my belt. Wish me luck!
 
 \chapter{Data}
 
-Our work begun when the Estonian partners send us the four different datasets of
+    Our work begun when the Estonian partners send us the four different datasets of
 the wanted to study phenomena. To study the effects of tunneling nanotubes which
 are these thin, long and often time curved structures, they deciced to use wings
 of fly larvae. A schematic can be viewed in Figure [TODO]. This is quite
@@ -200,6 +200,7 @@ The other paper which specificaly mentiones tunneling nanotubes is
 They describe how to improve the labels and make it easier 
 
 \section{U-Net}
+\label{sec:unet}
 
 In 2015 a seminal paper by Rossenberger et al. \parencite{Ronneberger2015} was
 published dealing with semantic segmentation of medicine data. The paper
@@ -372,10 +373,51 @@ considerations [TOOD what options] the blocks were placed according to Paper
 \parencite{Rundo2019} after every step in the decoder and after each upsampling
 step as is shown in Figure \ref{fig:se_unet}.
 
-\chapter{Processing data}
-splitting and stuff
-
 \chapter{Training}
+This chapter explains how the aforementioned neural networks were trained. How
+the data was split and handled.
+
+\section{Processing data}
+[TODO mention alternatives to supervised learning somewhere]
+
+As mentioned in the previous Chapter [TODO cite], we have 2 time frames of
+7x512x512 voxels. As we in some sense only have 2 full images the splitting of
+the dataset proved somewhat complicated. We wanted to experiment with using full
+3D U-Nets therefore using full sized images would lead to using just one image
+for training and one for testing. However, it is no reasoanble to think that
+this would be enough to teach the network any reasonable decision. As already
+mentioned in Chapter \ref{sec:unet} a nice feature the U-Net architecture is
+that it can be learned on much smaller datasets as was demonstrated in the
+original U-Net Paper \parencite{Ronneberger2015} [TODO check] and also in the
+CS-Net paper \parencite{Mou2021} were few dozens of images were used to train a
+neural network to segment medical images. As such a way to extract about a
+hundred images was needed.
+
+Splitting the dataset into quadrants would still yield only about 8 7x256x256
+images. Importantly, we have about 150 [TODO check] labeled tunnels, which would
+suffice the needed number of images. Hence, we decided to cut out the tunnels
+and train the network on the these subparts. Note that we still need to run the
+network on the whole images, but for training purposes this will suffice.
+
+The splitting logic iterates through every single tunnel and cuts it out. As the
+tunnels have different sizes we decided to cut out the bounding boxes of the
+tunnels with a set of minimum size. For the minimum size we decided to go for a
+7x90x90 shape as that confortably fits majority of tunnels and provides a decent
+context around it. [TODO mention expansion after explaining the splits]
+
+It is still important to be somehow able to split the dataset into  
+
+
+[TODO mention inside the intro chapter or architecture]
+When training
+networks using supervised learning approach we usualy have hundreds or more
+images [TODO CITE SOME classification papers], which we unfortunately do not
+have. But, one of the nice 
+
+it is not possible to simply use one timeframe for training
+and one for testing 
+
+splitting and stuff
 how the neural networks were trained.
 
 \chapter{Evaluation}
