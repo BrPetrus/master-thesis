@@ -484,19 +484,95 @@ As was mentioned in Section [TODO missing cite] the
 %splitting and stuff
 how the neural networks were trained.
 
-\chapter{Evaluation}
-how we evaluate the networks
-
-\chapter{Ablation studies}
-
 \chapter{Implementation}
+
 
 \section{Used technologies}
 Python, mlflow, Bash, uv, the shuffling, setting explicit seeds, issues with
 batch vs loss, implementing the loss functions in pytorch
 implementing the squeeze and excitation.
 
+\section{Environment}
+
+\subsection{Justification for the used technologies}
+The previously described training and preprocessing in previous chapters was
+implemented as collection of Bash scripts, python scripts and a python module.
+All of the code is available as part of the master thesis alongside several of
+the trained networks for the user.
+
+The Python environment is packaged and its dependecies are resolved by a tool
+cold uv \parencite{uv} developed by a company called Astral, who specialises on
+creating modern automatic tooling for Python. The environment is described using
+a TOML file available and list a number of dependencies. Altough the project is
+quite recent compared to others like Poetry, uv is significanlty faster.
+
+For convenience I am also including a \texttt{requirements.txt} which was automatically generated
+from a virtual Python environemnt, but the officially supported version is using
+the uv package manager. The environment can then be created in two ways: if the
+user runs a computer with a GPU, the working environmnet is creating using the
+command \texttt{uv sync --extra torch-gpu} which assumes that CUDA version 12.4
+is installed.
+
+I decided to use Python to develop the training and evaluation scripts, while
+handling the pipelines around it with Bash. Altough Python is an interpreted and
+dynamically typed language and therefore is comparably slower than other lower
+level languages traditionally used in image processing like C++, its nature
+allows it to rapidly prototype new application. Moreover, many packages call
+code written in other languages such as C++, Fortran or C, to somewhat alleviate
+the performance problem. Lastly, Python has become a widely adopted language in
+the area of neural networks, and many researchers publish their code in Python.
+
+As was already mentioned even though the majority of code is written in Python
+it is quite cumbersome to create a single Python script which handles both
+training and evaluation, especially if something changes in one of them. This
+fundamentally breaks the famous principle in software architecture called the
+separation of concers. As such a bash script is provided in the code archive
+under \texttt{scripts} called \texttt{run.sh} which is the main entrypoint for
+running the code.
+
+As a lot of the evaluation is concerned with doing proper cross-validation and
+then averaging the results it was easier to create a script which is easily
+configured using a text editor or by providing and parsing CLI arguments and the
+averaging and choosing different datasets should not be a responsibility of the
+Python script. As such, creating directories, running code, aggregating results
+and parsing arguments is a natural job for a scripting language such as Bash.
+The obvious disadvantage is that it is limited to the Unix and Unix like
+operating systems.
+
+As for the other tooling, here I list the most important tools:
+\begin{itemize}
+    \item{ruff linter TODO cite} is an extremely fast Python linter which was
+        developed by the company Astra. It automatically formats code and can
+        even fix some of the basic lint errors.
+    \item{numpy TODO CITE} has become one of the fundamental packages in
+        scientific computing in Python ecosystem. It provides a very efficient
+        implementation of 
+    \item{scikit-learn}
+    \item{pytroch}
+    \item{monai}
+    \item{matplotlib}
+    \item{scikit-learn}
+\end{itemize}
+
+
+
+
 \section{Use case modelling and expected usage}
+Here describe how to call the run.sh
+
+\section{Loss and metrics implementation}
+
+\section{SE implementation}
+
+\section{NN implementation}
+
+\section{Postprocessing}
+
+\chapter{Evaluation}
+how we evaluate the networks
+
+\chapter{Ablation studies}
+
 
 \chapter{Discussion}
 what to do next
