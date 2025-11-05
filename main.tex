@@ -440,10 +440,33 @@ the following decision. [TODO check the numbers and finalise this section.]
 
 
 \subsection{Loss funtions}
+Since we can look at finding tunneling nanotubes as a binary classification
+problem applied at every pixel, it naturally comes to use a binary cross-entropy
+loss to teach the network to learn to segment the images. However, our dataset
+is very heavily imbalanced as the data contains a lot more negative examples. To
+somewhat help the training to pay more attention to the tunnels, the
+cross-entropy was weighted by a factor or 50, which was estimated by taking the
+calculating the ration of pixels classified as background and pixels assigned to
+some tunnel by the biologist.
+
+To further improve the performance of the training, we got inspired CS-Net paper
+which uses Dice loss, and some papers claim that the combination of Dice loss
+and cross-entropy loss lead to better performance in many segmentation tasks
+\parencite{ma2020segmentationlossodyssey}. By using Dice loss it is meant to
+optimize the value of the Dice coefficient. This is defined as taking
+$L_{Dice} = 1 - \text{Dice}$, meaning that as we get segmentation results closer
+to the ideal mask, we get closer to 0.
+
+% TODO: full loses
+
+
+
 For the loss function we were inspired by [TODO cite
-the loss paper] and by CS-Net \parencite{Mou2021} to try a mix of Dice loss and
+the loss paper] and by CS-Net \parencite{Mou2021} to try a mix of Dice loss anda
 binary cross-entropy loss. Since we were not sure about how to weight these
-losses we went by setting their weights to be equal. To somewhat alleviate the
+losses we went by setting their weights to be equal. 
+
+To somewhat alleviate the
 issue with the uneven positive and negative labels in the labels, we counted how
 many positive and how negative pixels are in the whole dataset, and arrived at
 a 50 [TODO check] ratio of these two classes.
