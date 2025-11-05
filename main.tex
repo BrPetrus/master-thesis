@@ -541,24 +541,43 @@ operating systems.
 
 As for the other tooling, here I list the most important tools:
 \begin{itemize}
-    \item{ruff linter TODO cite} is an extremely fast Python linter which was
+    \item{MLflow is tool for handling machine learning pipelines, it allows to
+        track experiments, compare results, save and load models, deploy models
+        etc. In this work it was used to create a nice interface to keep track
+        of various experiments.}  % cite https://mlflow.org/docs/latest/ml/
+    \item{ruff linter TODO cite is an extremely fast Python linter which was
         developed by the company Astra. It automatically formats code and can
-        even fix some of the basic lint errors.
-    \item{numpy TODO CITE} has become one of the fundamental packages in
+        even fix some of the basic lint errors.}
+    \item{numpy TODO CITE has become one of the fundamental packages in
         scientific computing in Python ecosystem. It provides a very efficient
-        implementation of 
-    \item{scikit-learn}
-    \item{pytroch}
-    \item{monai}
+        implementation of} 
+    \item{scikit-learn provides a great framework for building machine learning
+        models not just deep learning models. This was used mainly for splitting
+        datasets and using their framework for handling batching.}  % TODO: https://scikit-learn.org/stable/index.html
+    \item{scikit-image is a package providing various algorithms for processing
+        images e.g. segmentation algorithms, point transform, mathematical
+        mopohlogy. I used it to handle the post-processing of masks and to find
+        connected components.} % TODO: https://scikit-image.org/
+    \item{Pytorch is a popular deep learning framework with focus on flexibility
+        and speed, this allows the user to create a well performing neural
+        network very fast. It automatically creates computational graphs
+        allowing it to compute gradient upgrades efficiently. It handles
+        connecting to various hardware like CPU and GPUs automatically. This has
+        allowed PyTorch to become one of the most used packages in the Python
+        ecostsem and is why I chose it to develop the program. TODO CITE} % https://pytorch.org/projects/pytorch/ 
+    \item{MONAI is another opensource framework for building neural networks on
+        top of PyTorch. It focuses on building models used in Medical area. In
+        the project I was using this package to handle augmentations of the
+        dataset as it provides first class support for 3D data.} % cite https://github.com/Project-MONAI/MONAI
     \item{matplotlib}
-    \item{scikit-learn}
 \end{itemize}
-
-
-
 
 \section{Use case modelling and expected usage}
 Here describe how to call the run.sh
+We identified two particular use cases for the application, it should provide a
+reasonably easy interface for training and then an interface for evaluating the
+models given some training data. For this purpose a single Bash script called
+wasc created which serves the 
 
 \section{Loss and metrics implementation}
 
@@ -571,8 +590,15 @@ Here describe how to call the run.sh
 \chapter{Evaluation}
 how we evaluate the networks
 
-\chapter{Ablation studies}
+\section{Choice of depth}
 
+\section{Choice of overlap}
+
+\section{Different architectures}
+
+\section{Recommended values}
+
+\section{Ablation studies}
 
 \chapter{Discussion}
 what to do next
