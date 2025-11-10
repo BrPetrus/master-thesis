@@ -84,6 +84,7 @@
 \usepackage{url}      %% Hyperlinks
 \usepackage{markdown} %% Lightweight markup
 \usepackage{listings} %% Source code highlighting
+\usepackage{subcaption}
 \lstset{
   basicstyle      = \ttfamily,
   identifierstyle = \color{black},
@@ -112,7 +113,10 @@ have a diploma under my belt. Wish me luck!
 [TODO: explain semantic segmentation] 
 
 \chapter{Data}
-    Our work begun when the Estonian partners send us the four different datasets of
+The data which we use was taken by our Estonian partners, the data comes from a
+sample of wings of the *Drosophila* fly. 
+
+Our work begun when the Estonian partners send us the four different datasets of
 the wanted to study phenomena. To study the effects of tunneling nanotubes which
 are these thin, long and often time curved structures, they deciced to use wings
 of fly larvae. A schematic can be viewed in Figure [TODO]. This is quite
@@ -144,7 +148,8 @@ As said before the data was captured by our Estonian partners at [TODO], to
 further propel the research they promised us to annotate the three large
 datasets, but after several months no labels were given which complicated the
 research and work. Hence, we approached our collegues at [TODO what fac.] and
-they were kind enough to help us.
+they were kind enough to help us. As we only have labeles to one dataset, in the
+rest of this work we will be primarily 
 
 \begin{figure}
     \begin{center}
@@ -164,19 +169,47 @@ applied to further enhance the images. The result of the preprocessing is
 visible in Figure \ref{fig:biologistpreprocessing}. As can be seen on the figure,
 this makes the tunnels easier to see at the cost making noise more visible.
 
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{resources/mask000-slice3-saturated.png}
+        \caption{}
+        \label{fig:gt-slice-3}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{resources/mask000-slice3-composite.png}
+        \caption{}
+        \label{fig:gt-slice-3-composition}
+    \end{subfigure}
+    \caption{Labeled tunnels by a biologist at 0th time slot on the left. On the
+    right the binarized version can be seen overlaid on top of the original
+    data.}
+    \label{fig:gt-slice-3}
+\end{figure}
+
 After the preprocessing is done, the protocol states that picking random time
 slots at least 100 instances of tunnels must be annotated, and each frame has to
 be fully annotated. According to this protocol the biologists picked two time
-steps --- the 0th and 17th step --- and gave us uniquelly labeled data, an
-example can be seen in Figure [TODO] also with an overlay of the labeles, over
-the data. In this case however, I removed the unique labels for better
-visualisation.
+steps --- the 0th and 17th step ---  and gave us uniquelly labeled data. The
+ground truth created by a biologist for the 0th time slot is visible in the left
+part of Figure \ref{fig:gt-slice-3}. In the right part of the mentioned figure
+a composition was created with gray data and the binarised ground truth in
+magenta colour.
 
-The labels were manually checked by me and a single case of label duplicity was
-found at time step [TODO], where two different tunnels were assigned the same id
-of 33. I manually fixed this and assigned a new unique label. In Figure [TODO] a
-maximum projection across the depth can be seen visualising the two problematic
-tunnels.
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.6\linewidth]{resources/duplicatedlabel.png}
+    \end{center}
+    \caption{Maximum projection of the data highlighting problematic tunnel with id 32 located in bottom right quadrant}.
+    \label{fig:duplicatedlabel}
+\end{figure}
+
+Afterwards the labels were check manually and two cases of label duplicity were
+found and fixed, by assigning a unique number to the new connected component.
+The flawed labels were 33 located in top right quadrant and label 32 located
+bottom right quadrant as can be seen in Figure \ref{fig:duplicatedlabel}.
 
 \chapter{Architectures}
 This chapter deals with what neural network architectures were used in
@@ -378,6 +411,7 @@ This chapter explains how the aforementioned neural networks were trained. How
 the data was split and handled.
 
 \section{Processing data}
+\label{sec:processing_data}
 [TODO mention alternatives to supervised learning somewhere]
 
 As mentioned in the previous Chapter [TODO cite], we have 2 time frames of
@@ -475,12 +509,12 @@ a 50 [TODO check] ratio of these two classes.
 [TODO defi. of Dice]
 [TODO defi. of Jaccard]
 
-\subsection{Optimizers, learning rates, regularization}
-The neural network was trained using Adam optimzizer as described in [TODO cite
-ADAM]. [TODO replace with ADamW]. As we are also using weight decay, equal to
-1e-4, it is commonly advised to use the AdamW variant as it correctly decouples
-the weight decay from the gradient updates [TODO cite].However, in practice no
-vast effect was observed.
+\subsection*{Optimizers, learning rates, regularization}
+The neural network was trained using Adam optimzizer, but soon switched as we
+are also using weight decay, equal to 1e-4, it is commonly advised to use the
+AdamW variant as it correctly decouples the weight decay from the gradient
+updates \parencite{loshchilov2019}. However, in practice no vast effect was
+observed during out testing.
 
 During the development of the training loop we observed that setting the
 learning rate to 0.001 [TODO check] and weight decay to [TODO check] achieved a
@@ -489,10 +523,46 @@ loop was not quite as robust; however, as the development progress the learning
 stayed well behaved and no experimentation on the values was done. Since the
 Adam family of optimizers change the learning rate adaptively per neuron we did
 not see the benefit of rerunning all evaluations also for different learning
-strategies.
+strategies considering the time requirements to perform such a study.
 
-\subsection{Training loop}
-As was mentioned in Section [TODO missing cite] the 
+\subsection*{Training the network}
+
+As was mentioned in Section \ref{sec:processing_data} the overall size of the
+dataset was rather tiny compromising of just a few images. To alleviate this we
+instead started focusing on training a network on smaller patches of 7x64x64
+size.
+
+A common problem with training neural networks is their capacity to overtrain
+on the training part of the dataset. This often times leads to poor
+generalisation performance. This is especiialy true fro really small datasets
+such as ours. One of the common ways to deal with this problem, as is mentioned
+in the original U-Net paper is the use of augmentations
+\parencite{Ronneberger2015} to artificially enlarge the training set. In our
+case we decided that we will use only augmentations which do not require
+interpolation. The reason is that unlike many other tasks, we are potentially
+dealing with quite thin structres, which could easily be significantly supressed
+or blured and no longer be seen.
+
+In each batch, a different set of transforms are used. This works by setting a
+random probability of this particular transform to be applyied. For the training
+we are:
+\begin{itemize}
+    \item{Adding random noise with a Gaussian distribution of mean 0 and 0.01
+        standard deviation with probability 0.5, which adds very faint noise.
+        This is a relatively low amount of noise and was chosen during the
+        development of the network as we did not want to change the images to
+        look completely different to the orignal ones.}
+    \item{Random flipping in every axes.}
+    \item{Random spatial crop which always crops to the preset size 7x64x64 from
+        any other size.}
+\end{itemize}
+A possible problem of using small tiles centered at tunnels is that we might
+introduce unwanted bias into the network, as it might learn to always try to
+find the tunnel in the middle. The design designation behind using random
+spatial crop was to try to suppress this, as the program now randomly finds a
+crop of the wanted size, which reduces this problem.
+
+Given all the mentioned settings the 
 
 
 % [TODO mention inside the intro chapter or architecture]
