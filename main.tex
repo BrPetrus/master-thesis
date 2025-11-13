@@ -678,10 +678,140 @@ wasc created which serves the
 
 \section{NN implementation}
 
-\section{Postprocessing}
 
 \chapter{Evaluation}
 how we evaluate the networks
+overlaps
+dice / Jaccard
+mapping
+
+\section{Metrics}  % todo: prob. make this not a section
+For evaluating the resulting predictions we decided to use Dice and Jaccard
+scores as both are very common to use in biomedical papers
+\parencite{Ronneberger2015} [TODO] but the end user is not interested in the
+quality of the scores on cutouts around tunnels, instead we must somehow use our
+neural network for predicting over the whole images.
+% [TODO more citations? espc. for Dice].
+
+\section{Running the network}
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{resources/tile0px.png}
+        \caption{0px overlap}
+        \label{fig:tile0px}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{resources/tile10px.png}
+        \caption{10px overlap}
+        \label{fig:tile10px}
+    \end{subfigure}
+    \caption{Visualisation of overlaps for 0 and 10px overlaps.}
+    \label{fig:tiling}
+\end{figure}
+
+
+Since our neural network works on square cutouts of 7x64x64 size, we decided to
+solve this problem by tilling the original images and then stitching them
+together. This overlap-tile strategy is used in several papers such as
+\parencite{Ronneberger2015} [TODO]. There are roughly two strategies on how to
+handle the edges, in works such as \parencite{Ronneberger2015} the neural
+network's prediction is smaller than the original size since they do no pad the
+intermediate results. Then the sampling of images is done in such a way that
+every output pixel has a prediction.
+
+Since, our crop size is rather small, given
+the problems with dataset size described in [TODO], we decided to use padding
+and always output the same size, and to have a configurable overlap size between
+the neighbouring tiles. The idea is better visualised in Figure
+\ref{fig:tiling}, where the various overlaps are visualised.
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{resources/t000-3-0verlap.png}
+        \caption{0px overlap}
+        \label{fig:stitchingoverlap0}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{resources/t000-3-30overlap.png}
+        \caption{30px overlap}
+        \label{fig:stitchingoverlap30}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{resources/t000-3-orig-stretched.png}
+        \caption{Original image (stretched).}  % todo: maybe mention the quad
+    \end{subfigure}
+    \caption{This figure shows how choosing different amount of overlap in
+    pixels has an effect on suppresing some of the artifacts at the edges of
+    stitched tiles.}
+    \label{fig:stitchingoverlap}
+\end{figure}
+
+The idea to use configurable overlap size came from the following observation.
+In Figure \ref{fig:stitchingoverlap0} there can be seen several sharp artifacts
+%todo how to cite subfigure?
+at places where the tiles were touching, as there were some leftover information
+from neighbouring tiles but not quite a good view of the whole object, the
+network probably got confused, and mistook the feature for a very short tunnel.
+This lead us to the idea that if we use larger overlaps and aggregate them these
+effects on boundaries might get fixed. As can be seen in the figure, using
+larger overlap and averaging the predictions suppresses a lot of these
+artifacts.
+% todo in discussion mention that maybe this was not the best idea, maybe we
+% should have chosen larger context. The context x precision tradeoff.
+
+For the purpose of aggregating the overlaps, simple averaging was chosen due to
+its simplicity. The main idea was, that if the network predicts a false tunnel
+on the edge, due to the limited context, it might assign a high probability
+there, but as the other tile has more context, it will say that the tunnel is
+there with smaller probability; hence, by averagint them we will get hopefully
+small enough probability that the artifact is removed.
+
+Interestingly, some new artifacts appear, which at first glance might seem
+strange, but if we compare the locations of some of these artifacts it becomes
+clear they correspond to various noise inside the original input.
+% todo: add arrow or something
+
+% TODO: consider drawing there
+Even after this step there still might be some leftover artifacts as can be seen
+in Figure \ref{fig:stitchingoverlap}, which is not ideal, but these artifacts
+are generally, from the way how they arrived small. This leads us to how the
+predictions are processed.
+
+\section{Postprocessing}
+
+As mentioned in the previous section even after applying the overlap strategy
+some artifacts remain. Moreover, some artifacts actually closely resemble thin
+structures but are not a true tunnels. In general to further cleanup this
+prediction we decided to use area size.
+
+We can think of the tunnels as individual connected components. In general, only
+if at some z height the tunnel is not from a single connected component we are
+assuming that this will hold if we are looking at the tunnels in 3D instead.
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.6\linewidth]{resources/histogramofsizes.png}
+    \end{center}
+    \caption{Histogram of the volume (in pixels) of all labeled tunneling
+    nanotubes with median and mean highlighted.}.
+    \label{fig:histogramoflabelsizes}
+\end{figure}
+
+Given this assumption we can filter the tunnels also based on their sizes, if
+the 
+
+\subsection{Mapping}
+
+
+\section{Ablation studies}
 
 \section{Choice of depth}
 
@@ -691,7 +821,6 @@ how we evaluate the networks
 
 \section{Recommended values}
 
-\section{Ablation studies}
 
 \chapter{Discussion}
 what to do next
