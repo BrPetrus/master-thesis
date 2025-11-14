@@ -805,10 +805,57 @@ assuming that this will hold if we are looking at the tunnels in 3D instead.
     \label{fig:histogramoflabelsizes}
 \end{figure}
 
-Given this assumption we can filter the tunnels also based on their sizes, if
-the 
+Given this assumption we can filter the tunnels also based on their sizes. I
+chose the value of 100px, realising that some of the tiny tunnels might get
+removed, but as will later be shown, the network tends to find more tunnels than
+the biologist. Hence, I believe this to be a reasonable assumption to make.
+Finnaly, the predictions are thresholded by the value of 0.5. This was chosen as
+a reasonable threshold.
+% todo: mention in discussion that this prob. could have been more studied
 
 \subsection{Mapping}
+It is obviously important to calculate Dice and Jaccard on the whole images for
+the final evaluations, but is it sometimes quite important to also see how well
+the network segments tunnels is correctly identifies. For this purpose we
+developed the following extra metrics.
+
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\linewidth]{resources/inkscape/matching_simple.png}
+        \caption{}
+        \label{fig:matchingsimple}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.45\linewidth}
+        \includegraphics[width=\linewidth]{resources/inkscape/matching_multiple.png}
+        \caption{}
+        \label{fig:matchingmultiple}
+    \end{subfigure}
+    \caption{An example of three vertical pillars (black circles) and tunnels
+    (in black)
+    connecting them. In Subfigure \ref{fig:matchingsimple} we can see one good
+    prediction and one false one. In SubFigure \ref{fig:matchingmultiple} we can
+    see a single large prediction covering both tunnels.}
+    \label{fig:matchingdiagram}
+\end{figure}
+
+The way we have defined speccialy look at tunnels which were correctly
+identified and see how well the network worked in segmenting them out. In Figure
+\ref{fig:matchingsimple} we can see a simple schematic of a situation in which a
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.4\linewidth]{resources/inkscape/matching_bipartite.png}
+    \end{center}
+    \caption{A diagram showing how multiple }.
+    \label{fig:bipartitematching}
+\end{figure}
+   
+
+
+
 
 
 \section{Ablation studies}
