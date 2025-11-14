@@ -868,7 +868,14 @@ metrics in this case.
 This idea is techinally implemented in the following manner inside the
 evaluations. We take the predictions of the neural networks and calculate the
 component components in 3D. As described previously, the components are filtered
-by size and thresholded. now comes the 
+by size and thresholded. Now comes the matching. In the first pass the
+application will iterate over all labels in the ground truth and see if there
+are any predictions which contain at least 50\% of the mask. All of these
+matches are then accumulated. In the implementation and further diagrams we
+refer to this as all matches. The value 50\% was chosen so that a single ground
+truth label cannot be contained in multiple predicted connected components.
+
+Afterwards the 
 % todo: as an example, show the quad with all sort of tunnels connected together
 % todo : btw am i explainign the how we binarise the labels?
 
