@@ -843,7 +843,34 @@ developed the following extra metrics.
 
 The way we have defined speccialy look at tunnels which were correctly
 identified and see how well the network worked in segmenting them out. In Figure
-\ref{fig:matchingsimple} we can see a simple schematic of a situation in which a
+\ref{fig:matchingsimple} we can see a simple hypotetical schematic of a situation in which a
+we have three vertical pillars, shown here as three black circles, and two
+tunnels connecting them, here the tunnels are in black. Now the neural network
+might predict multiple connected components, but only some of them are right
+matches and correspond to a tunnel. In this figure, it is okay to say that the
+blue tunnel is predicting one of the true tunnels, albeit it is little bit
+oversegmenting the tunnel. On the other hand, the red predition is completely
+off and it is not connected to any underlying tunnel; therefore, this should be
+counted as a false predictions.
+
+As we look into the data we might see that often time the tunnels, especially in
+places where there a cluster of tunnels might not be perfectly sepparated. They
+may be touching or even crossing each other. In some cases two tunnels visually
+look like they have joined together. In this cases if we picked the strategy in
+\ref{fig:matchingsimple} where predictions and labels are matched according to
+the closest match, we would severally penalise predictions which touch. This is
+a problem as it is weird to penalise the network if single predicted component
+covers multiple predictions. The problem is again schematically visualised in
+Figure \ref{fig:matchingmultiple}, where a a tunnel prediction in blue, matches
+two different tunnels in black). I would argue that it is unfair to penalise the
+metrics in this case.
+
+This idea is techinally implemented in the following manner inside the
+evaluations. We take the predictions of the neural networks and calculate the
+component components in 3D. As described previously, the components are filtered
+by size and thresholded. now comes the 
+% todo: as an example, show the quad with all sort of tunnels connected together
+% todo : btw am i explainign the how we binarise the labels?
 
 \begin{figure}
     \begin{center}
