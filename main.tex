@@ -786,6 +786,7 @@ are generally, from the way how they arrived small. This leads us to how the
 predictions are processed.
 
 \section{Postprocessing}
+\label{sec:postprocessing}
 
 As mentioned in the previous section even after applying the overlap strategy
 some artifacts remain. Moreover, some artifacts actually closely resemble thin
@@ -875,7 +876,46 @@ matches are then accumulated. In the implementation and further diagrams we
 refer to this as all matches. The value 50\% was chosen so that a single ground
 truth label cannot be contained in multiple predicted connected components.
 
-Afterwards the 
+Now that we have assigned possible multiple labels to each predicted connected
+component we can divide the mapping into what is refered to as clean matches and
+others. In Figure \ref{fig:bipartitematching} we see a diagram of an example of
+a possible matching. In these case the network predicted three tunnels, and the
+data has three labeled tunnels. In this case a predicted tunnel denoted as $p_1$
+is uniquely mapped to label $l_1$. Since $p_1$ is not connected to any other
+label, we call this a clean match. On the other hand predicted connected
+component $p_2$ has according to the aforementioned algorithm been mapped to two
+different labels $l_2$ and $l_3$. As previously argued it would be unwise to
+disregard this mapping as a bad one, therefore we will also accept this mapping
+and it will show up in following metrics when we refer to all matches.
+
+Finnaly, this allows us to quantify how well different networks understand the
+image not on a pixel by pixel manner, but in terms of the whole tunnels. We can
+look at the prediction $p_3$ as a false positive, since it is not mapped to any
+tunnel, while the label is $l_4$ is viewed as a missed tunnel, and therefore
+called a false negative. All clean matches ($p_1$->$l_1$) are considered to be a
+true positives, while multiple matches are, according to the precious arguments,
+also considered as a true positive, in fact this is counted as a single true
+positive.
+
+To summaries, we are goind to look at the Jaccard and Dice score for the
+following cases:
+\begin{itemize}
+    \item{Test: In this case we are looking at performance on cutouts of tunnels
+        in one particular quadrant}
+    \item{Evalution: In this case we are calculating the performance from the
+        overal stitched binary images.}
+    \item{Postprocesed overall: In this metric, the postprocessing described in Section
+        \ref{sec:postprocessing} is applied on top of the predictions, and whole
+        images are evaluated}
+    \item{Postprocessed Clean matches: In this metric, we take just the clean
+        matches and evaluate the binary masks.}
+    \item{Postprocessed all matches: Like above, but even predictions mapped to
+        multiple labels are used.}
+    \item{Tunnel metric: Here we care about just the mapping described in Figure
+        \ref{fig:bipartitematching}}
+\end{itemize}
+% todo: definitely deserves more attention
+
 % todo: as an example, show the quad with all sort of tunnels connected together
 % todo : btw am i explainign the how we binarise the labels?
 
