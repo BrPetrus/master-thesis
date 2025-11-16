@@ -915,7 +915,6 @@ following cases:
         \ref{fig:bipartitematching}}
 \end{itemize}
 % todo: definitely deserves more attention
-
 % todo: as an example, show the quad with all sort of tunnels connected together
 % todo : btw am i explainign the how we binarise the labels?
 
@@ -926,21 +925,61 @@ following cases:
     \caption{A diagram showing how multiple }.
     \label{fig:bipartitematching}
 \end{figure}
-   
 
-
-
-
+Lastly, to reiterate the idea preseneted in the training Section [TODO: not
+written yet], we are always training the network on three of the four possible
+quadrants. As such, four different models are always trained and the results
+will averaged.
 
 \section{Ablation studies}
+In this section we will present experimentally infered sizes of hyperparameters
+for the neural network.
 
-\section{Choice of depth}
+\subsection*{Choice of depth and overlap for the network}
+While working on the network the choice of depth and overlap is not obvious. It
+is widely accepted that the ability to teach deeper network helped improve
+neural networks performance.
+% TODO citation needed
 
-\section{Choice of overlap}
+In general, the size of the network should be somehow connected to the
+complexity of the problem, both in terms of size of the context and the image
+complexity. To find a reasoanble value for this parameters we decided to do a 2D
+hyperparameter search study. 
 
-\section{Different architectures}
+We took the 3D version of the Anisotropic architecture (AnisoUNet3D) and
+considered five different versions. The shallowest one has exactly two
+downsampling layers --- so it is referenced as a network with depth equal to 2
+--- and the deepest one has 6 downsampling layers. Six downsampling layers was
+chosen as this is enough to reduce the original size 7x64x64 to 7x1x1 as such,
+there is no need to have a deeper network. For reference we also studied the
+performance of the BasicUNet version.
 
-\section{Recommended values}
+For the overlap hyperparameter we chose the values 0px, 10px, 20px, 30px, and
+40px. The value 40px was chosen arbitrarily, as in this case, the neighbouring
+cells already share more than half of the volume.
+
+As the overlap is a hyperparameter of the postprocessing, this means that only
+seven different architectures must be trained to perform this analysis.
+Afterwards the seven different models are evaluated for every possible overlap
+combination, leading to 30 values. Since neural networks employ randomness to
+train, to improve the stability of the results, each architectures are trained
+three times. This means that each number in TODO is in fact combined from three
+models, and for this evaluation 21 models were trained.
+
+As for the 
+
+
+
+
+%\section{Ablation studies}
+
+%\section{Choice of depth}
+
+%\section{Choice of overlap}
+
+%\section{Different architectures}
+
+%\section{Recommended values}
 
 
 \chapter{Discussion}
