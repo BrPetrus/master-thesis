@@ -973,7 +973,7 @@ trained.
     \end{center}
     \caption{Evaluation Dice score for various depths of the network. Best
     values is highlighted.}
-    \label{fig:eval:dice_mean}
+    \label{fig:eval_quads}
 \end{figure}
 
 The results of this ablation study is shown in Figure \ref{fig:eval:dice_mean}
@@ -1007,7 +1007,27 @@ network might suffer from not enough layers.
 
 However, it must be noted, that the error bars are very large and complicate any
 conclussion, as it shows that the performance varies quite dramatically. This
-lead to analyse if this is not a problem of running the network 
+lead us to investigate what could be causing this variety, and one possible
+explanation is the various performance on the quadrants.
+
+Taking a look at Figure \ref{fig:eval_quads} here we can see the same metrics,
+but this time it is further divided among the various quadrants. What is
+immediately obvious us that the error bars are less varied, due to the
+performance differences accross quadrants.
+
+In general, all models performed the best at the first quadrant (top left) and
+third quadrant (bottom left), while the performance was lower on the second
+quadrant (top right) and the fourth quadrant (bottom right). Looking at the
+means and error bars now, it seems that the model with three downsampling layers
+performs best or close to best in all folds, while having more layers can
+sometimes reach similar performance it might also lead to worse (like in case of
+three downsampling steps in quadrant 3); hence, we cannot say that for our input
+size, the increased depth helps dramatically.
+
+Another observation of note is the significantly lower performance of the model
+in quadrant 2 when looking at the tunnel metrics like in Figure
+\ref{subfig:eval_tunnels}. This explains the large error bars in the overall
+performance seen in Figure \ref{}:
 
 
 
@@ -1023,32 +1043,44 @@ lead to analyse if this is not a problem of running the network
         \centering
         \includegraphics[width=\linewidth]{resources/evaluations/postprocess_overall_dice_architecture_comparison.png}
         \caption{Performance with post-processing.}
-        \label{fig:gt-slice-3-composition}
     \end{subfigure}
     \begin{subfigure}[b]{0.8\textwidth}
         \centering
         \includegraphics[width=\linewidth]{resources/evaluations/tunnel_dice_architecture_comparison.png}
         \caption{Performance on tunnels.}
-        \label{fig:gt-slice-3-composition}
+        \label{fig:}
     \end{subfigure}
     \caption{Performance evaluations of the neural networks for various depths
     and fixed 10 pixel overlap.}
     \label{fig:eval:depth}
 \end{figure}
 
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{0.8\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{resources/evaluations/eval_dice_mean_by_quad_arch.png}
+        \caption{Evaluation performance.}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.8\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{resources/evaluations/postprocess_overall_dice_by_quad_arch.png}
+        \caption{Performance with post-processing.}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.8\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{resources/evaluations/tunnel_dice_by_quad_arch.png}
+        \caption{Performance on tunnels.}
+        \label{subfig:eval_tunnels}
+    \end{subfigure}
+    \caption{Performance evaluations of the neural networks for various depths
+    and fixed 10 pixel overlap.}
+    \label{fig:eval_quads}
+\end{figure}
 
-
-
-%\section{Ablation studies}
-
-%\section{Choice of depth}
-
-%\section{Choice of overlap}
-
-%\section{Different architectures}
+\subsection*{Different architectures}
 
 %\section{Recommended values}
-
 
 \chapter{Discussion}
 what to do next
