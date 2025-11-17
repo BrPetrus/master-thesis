@@ -991,7 +991,25 @@ and all others is visible in every case.
 For further studies, we took a look at just 10 pixel overlap and looked at other
 metrics, which were introduced in the previous chapters. In Figure
 \ref{fig:eval:depth} the effect of the depth is studied more. I chose three
-different metrics to show if the 
+different metrics to investigate the effect of postprocessing and the
+performance on the level of tunnels. Just to make clear, in these graphs, each
+average is calculated as the mean of the performance accross four cross folds
+and three runs. The error bars are +- a single sample standard deviation of
+these values.
+
+First of all, it is visible, that the performance differences accross various
+depths is not that significant, but overall the network with three downsampling
+steps and the network with five downsampling steps are achieving consistently
+the best numbers, while the networks with two and six downsampling steps are
+performing the worst. I believe this can be explained by the fact, that the
+deepest network is unreasoanble large for our given problem, while the smallest
+network might suffer from not enough layers.
+
+However, it must be noted, that the error bars are very large and complicate any
+conclussion, as it shows that the performance varies quite dramatically. This
+lead to analyse if this is not a problem of running the network 
+
+
 
 \begin{figure}
     \centering
