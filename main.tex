@@ -963,10 +963,60 @@ seven different architectures must be trained to perform this analysis.
 Afterwards the seven different models are evaluated for every possible overlap
 combination, leading to 30 values. Since neural networks employ randomness to
 train, to improve the stability of the results, each architectures are trained
-three times. This means that each number in TODO is in fact combined from three
-models, and for this evaluation 21 models were trained.
+three times. This means that each number in Figure \ref{fig:eval:dice_mean} is
+in fact combined from three models, and for this evaluation 21 models were
+trained.
 
-As for the 
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.8\linewidth]{resources/evaluations/eval_dice_mean_heatmap.png}
+    \end{center}
+    \caption{Evaluation Dice score for various depths of the network. Best
+    values is highlighted.}
+    \label{fig:eval:dice_mean}
+\end{figure}
+
+The results of this ablation study is shown in Figure \ref{fig:eval:dice_mean}
+with the highlighted maximum number, which corresponds to the 10 pixel overlap
+and a network with three downsampling layers. This was used to fix these
+hyperparameters for later studies.
+
+What we can also see from this hyperparameter search is that the effect of
+number of downsampling layers is rather marginal and there is not a clear trend
+of more downsampling layers leading to better performance or vice-versa. Another
+effect that is visible is that while changing between 10 pixels to 20 or 30
+pixels does minimal change in the performance, the difference between 0 pixels
+and all others is visible in every case.
+
+For further studies, we took a look at just 10 pixel overlap and looked at other
+metrics, which were introduced in the previous chapters. In Figure
+\ref{fig:eval:depth} the effect of the depth is studied more. I chose three
+different metrics to show if the 
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{0.8\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{resources/evaluations/eval_dice_mean_architecture_comparison.png}
+        \caption{Evaluation performance.}
+        \label{}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.8\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{resources/evaluations/postprocess_overall_dice_architecture_comparison.png}
+        \caption{Performance with post-processing.}
+        \label{fig:gt-slice-3-composition}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.8\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{resources/evaluations/tunnel_dice_architecture_comparison.png}
+        \caption{Performance on tunnels.}
+        \label{fig:gt-slice-3-composition}
+    \end{subfigure}
+    \caption{Performance evaluations of the neural networks for various depths
+    and fixed 10 pixel overlap.}
+    \label{fig:eval:depth}
+\end{figure}
 
 
 
