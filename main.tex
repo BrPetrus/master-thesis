@@ -110,7 +110,7 @@
 Theses are rumoured to be \enquote{the capstones of education}, so
 I decided to write one of my own. If all goes well, I will soon
 have a diploma under my belt. Wish me luck!
-[TODO: explain semantic segmentation] 
+[TODO: explain semantic segmentation]
 
 \chapter{Data}
 The data which we use was taken by our Estonian partners, the data comes from a
@@ -313,6 +313,7 @@ ignore downsampling in the z dimension by setting the kernel size in that
 direction equal to 1 [TODO or 0?].
 
 \section{The CSAM module}
+\label{sec-csammodule}
 
 This section talks about the channel and spatial attention module (further
 refered to as the CSAM) mentioned in the CS-Net paper \parencite{Mou2021}. In
@@ -354,6 +355,7 @@ The design ...
 
 
 \section{Squeeze and excitation block}
+\label{sec-seblock}  % consider adding a usenet paragraph
 In Paper \parencite{Hu2018} researchers demonstrated how a simple small block
 can be inserted inside deep neural networks to improve their performance accross
 various datasets and tasks. The researchers postulate that this block helps the
@@ -1027,8 +1029,7 @@ size, the increased depth helps dramatically.
 Another observation of note is the significantly lower performance of the model
 in quadrant 2 when looking at the tunnel metrics like in Figure
 \ref{subfig:eval_tunnels}. This explains the large error bars in the overall
-performance seen in Figure \ref{}:
-
+performance seen in Figure \ref{fig:eval-depth-tunnels}.
 
 
 \begin{figure}
@@ -1048,7 +1049,7 @@ performance seen in Figure \ref{}:
         \centering
         \includegraphics[width=\linewidth]{resources/evaluations/tunnel_dice_architecture_comparison.png}
         \caption{Performance on tunnels.}
-        \label{fig:}
+        \label{fig:eval-depth-tunnels}
     \end{subfigure}
     \caption{Performance evaluations of the neural networks for various depths
     and fixed 10 pixel overlap.}
@@ -1078,7 +1079,33 @@ performance seen in Figure \ref{}:
     \label{fig:eval_quads}
 \end{figure}
 
+TODO: missing some examples or theories why the quad 2 looks bad :(
+
 \subsection*{Different architectures}
+As we have discussed in the previous section, we did a 2D hyperparameter search
+to choose a good estimate of the depth and overlap values, since these are used
+by our advance neural networks, we picked 3 downsampling layers and an overlap
+of 10 pixels. In this section the evaluation of other networks will be
+presented.
+
+We decided to study the following architectures: a basic implementation of UNet
+as described in Section [TODO]. Its anisotropic version as described in Section
+[TODO], a version of Anisotropic model with the CSAM module as described in
+Section \ref{sec-csammodule}, and finally the UseNet architecture from Section
+\ref{sec-seblock}. All models are using 10 pixel overlap and their depth is
+equal to three downsampling blocks, with the exception of BasicUNet, which has
+two downsampling blocks. Lastly, what is referred to as a 2D and 3D version of
+most complex models were created. This came out of the idea, that though that
+the network would benefit from looking at not just a single slice, but multiple
+slices. Hence, the 3D version of a given model uses (3,3,3) kernel in all
+convolutional operations, which are located in the Horizontal blocks, and the 2D
+version of a given model uses a (1,3,3) kernel (the first dimension is depth).
+
+
+
+
+
+
 
 %\section{Recommended values}
 
