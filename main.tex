@@ -937,7 +937,8 @@ will averaged.
 In this section we will present experimentally infered sizes of hyperparameters
 for the neural network.
 
-\subsection*{Choice of depth and overlap for the network}
+\subsection{Choice of depth and overlap for the network}
+\label{sec:ablation-depth}
 While working on the network the choice of depth and overlap is not obvious. It
 is widely accepted that the ability to teach deeper network helped improve
 neural networks performance.
@@ -1101,10 +1102,96 @@ slices. Hence, the 3D version of a given model uses (3,3,3) kernel in all
 convolutional operations, which are located in the Horizontal blocks, and the 2D
 version of a given model uses a (1,3,3) kernel (the first dimension is depth).
 
+Moving on to the results Figures \ref{fig:eval-diff-arch-dice}-
+\ref{fig:eval-diff-arch-tunnel} shows the same metrics we discussed in Section
+\ref{sec:ablation-depth} aggregated accross all the cross folds, while
+\ref{fig:eval-diff-arch-dice-quads}-\ref{fig:eval-diff-arch-tunnel-quads} shows
+the performace for each quadrant. The means and standard derivations of all
+metrics was calculated exactly the same as in the previous section.
+
+We can again see a similar pattern with the large error bars in all figures
+especially the Figure \ref{fig:eval-diff-arch-tunnel} when looking at the tunnel
+metrics. Of note is that the BasicUNet architecture is performing worse than all
+others in every metric even accounting for the standard derivation.
+
+As such, the problem of large distrepancy in perfoamnce is similarly caused by
+different perfoermance accross the folds, where the overall dice performance is
+highest for the third quadrant while being relativaly lower for the 
 
 
 
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.9\linewidth]{resources/evaluations/diffarchs/eval_dice_mean_architecture_comparison.png}
+    \end{center}
+    \caption{}
+    \label{fig:eval-diff-arch-dice}
+\end{figure}
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.9\linewidth]{resources/evaluations/diffarchs/postprocess_overall_dice_architecture_comparison.png}
+    \end{center}
+    \caption{}
+    \label{}
+\end{figure}
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.9\linewidth]{resources/evaluations/diffarchs/postprocess_clean_matched_dice_architecture_comparison.png}
+    \end{center}
+    \caption{}
+    \label{}
+\end{figure}
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.9\linewidth]{resources/evaluations/diffarchs/postprocess_matched_dice_architecture_comparison.png}
+    \end{center}
+    \caption{}
+    \label{}
+\end{figure}
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.9\linewidth]{resources/evaluations/diffarchs/tunnel_dice_architecture_comparison.png}
+    \end{center}
+    \caption{}
+    \label{fig:eval-diff-arch-tunnel}
+\end{figure}
 
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.9\linewidth]{resources/evaluations/diffarchs/eval_dice_mean_by_quad_arch.png}
+    \end{center}
+    \caption{}
+    \label{fig:eval-diff-arch-dice-quads}
+\end{figure}
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.8\linewidth]{resources/evaluations/diffarchs/postprocess_overall_dice_by_quad_arch.png}
+    \end{center}
+    \caption{}
+    \label{}
+\end{figure}
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.8\linewidth]{resources/evaluations/diffarchs/postprocess_clean_matched_dice_by_quad_arch.png}
+    \end{center}
+    \caption{}
+    \label{}
+\end{figure}
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.8\linewidth]{resources/evaluations/diffarchs/postprocess_matched_dice_by_quad_arch.png}
+    \end{center}
+    \caption{}
+    \label{}
+\end{figure}
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.8\linewidth]{resources/evaluations/diffarchs/tunnel_dice_by_quad_arch.png}
+    \end{center}
+    \caption{}
+    \label{fig:eval-diff-arch-tunnel-quads}
+\end{figure}
 
 
 %\section{Recommended values}
