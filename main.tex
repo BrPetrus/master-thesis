@@ -1115,10 +1115,37 @@ metrics. Of note is that the BasicUNet architecture is performing worse than all
 others in every metric even accounting for the standard derivation.
 
 As such, the problem of large distrepancy in perfoamnce is similarly caused by
-different perfoermance accross the folds, where the overall dice performance is
-highest for the third quadrant while being relativaly lower for the 
+different performance accross the folds, where the overall dice performance is
+highest for the third quadrant while being relativaly lower for the second
+quadrant and fourth quadrant in Figure
+\ref{fig:eval-diff-arch-dice-overall-quads}.
 
+While it is difficult to asses the overall trends due to the error bars, an
+interesting observation is that the 2D versions tend to perform equally like in
+third quadrant in Figure \ref{fig:eval-diff-arch-dice-overall-quads} or slighly
+better than their 3D versions. I suspect this could be caused by having
+significantly less parameters compared to the 3D versions.
 
+Like in the previous section we found that the tunnel metrics are poor in the
+second quadrant compared to the other ones. To investigate this behaviour we
+investigated closer the output of the 2D version of the AnisoUSENet model, which
+is near the top of the score in for every quadrant. Since this metric is
+calculated on top of matched predictions and labels, it is important to look at
+how well did the matching work in this quadrant. The precision and recall of
+matching is visible in Figure \ref{fig:eval-diff-arch-dice-overall-quads}, and
+as is clearly seen matching is performing sgnificantly worse on the second
+quadrant.
+
+This provides an interesting observation as we can clearly see from the dice
+score on postprocessed images in Figure
+\ref{fig:eval-diff-arch-dice-overall-quads}, that while the segmentation are not
+much worse than in the other folds, the predictions cannot be clearly mapped to
+the labels on an instance level; moreover, looking at the
+\ref{fig:eval_diff_arch_matched_dice_quads} and Figure
+\ref{fig:eval_diff_arch_clean_match_dice_quads} we can also see that the network
+poorly segments tunnels which we were able to match, which is not the case for
+other quadrants, where we can generaly see an improvement when looking just at
+the Dice score of matched tunnels.
 
 \begin{figure}
     \begin{center}
@@ -1169,21 +1196,21 @@ highest for the third quadrant while being relativaly lower for the
         \includegraphics[width=0.8\linewidth]{resources/evaluations/diffarchs/postprocess_overall_dice_by_quad_arch.png}
     \end{center}
     \caption{}
-    \label{}
+    \label{fig:eval-diff-arch-dice-overall-quads}
 \end{figure}
 \begin{figure}
     \begin{center}
         \includegraphics[width=0.8\linewidth]{resources/evaluations/diffarchs/postprocess_clean_matched_dice_by_quad_arch.png}
     \end{center}
     \caption{}
-    \label{}
+    \label{fig:eval_diff_arch_clean_match_dice_quads}
 \end{figure}
 \begin{figure}
     \begin{center}
         \includegraphics[width=0.8\linewidth]{resources/evaluations/diffarchs/postprocess_matched_dice_by_quad_arch.png}
     \end{center}
     \caption{}
-    \label{}
+    \label{fig:eval_diff_arch_matched_dice_quads}
 \end{figure}
 \begin{figure}
     \begin{center}
@@ -1193,6 +1220,12 @@ highest for the third quadrant while being relativaly lower for the
     \label{fig:eval-diff-arch-tunnel-quads}
 \end{figure}
 
+\begin{figure}
+    \centering
+    \includegraphics[width=0.6\linewidth]{resources/evaluations/diffarchs/precision_recall_quads.png}
+    \caption{}
+    \label{fig:eval-prec-recall-quads}
+\end{figure}
 
 %\section{Recommended values}
 
