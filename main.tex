@@ -939,12 +939,16 @@ for the neural network.
 
 \subsection{Choice of depth and overlap for the network}
 \label{sec:ablation-depth}
-While working on the network the choice of depth and overlap is not obvious. It
-is widely accepted that the ability to teach deeper network helped improve
-neural networks performance.
-% TODO citation needed
+While working on the network the choice of depth and overlap is not obvious, but
+it is a very important parameter as every advanced architecture is build on top
+of the anisotropic unet described in Chapter [TODO], which has customizeable
+depth. Moreover, the reason why the anisotropic version was created is to allow
+us to change the depth.
 
-In general, the size of the network should be somehow connected to the
+In general it is accepted that the ability to teach deeper network helped improve
+neural networks performance and in some sense, the ability to teach deeper
+networks lead us to the neural network revolution. [TODO cit. needed] % TODO citation needed
+But, the size of the network should be somehow connected to the
 complexity of the problem, both in terms of size of the context and the image
 complexity. To find a reasoanble value for this parameters we decided to do a 2D
 hyperparameter search study. 
@@ -954,21 +958,25 @@ considered five different versions. The shallowest one has exactly two
 downsampling layers --- so it is referenced as a network with depth equal to 2
 --- and the deepest one has 6 downsampling layers. Six downsampling layers was
 chosen as this is enough to reduce the original size 7x64x64 to 7x1x1 as such,
-there is no need to have a deeper network. For reference we also studied the
-performance of the BasicUNet version.
+there is no need to have a deeper network.
 
 For the overlap hyperparameter we chose the values 0px, 10px, 20px, 30px, and
 40px. The value 40px was chosen arbitrarily, as in this case, the neighbouring
 cells already share more than half of the volume.
 
 As the overlap is a hyperparameter of the postprocessing, this means that only
-seven different architectures must be trained to perform this analysis.
-Afterwards the seven different models are evaluated for every possible overlap
-combination, leading to 30 values. Since neural networks employ randomness to
-train, to improve the stability of the results, each architectures are trained
-three times. This means that each number in Figure \ref{fig:eval:dice_mean} is
-in fact combined from three models, and for this evaluation 21 models were
-trained.
+five different architectures must be trained to perform this analysis. Since we
+are doing cross fold analysis, we are training 20 models. Finally, since neural
+networks employ randomness, each combination of fold and architecutre is
+repeated three times, leading to training 60 models for this evaluation.
+
+The Figure \ref{fig:parametersearchstudy} showcases the dice score of the
+various networks. Every number is the mean performance accross the 4-cross fold
+validation and 3 indepedendant runs i.e. an average of 12 networks. Overall the
+highest number is highlighted and it corresponds to the version with three
+downsampling layers and 10px overlap; thus, all following models will be using
+this combination of hyperparameters.
+% TODO: tripple check, i had very different numbers before
 
 \begin{figure}
     \begin{center}
@@ -976,20 +984,18 @@ trained.
     \end{center}
     \caption{Evaluation Dice score for various depths of the network. Best
     values is highlighted.}
-    \label{fig:eval_quads}
+    \label{fig:parametersearchstudy}
 \end{figure}
 
-The results of this ablation study is shown in Figure \ref{fig:eval:dice_mean}
-with the highlighted maximum number, which corresponds to the 10 pixel overlap
-and a network with three downsampling layers. This was used to fix these
-hyperparameters for later studies.
 
 What we can also see from this hyperparameter search is that the effect of
 number of downsampling layers is rather marginal and there is not a clear trend
 of more downsampling layers leading to better performance or vice-versa. Another
 effect that is visible is that while changing between 10 pixels to 20 or 30
 pixels does minimal change in the performance, the difference between 0 pixels
-and all others is visible in every case.
+and all others is visible in every case. Also it is interesting to see, that
+altough the changes are not greatly different, the network with three
+downsampling laters seems to always beat the others.
 
 For further studies, we took a look at just 10 pixel overlap and looked at other
 metrics, which were introduced in the previous chapters. In Figure
@@ -1003,7 +1009,7 @@ these values.
 First of all, it is visible, that the performance differences accross various
 depths is not that significant, but overall the network with three downsampling
 steps and the network with five downsampling steps are achieving consistently
-the best numbers, while the networks with two and six downsampling steps are
+the highest averages, while the networks with two and six downsampling steps are
 performing the worst. I believe this can be explained by the fact, that the
 deepest network is unreasoanble large for our given problem, while the smallest
 network might suffer from not enough layers.
@@ -1016,7 +1022,12 @@ explanation is the various performance on the quadrants.
 Taking a look at Figure \ref{fig:eval_quads} here we can see the same metrics,
 but this time it is further divided among the various quadrants. What is
 immediately obvious us that the error bars are less varied, due to the
-performance differences accross quadrants.
+performance differences accross quadrants. Interestingly, in some cases like the
+models with 6 downsapling layers for the first quadrant has large performance
+differences, but no reason as to why this happens was found. Since in this case
+all bars are averages of three numbers, it is plausible that due to bad luck,
+sometimes the network does not achieve as good of a performance as in other
+runs. % TODO talk in discussion
 
 In general, all models performed the best at the first quadrant (top left) and
 third quadrant (bottom left), while the performance was lower on the second
@@ -1025,13 +1036,11 @@ means and error bars now, it seems that the model with three downsampling layers
 performs best or close to best in all folds, while having more layers can
 sometimes reach similar performance it might also lead to worse (like in case of
 three downsampling steps in quadrant 3); hence, we cannot say that for our input
-size, the increased depth helps dramatically.
-
-Another observation of note is the significantly lower performance of the model
-in quadrant 2 when looking at the tunnel metrics like in Figure
-\ref{subfig:eval_tunnels}. This explains the large error bars in the overall
-performance seen in Figure \ref{fig:eval-depth-tunnels}.
-
+size, the increased depth helps dramatically. But our previous decision to
+choose the network of depth three in the following studies still stands, as even
+tough the performance difference is not that different, this network is
+consitently beating the smaller network and at the same time has much less
+parameters than the larger networks.
 
 \begin{figure}
     \centering
@@ -1079,8 +1088,6 @@ performance seen in Figure \ref{fig:eval-depth-tunnels}.
     and fixed 10 pixel overlap.}
     \label{fig:eval_quads}
 \end{figure}
-
-TODO: missing some examples or theories why the quad 2 looks bad :(
 
 \subsection*{Different architectures}
 As we have discussed in the previous section, we did a 2D hyperparameter search
@@ -1147,6 +1154,8 @@ poorly segments tunnels which we were able to match, which is not the case for
 other quadrants, where we can generaly see an improvement when looking just at
 the Dice score of matched tunnels.
 
+
+
 \begin{figure}
     \begin{center}
         \includegraphics[width=0.9\linewidth]{resources/evaluations/diffarchs/eval_dice_mean_architecture_comparison.png}
@@ -1186,21 +1195,21 @@ the Dice score of matched tunnels.
 
 \begin{figure}
     \begin{center}
-        \includegraphics[width=0.9\linewidth]{resources/evaluations/diffarchs/eval_dice_mean_by_quad_arch.png}
+        \includegraphics[width=\linewidth]{resources/evaluations/diffarchs/eval_dice_mean_by_quad_arch.png}
     \end{center}
     \caption{}
     \label{fig:eval-diff-arch-dice-quads}
 \end{figure}
 \begin{figure}
     \begin{center}
-        \includegraphics[width=0.8\linewidth]{resources/evaluations/diffarchs/postprocess_overall_dice_by_quad_arch.png}
+        \includegraphics[width=\linewidth]{resources/evaluations/diffarchs/postprocess_overall_dice_by_quad_arch.png}
     \end{center}
     \caption{}
     \label{fig:eval-diff-arch-dice-overall-quads}
 \end{figure}
 \begin{figure}
     \begin{center}
-        \includegraphics[width=0.8\linewidth]{resources/evaluations/diffarchs/postprocess_clean_matched_dice_by_quad_arch.png}
+        \includegraphics[width=\linewidth]{resources/evaluations/diffarchs/postprocess_clean_matched_dice_by_quad_arch.png}
     \end{center}
     \caption{}
     \label{fig:eval_diff_arch_clean_match_dice_quads}
