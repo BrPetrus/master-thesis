@@ -580,6 +580,7 @@ how the neural networks were trained.
 
 
 \section{Running the network}
+\label{sec:runningthenetwork}
 \begin{figure}
     \centering
     \begin{subfigure}[b]{0.45\textwidth}
@@ -802,26 +803,26 @@ wasc created which serves the
 
 
 \chapter{Evaluation}
-how we evaluate the networks
-overlaps
-dice / Jaccard
-mapping
+In this chapter we describe how and evaluate the different networks on the whole
+dataset and how a study on the depth and overlap was done.
 
 \section{Metrics}  % todo: prob. make this not a section
 For evaluating the resulting predictions we decided to use Dice scores as they
-are comminly used in many biomedical papers [TODO citation needed] but the end
+are commonly used in many biomedical papers [TODO citation needed] but the end
 user is not interested in the quality of the scores on cutouts around tunnels,
 instead we must somehow use our neural network for predicting over the whole
-images.
-% [TODO more citations? espc. for Dice].
-
-
-\section{Running the network}
-
+images. For this purpose, we will present the Dice scores calculated using the
+stitched predictions as described in Section \ref{sec:runningthenetwork}. In
+these cases the labels are binarised, and with the binary prediction mask, the
+final score is calculated. Similarly, this is done with the postprocessed
+images. These numbers are by itself important, but we would also like to
+investigate how the network does on the level of tunnels and in terms of how
+well does it segment tunnels which are really present as compared to faint
+artefacts.
 
 \subsection{Mapping}
 \label{section:mapping}
-It is obviously important to calculate Dice and Jaccard on the whole images for
+It is obviously important to calculate Dice on the whole images for
 the final evaluations, but is it sometimes quite important to also see how well
 the network segments tunnels is correctly identifies. For this purpose we
 developed the following extra metrics.
@@ -848,31 +849,31 @@ developed the following extra metrics.
     \label{fig:matchingdiagram}
 \end{figure}
 
-The way we have defined speccialy look at tunnels which were correctly
+The way we have defined specially look at tunnels which were correctly
 identified and see how well the network worked in segmenting them out. In Figure
-\ref{fig:matchingsimple} we can see a simple hypotetical schematic of a situation in which a
-we have three vertical pillars, shown here as three black circles, and two
-tunnels connecting them, here the tunnels are in black. Now the neural network
-might predict multiple connected components, but only some of them are right
-matches and correspond to a tunnel. In this figure, it is okay to say that the
-blue tunnel is predicting one of the true tunnels, albeit it is little bit
-oversegmenting the tunnel. On the other hand, the red predition is completely
-off and it is not connected to any underlying tunnel; therefore, this should be
-counted as a false predictions.
+\ref{fig:matchingsimple} we can see a simple hypothetical schematic of a
+situation in which a we have three vertical pillars, shown here as three black
+circles, and two tunnels connecting them, here the tunnels are in black. Now the
+neural network might predict multiple connected components, but only some of
+them are right matches and correspond to a tunnel. In this figure, it is okay to
+say that the blue tunnel is predicting one of the true tunnels, albeit it is
+little bit oversegmenting the tunnel. On the other hand, the red prediction is
+completely off and it is not connected to any underlying tunnel; therefore, this
+should be counted as a false predictions.
 
 As we look into the data we might see that often time the tunnels, especially in
-places where there a cluster of tunnels might not be perfectly sepparated. They
+places where there a cluster of tunnels might not be perfectly separated. They
 may be touching or even crossing each other. In some cases two tunnels visually
 look like they have joined together. In this cases if we picked the strategy in
 \ref{fig:matchingsimple} where predictions and labels are matched according to
 the closest match, we would severally penalise predictions which touch. This is
 a problem as it is weird to penalise the network if single predicted component
 covers multiple predictions. The problem is again schematically visualised in
-Figure \ref{fig:matchingmultiple}, where a a tunnel prediction in blue, matches
+Figure \ref{fig:matchingmultiple}, where a tunnel prediction in blue, matches
 two different tunnels in black). I would argue that it is unfair to penalise the
 metrics in this case.
 
-This idea is techinally implemented in the following manner inside the
+This idea is technically implemented in the following manner inside the
 evaluations. We take the predictions of the neural networks and calculate the
 component components in 3D. As described previously, the components are filtered
 by size and thresholded. Now comes the matching. In the first pass the
@@ -883,18 +884,19 @@ refer to this as all matches. The value 50\% was chosen so that a single ground
 truth label cannot be contained in multiple predicted connected components.
 
 Now that we have assigned possible multiple labels to each predicted connected
-component we can divide the mapping into what is refered to as clean matches and
-others. In Figure \ref{fig:bipartitematching} we see a diagram of an example of
-a possible matching. In these case the network predicted three tunnels, and the
-data has three labeled tunnels. In this case a predicted tunnel denoted as $p_1$
-is uniquely mapped to label $l_1$. Since $p_1$ is not connected to any other
-label, we call this a clean match. On the other hand predicted connected
-component $p_2$ has according to the aforementioned algorithm been mapped to two
-different labels $l_2$ and $l_3$. As previously argued it would be unwise to
-disregard this mapping as a bad one, therefore we will also accept this mapping
-and it will show up in following metrics when we refer to all matches.
+component we can divide the mapping into what is referred to as clean matches
+and all matches. In Figure \ref{fig:bipartitematching} we see a diagram of an
+example of a possible matching. In these case the network predicted three
+tunnels, and the data has three labeled tunnels. In this case a predicted tunnel
+denoted as $p_1$ is uniquely mapped to label $l_1$. Since $p_1$ is not connected
+to any other label, we call this a clean match. On the other hand predicted
+connected component $p_2$ has according to the aforementioned algorithm been
+mapped to two different labels $l_2$ and $l_3$. As previously argued it would be
+unwise to disregard this mapping as a bad one, therefore we will also accept
+this mapping and it will show up in following metrics when we refer to all
+matches.
 
-Finnaly, this allows us to quantify how well different networks understand the
+Finally, this allows us to quantify how well different networks understand the
 image not on a pixel by pixel manner, but in terms of the whole tunnels. We can
 look at the prediction $p_3$ as a false positive, since it is not mapped to any
 tunnel, while the label is $l_4$ is viewed as a missed tunnel, and therefore
@@ -903,18 +905,18 @@ true positives, while multiple matches are, according to the precious arguments,
 also considered as a true positive, in fact this is counted as a single true
 positive.
 
-To summaries, we are goind to look at the Jaccard and Dice score for the
-following cases:
+To summarise, we are going to look at the Dice score for the following cases:
 \begin{itemize}
     \item{Test: In this case we are looking at performance on cutouts of tunnels
         in one particular quadrant}
     \item{Evalution: In this case we are calculating the performance from the
-        overal stitched binary images.}
-    \item{Postprocesed overall: In this metric, the postprocessing described in Section
-        \ref{sec:postprocessing} is applied on top of the predictions, and whole
-        images are evaluated}
-    \item{Postprocessed Clean matches: In this metric, we take just the clean
-        matches and evaluate the binary masks.}
+        overall stitched binary images.}
+    \item{Postprocesed overall: In this metric, the postprocessing described in
+        Section \ref{sec:postprocessing} is applied on top of the predictions,
+        and whole images are evaluated}
+    \item{Postprocessed Clean matches: In this metric, we overlay the binary
+        masks of cleanly matched tunnels and predictions and calculate the Dice
+        score.}
     \item{Postprocessed all matches: Like above, but even predictions mapped to
         multiple labels are used.}
     \item{Tunnel metric: Here we care about just the mapping described in Figure
@@ -932,20 +934,20 @@ following cases:
     \label{fig:bipartitematching}
 \end{figure}
 
-Lastly, to reiterate the idea preseneted in the training Section [TODO: not
+Lastly, to reiterate the idea presented in the training Section [TODO: not
 written yet], we are always training the network on three of the four possible
 quadrants. As such, four different models are always trained and the results
 will averaged.
 
 \section{Ablation studies}
-In this section we will present experimentally infered sizes of hyperparameters
+In this section we will present experimentally inferred sizes of hyperparameters
 for the neural network.
 
 \subsection{Choice of depth and overlap for the network}
 \label{sec:ablation-depth}
 While working on the network the choice of depth and overlap is not obvious, but
 it is a very important parameter as every advanced architecture is build on top
-of the anisotropic unet described in Chapter [TODO], which has customizeable
+of the anisotropic unet described in Chapter [TODO], which has customizable
 depth. Moreover, the reason why the anisotropic version was created is to allow
 us to change the depth.
 
@@ -954,8 +956,9 @@ neural networks performance and in some sense, the ability to teach deeper
 networks lead us to the neural network revolution. [TODO cit. needed] % TODO citation needed
 But, the size of the network should be somehow connected to the
 complexity of the problem, both in terms of size of the context and the image
-complexity. To find a reasoanble value for this parameters we decided to do a 2D
+complexity. To find a reasonable value for this parameters we decided to do a 2D
 hyperparameter search study. 
+% todo: talk about this in the discussion
 
 We took the 3D version of the Anisotropic architecture (AnisoUNet3D) and
 considered five different versions. The shallowest one has exactly two
@@ -971,12 +974,12 @@ cells already share more than half of the volume.
 As the overlap is a hyperparameter of the postprocessing, this means that only
 five different architectures must be trained to perform this analysis. Since we
 are doing cross fold analysis, we are training 20 models. Finally, since neural
-networks employ randomness, each combination of fold and architecutre is
+networks employ randomness, each combination of fold and architecture is
 repeated three times, leading to training 60 models for this evaluation.
 
 The Figure \ref{fig:parametersearchstudy} showcases the dice score of the
-various networks. Every number is the mean performance accross the 4-cross fold
-validation and 3 indepedendant runs i.e. an average of 12 networks. Overall the
+various networks. Every number is the mean performance across the 4-cross fold
+validation and 3 independent runs i.e. an average of 12 networks. Overall the
 highest number is highlighted and it corresponds to the version with three
 downsampling layers and 10px overlap; thus, all following models will be using
 this combination of hyperparameters.
@@ -998,36 +1001,36 @@ of more downsampling layers leading to better performance or vice-versa. Another
 effect that is visible is that while changing between 10 pixels to 20 or 30
 pixels does minimal change in the performance, the difference between 0 pixels
 and all others is visible in every case. Also it is interesting to see, that
-altough the changes are not greatly different, the network with three
-downsampling laters seems to always beat the others.
+although the changes are not greatly different, the network with three
+downsampling layers seems to always beat the others.
 
 For further studies, we took a look at just 10 pixel overlap and looked at other
 metrics, which were introduced in the previous chapters. In Figure
 \ref{fig:eval:depth} the effect of the depth is studied more. I chose three
 different metrics to investigate the effect of postprocessing and the
 performance on the level of tunnels. Just to make clear, in these graphs, each
-average is calculated as the mean of the performance accross four cross folds
+average is calculated as the mean of the performance across four cross folds
 and three runs. The error bars are +- a single sample standard deviation of
 these values.
 
-First of all, it is visible, that the performance differences accross various
+First of all, it is visible, that the performance differences across various
 depths is not that significant, but overall the network with three downsampling
 steps and the network with five downsampling steps are achieving consistently
 the highest averages, while the networks with two and six downsampling steps are
 performing the worst. I believe this can be explained by the fact, that the
-deepest network is unreasoanble large for our given problem, while the smallest
+deepest network is unreasonable large for our given problem, while the smallest
 network might suffer from not enough layers.
 
 However, it must be noted, that the error bars are very large and complicate any
-conclussion, as it shows that the performance varies quite dramatically. This
+conclusion, as it shows that the performance varies quite dramatically. This
 lead us to investigate what could be causing this variety, and one possible
 explanation is the various performance on the quadrants.
 
 Taking a look at Figure \ref{fig:eval_quads} here we can see the same metrics,
 but this time it is further divided among the various quadrants. What is
 immediately obvious us that the error bars are less varied, due to the
-performance differences accross quadrants. Interestingly, in some cases like the
-models with 6 downsapling layers for the first quadrant has large performance
+performance differences across quadrants. Interestingly, in some cases like the
+models with 6 downsampling layers for the first quadrant has large performance
 differences, but no reason as to why this happens was found. Since in this case
 all bars are averages of three numbers, it is plausible that due to bad luck,
 sometimes the network does not achieve as good of a performance as in other
@@ -1124,9 +1127,9 @@ perform better.
 
 Moving on to the results Figures \ref{fig:eval-diff-arch-dice}-
 \ref{fig:eval-diff-arch-tunnel} shows the same metrics we discussed in Section
-\ref{sec:ablation-depth} aggregated accross all the cross folds, while
+\ref{sec:ablation-depth} aggregated across all the cross folds, while
 \ref{fig:eval-diff-arch-dice-quads}-\ref{fig:eval-diff-arch-tunnel-quads} shows
-the performace for each quadrant. The means and standard derivations of all
+the performance for each quadrant. The means and standard derivations of all
 metrics was calculated exactly the same as in the previous section, again every
 combination was trained three times.
 
@@ -1135,15 +1138,15 @@ especially the Figure \ref{fig:eval-diff-arch-tunnel} when looking at the tunnel
 metrics. Of note is that the BasicUNet architecture is performing worse than all
 others in every metric even accounting for the standard derivation.
 
-As such, the problem of large distrepancy in perfoamnce is similarly caused by
-different performance accross the folds, where the overall dice performance is
-highest for the third quadrant while being relativaly lower for the second
+As such, the problem of large discrepancy in performance is similarly caused by
+different performance across the folds, where the overall dice performance is
+highest for the third quadrant while being relatively lower for the second
 quadrant and fourth quadrant in Figure
 \ref{fig:eval-diff-arch-dice-overall-quads}.
 
 While it is difficult to asses the overall trends due to the error bars, an
 interesting observation is that the 2D versions tend to perform equally like in
-third quadrant in Figure \ref{fig:eval-diff-arch-dice-overall-quads} or slighly
+third quadrant in Figure \ref{fig:eval-diff-arch-dice-overall-quads} or slightly
 better than their 3D versions. I suspect this could be caused by having
 significantly less parameters compared to the 3D versions.
 
@@ -1160,7 +1163,7 @@ postprocessing neealy always helps increase the metric's value, but it is rather
 on the second decimal position. And the effect is largest on the third quadrant.
 
 If we were to just focus on the nicely segmented tunnels i.e. those that were
-matched we can see that the overal dice score jumps to higher values, reaching
+matched we can see that the overall dice score jumps to higher values, reaching
 even around 0.68 in the second quadrant. Hence, it looks like the overall Dice
 score is being lowered by false predictions, which even the postprocessing is
 not able to remove.
@@ -1177,35 +1180,35 @@ rest.
     \begin{center}
         \includegraphics[width=0.9\linewidth]{resources/evaluations/diffarchs/eval_dice_mean_architecture_comparison.png}
     \end{center}
-    \caption{}
+    \caption{dice}
     \label{fig:eval-diff-arch-dice}
 \end{figure}
 \begin{figure}
     \begin{center}
         \includegraphics[width=0.9\linewidth]{resources/evaluations/diffarchs/postprocess_overall_dice_architecture_comparison.png}
     \end{center}
-    \caption{}
+    \caption{overall dice}
     \label{}
 \end{figure}
 \begin{figure}
     \begin{center}
         \includegraphics[width=0.9\linewidth]{resources/evaluations/diffarchs/postprocess_clean_matched_dice_architecture_comparison.png}
     \end{center}
-    \caption{}
+    \caption{dice on cleaned matches}
     \label{}
 \end{figure}
 \begin{figure}
     \begin{center}
         \includegraphics[width=0.9\linewidth]{resources/evaluations/diffarchs/postprocess_matched_dice_architecture_comparison.png}
     \end{center}
-    \caption{}
+    \caption{dice on all matches}
     \label{}
 \end{figure}
 \begin{figure}
     \begin{center}
         \includegraphics[width=0.9\linewidth]{resources/evaluations/diffarchs/tunnel_dice_architecture_comparison.png}
     \end{center}
-    \caption{}
+    \caption{dice on tunnel level}
     \label{fig:eval-diff-arch-tunnel}
 \end{figure}
 
