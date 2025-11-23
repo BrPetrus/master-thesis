@@ -472,7 +472,7 @@ Figure [TODO] where a possible split is shown in two colours.
 The decision if a particular tunnel belongs in test or train subset is made by
 the following decision. [TODO check the numbers and finalise this section.]
 
-\section{Training}
+\section{Training and Running}
 
 
 \subsection{Loss funtions}
@@ -494,7 +494,6 @@ $L_{Dice} = 1 - \text{Dice}$, meaning that as we get segmentation results closer
 to the ideal mask, we get closer to 0.
 
 % TODO: full loses
-
 
 
 For the loss function we were inspired by [TODO cite
@@ -578,6 +577,98 @@ Given all the mentioned settings the
 
 %splitting and stuff
 how the neural networks were trained.
+
+
+\section{Running the network}
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{resources/tile0px.png}
+        \caption{0px overlap}
+        \label{fig:tile0px}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{resources/tile10px.png}
+        \caption{10px overlap}
+        \label{fig:tile10px}
+    \end{subfigure}
+    \caption{Visualisation of overlaps for 0 and 10px overlaps.}
+    \label{fig:tiling}
+\end{figure}
+
+
+Since our neural network works on square cutouts of 7x64x64 size, we decided to
+solve this problem by tilling the original images and then stitching them
+together. This overlap-tile strategy is used in several papers such as
+\parencite{Ronneberger2015} [TODO]. There are roughly two strategies on how to
+handle the edges, in works such as \parencite{Ronneberger2015} the neural
+network's prediction is smaller than the original size since they do no pad the
+intermediate results. Then the sampling of images is done in such a way that
+every output pixel has a prediction.
+
+Since, our crop size is rather small, given
+the problems with dataset size described in [TODO], we decided to use padding
+and always output the same size, and to have a configurable overlap size between
+the neighbouring tiles. The idea is better visualised in Figure
+\ref{fig:tiling}, where the various overlaps are visualised.
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{resources/t000-3-0verlap.png}
+        \caption{0px overlap}
+        \label{fig:stitchingoverlap0}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{resources/t000-3-30overlap.png}
+        \caption{30px overlap}
+        \label{fig:stitchingoverlap30}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{resources/t000-3-orig-stretched.png}
+        \caption{Original image (stretched).}  % todo: maybe mention the quad
+    \end{subfigure}
+    \caption{This figure shows how choosing different amount of overlap in
+    pixels has an effect on suppresing some of the artifacts at the edges of
+    stitched tiles.}
+    \label{fig:stitchingoverlap}
+\end{figure}
+
+The idea to use configurable overlap size came from the following observation.
+In Figure \ref{fig:stitchingoverlap0} there can be seen several sharp artifacts
+%todo how to cite subfigure?
+at places where the tiles were touching, as there were some leftover information
+from neighbouring tiles but not quite a good view of the whole object, the
+network probably got confused, and mistook the feature for a very short tunnel.
+This lead us to the idea that if we use larger overlaps and aggregate them these
+effects on boundaries might get fixed. As can be seen in the figure, using
+larger overlap and averaging the predictions suppresses a lot of these
+artifacts.
+% todo in discussion mention that maybe this was not the best idea, maybe we
+% should have chosen larger context. The context x precision tradeoff.
+
+For the purpose of aggregating the overlaps, simple averaging was chosen due to
+its simplicity. The main idea was, that if the network predicts a false tunnel
+on the edge, due to the limited context, it might assign a high probability
+there, but as the other tile has more context, it will say that the tunnel is
+there with smaller probability; hence, by averagint them we will get hopefully
+small enough probability that the artifact is removed.
+
+Interestingly, some new artifacts appear, which at first glance might seem
+strange, but if we compare the locations of some of these artifacts it becomes
+clear they correspond to various noise inside the original input.
+% todo: add arrow or something
+
+% TODO: consider drawing there
+Even after this step there still might be some leftover artifacts as can be seen
+in Figure \ref{fig:stitchingoverlap}, which is not ideal, but these artifacts
+are generally, from the way how they arrived small. This leads us to how the
+predictions are processed.
 
 \chapter{Implementation}
 
@@ -681,6 +772,7 @@ wasc created which serves the
 \section{NN implementation}
 
 
+
 \chapter{Evaluation}
 how we evaluate the networks
 overlaps
@@ -688,104 +780,15 @@ dice / Jaccard
 mapping
 
 \section{Metrics}  % todo: prob. make this not a section
-For evaluating the resulting predictions we decided to use Dice and Jaccard
-scores as both are very common to use in biomedical papers
-\parencite{Ronneberger2015} [TODO] but the end user is not interested in the
-quality of the scores on cutouts around tunnels, instead we must somehow use our
-neural network for predicting over the whole images.
+For evaluating the resulting predictions we decided to use Dice scores as they
+are comminly used in many biomedical papers [TODO citation needed] but the end
+user is not interested in the quality of the scores on cutouts around tunnels,
+instead we must somehow use our neural network for predicting over the whole
+images.
 % [TODO more citations? espc. for Dice].
 
+
 \section{Running the network}
-
-\begin{figure}
-    \centering
-    \begin{subfigure}[b]{0.45\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{resources/tile0px.png}
-        \caption{0px overlap}
-        \label{fig:tile0px}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.45\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{resources/tile10px.png}
-        \caption{10px overlap}
-        \label{fig:tile10px}
-    \end{subfigure}
-    \caption{Visualisation of overlaps for 0 and 10px overlaps.}
-    \label{fig:tiling}
-\end{figure}
-
-
-Since our neural network works on square cutouts of 7x64x64 size, we decided to
-solve this problem by tilling the original images and then stitching them
-together. This overlap-tile strategy is used in several papers such as
-\parencite{Ronneberger2015} [TODO]. There are roughly two strategies on how to
-handle the edges, in works such as \parencite{Ronneberger2015} the neural
-network's prediction is smaller than the original size since they do no pad the
-intermediate results. Then the sampling of images is done in such a way that
-every output pixel has a prediction.
-
-Since, our crop size is rather small, given
-the problems with dataset size described in [TODO], we decided to use padding
-and always output the same size, and to have a configurable overlap size between
-the neighbouring tiles. The idea is better visualised in Figure
-\ref{fig:tiling}, where the various overlaps are visualised.
-
-\begin{figure}
-    \centering
-    \begin{subfigure}[b]{0.45\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{resources/t000-3-0verlap.png}
-        \caption{0px overlap}
-        \label{fig:stitchingoverlap0}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.45\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{resources/t000-3-30overlap.png}
-        \caption{30px overlap}
-        \label{fig:stitchingoverlap30}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.45\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{resources/t000-3-orig-stretched.png}
-        \caption{Original image (stretched).}  % todo: maybe mention the quad
-    \end{subfigure}
-    \caption{This figure shows how choosing different amount of overlap in
-    pixels has an effect on suppresing some of the artifacts at the edges of
-    stitched tiles.}
-    \label{fig:stitchingoverlap}
-\end{figure}
-
-The idea to use configurable overlap size came from the following observation.
-In Figure \ref{fig:stitchingoverlap0} there can be seen several sharp artifacts
-%todo how to cite subfigure?
-at places where the tiles were touching, as there were some leftover information
-from neighbouring tiles but not quite a good view of the whole object, the
-network probably got confused, and mistook the feature for a very short tunnel.
-This lead us to the idea that if we use larger overlaps and aggregate them these
-effects on boundaries might get fixed. As can be seen in the figure, using
-larger overlap and averaging the predictions suppresses a lot of these
-artifacts.
-% todo in discussion mention that maybe this was not the best idea, maybe we
-% should have chosen larger context. The context x precision tradeoff.
-
-For the purpose of aggregating the overlaps, simple averaging was chosen due to
-its simplicity. The main idea was, that if the network predicts a false tunnel
-on the edge, due to the limited context, it might assign a high probability
-there, but as the other tile has more context, it will say that the tunnel is
-there with smaller probability; hence, by averagint them we will get hopefully
-small enough probability that the artifact is removed.
-
-Interestingly, some new artifacts appear, which at first glance might seem
-strange, but if we compare the locations of some of these artifacts it becomes
-clear they correspond to various noise inside the original input.
-% todo: add arrow or something
-
-% TODO: consider drawing there
-Even after this step there still might be some leftover artifacts as can be seen
-in Figure \ref{fig:stitchingoverlap}, which is not ideal, but these artifacts
-are generally, from the way how they arrived small. This leads us to how the
-predictions are processed.
 
 \section{Postprocessing}
 \label{sec:postprocessing}
@@ -817,6 +820,7 @@ a reasonable threshold.
 % todo: mention in discussion that this prob. could have been more studied
 
 \subsection{Mapping}
+\label{section:mapping}
 It is obviously important to calculate Dice and Jaccard on the whole images for
 the final evaluations, but is it sometimes quite important to also see how well
 the network segments tunnels is correctly identifies. For this purpose we
@@ -1103,18 +1107,28 @@ Section \ref{sec-csammodule}, and finally the UseNet architecture from Section
 \ref{sec-seblock}. All models are using 10 pixel overlap and their depth is
 equal to three downsampling blocks, with the exception of BasicUNet, which has
 two downsampling blocks. Lastly, what is referred to as a 2D and 3D version of
-most complex models were created. This came out of the idea, that though that
-the network would benefit from looking at not just a single slice, but multiple
-slices. Hence, the 3D version of a given model uses (3,3,3) kernel in all
-convolutional operations, which are located in the Horizontal blocks, and the 2D
-version of a given model uses a (1,3,3) kernel (the first dimension is depth).
+most complex models were created. In the 3D versions all convolution blocks,
+which are technically refered to as Horizontal blocks, are using 3x3x3 sized
+kernels to perform all convolutions, while the 2D versions are using 1x3x3 sized
+kernels. Note that the first dimension is equal to the depth or the z slices.
+
+The idea to test the difference in their performance came from the following two
+concepts: when I as a human am looking at the images, I can roughly estimate
+what are tunnels and what is a pillar based on the overall shape, but it is
+significantly easier if I am allowed to see multiple slices; hence, the 3D
+version with their greater receptive fields reaching other z slices, would
+benefit in terms of their accuracy. On the other hand, network with 3D kernels
+have more trainable parameters; thus, might be harder to train and as we have
+sparsely annotated dataset this could become a hurdle causing the 2D version to
+perform better.
 
 Moving on to the results Figures \ref{fig:eval-diff-arch-dice}-
 \ref{fig:eval-diff-arch-tunnel} shows the same metrics we discussed in Section
 \ref{sec:ablation-depth} aggregated accross all the cross folds, while
 \ref{fig:eval-diff-arch-dice-quads}-\ref{fig:eval-diff-arch-tunnel-quads} shows
 the performace for each quadrant. The means and standard derivations of all
-metrics was calculated exactly the same as in the previous section.
+metrics was calculated exactly the same as in the previous section, again every
+combination was trained three times.
 
 We can again see a similar pattern with the large error bars in all figures
 especially the Figure \ref{fig:eval-diff-arch-tunnel} when looking at the tunnel
@@ -1133,27 +1147,30 @@ third quadrant in Figure \ref{fig:eval-diff-arch-dice-overall-quads} or slighly
 better than their 3D versions. I suspect this could be caused by having
 significantly less parameters compared to the 3D versions.
 
-Like in the previous section we found that the tunnel metrics are poor in the
-second quadrant compared to the other ones. To investigate this behaviour we
-investigated closer the output of the 2D version of the AnisoUSENet model, which
-is near the top of the score in for every quadrant. Since this metric is
-calculated on top of matched predictions and labels, it is important to look at
-how well did the matching work in this quadrant. The precision and recall of
-matching is visible in Figure \ref{fig:eval-diff-arch-dice-overall-quads}, and
-as is clearly seen matching is performing sgnificantly worse on the second
-quadrant.
+Since the error bars are quite large even tough the value is calculated from 12
+values for each bar, it would be insightful to find out what causes this.
+Inspired by the previous hyperparameter search section, additional graphs, where
+the performance is analysed per quadrant were created in Figures
+\ref{eval-diff-arch-dice-quads}-\ref{eval-diff-arch-tunnel-quads}.
 
-This provides an interesting observation as we can clearly see from the dice
-score on postprocessed images in Figure
-\ref{fig:eval-diff-arch-dice-overall-quads}, that while the segmentation are not
-much worse than in the other folds, the predictions cannot be clearly mapped to
-the labels on an instance level; moreover, looking at the
-\ref{fig:eval_diff_arch_matched_dice_quads} and Figure
-\ref{fig:eval_diff_arch_clean_match_dice_quads} we can also see that the network
-poorly segments tunnels which we were able to match, which is not the case for
-other quadrants, where we can generaly see an improvement when looking just at
-the Dice score of matched tunnels.
+In Figure \ref{eval-diff-arch-dice-quads} the overall evaluation dice is shown
+and in Figure \ref{eval-diff-arch-dice-overall-quads} are results with the
+postprocessing applied. Looking at the dice results it is clear that the
+postprocessing neealy always helps increase the metric's value, but it is rather
+on the second decimal position. And the effect is largest on the third quadrant.
 
+If we were to just focus on the nicely segmented tunnels i.e. those that were
+matched we can see that the overal dice score jumps to higher values, reaching
+even around 0.68 in the second quadrant. Hence, it looks like the overall Dice
+score is being lowered by false predictions, which even the postprocessing is
+not able to remove.
+
+Lastly, we will talk about the Dice score on the level of tunnel detection as
+was described in Section \ref{sec:matching}. Compared to the overall Tunnel
+scores in Figure \ref{fig:eval-diff-arch-tunnels}, where it seemed according to
+the average values, that the 2D version have slight advantage, here it is not so
+clear, there also seems not be any clear clearly better architecture than the
+rest.
 
 
 \begin{figure}
@@ -1197,46 +1214,40 @@ the Dice score of matched tunnels.
     \begin{center}
         \includegraphics[width=\linewidth]{resources/evaluations/diffarchs/eval_dice_mean_by_quad_arch.png}
     \end{center}
-    \caption{}
+    \caption{eval dice}
     \label{fig:eval-diff-arch-dice-quads}
 \end{figure}
 \begin{figure}
     \begin{center}
         \includegraphics[width=\linewidth]{resources/evaluations/diffarchs/postprocess_overall_dice_by_quad_arch.png}
     \end{center}
-    \caption{}
+    \caption{overall dice}
     \label{fig:eval-diff-arch-dice-overall-quads}
 \end{figure}
 \begin{figure}
     \begin{center}
         \includegraphics[width=\linewidth]{resources/evaluations/diffarchs/postprocess_clean_matched_dice_by_quad_arch.png}
     \end{center}
-    \caption{}
+    \caption{clean matched}
     \label{fig:eval_diff_arch_clean_match_dice_quads}
 \end{figure}
 \begin{figure}
     \begin{center}
         \includegraphics[width=0.8\linewidth]{resources/evaluations/diffarchs/postprocess_matched_dice_by_quad_arch.png}
     \end{center}
-    \caption{}
+    \caption{matched dice}
     \label{fig:eval_diff_arch_matched_dice_quads}
 \end{figure}
 \begin{figure}
     \begin{center}
         \includegraphics[width=0.8\linewidth]{resources/evaluations/diffarchs/tunnel_dice_by_quad_arch.png}
     \end{center}
-    \caption{}
+    \caption{tunnels}
     \label{fig:eval-diff-arch-tunnel-quads}
 \end{figure}
 
-\begin{figure}
-    \centering
-    \includegraphics[width=0.6\linewidth]{resources/evaluations/diffarchs/precision_recall_quads.png}
-    \caption{}
-    \label{fig:eval-prec-recall-quads}
-\end{figure}
-
-%\section{Recommended values}
+\section{Recommended values}
+As was discussed in the previous sections using the hyperparameter study and 
 
 \chapter{Discussion}
 what to do next
