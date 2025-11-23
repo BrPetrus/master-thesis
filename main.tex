@@ -598,21 +598,20 @@ how the neural networks were trained.
     \label{fig:tiling}
 \end{figure}
 
-
 Since our neural network works on square cutouts of 7x64x64 size, we decided to
-solve this problem by tilling the original images and then stitching them
-together. This overlap-tile strategy is used in several papers such as
-\parencite{Ronneberger2015} [TODO]. There are roughly two strategies on how to
-handle the edges, in works such as \parencite{Ronneberger2015} the neural
-network's prediction is smaller than the original size since they do no pad the
+solve this problem by tiling the original images and then stitching them
+together. This overlap-tile strategy is used in several papers, such as
+\parencite{Ronneberger2015} [TODO]. There are roughly two strategies for
+handling the edges. In works such as \parencite{Ronneberger2015}, the neural
+network's prediction is smaller than the original size since they do not pad the
 intermediate results. Then the sampling of images is done in such a way that
 every output pixel has a prediction.
 
-Since, our crop size is rather small, given
-the problems with dataset size described in [TODO], we decided to use padding
-and always output the same size, and to have a configurable overlap size between
-the neighbouring tiles. The idea is better visualised in Figure
-\ref{fig:tiling}, where the various overlaps are visualised.
+Since our crop size is rather small, given the problems with dataset size
+described in [TODO], we decided to use padding and always output the same size,
+and to have a configurable overlap size between the neighbouring tiles. The idea
+is better visualised in Figure \ref{fig:tiling}, where the various overlaps are
+visualised.
 
 \begin{figure}
     \centering
@@ -639,16 +638,16 @@ the neighbouring tiles. The idea is better visualised in Figure
     \label{fig:stitchingoverlap}
 \end{figure}
 
-The idea to use configurable overlap size came from the following observation.
-In Figure \ref{fig:stitchingoverlap0} there can be seen several sharp artifacts
 %todo how to cite subfigure?
-at places where the tiles were touching, as there were some leftover information
-from neighbouring tiles but not quite a good view of the whole object, the
-network probably got confused, and mistook the feature for a very short tunnel.
-This lead us to the idea that if we use larger overlaps and aggregate them these
-effects on boundaries might get fixed. As can be seen in the figure, using
-larger overlap and averaging the predictions suppresses a lot of these
-artifacts.
+
+The idea to use a configurable overlap size came from the following observation.
+In Figure \ref{fig:stitchingoverlap0}, several sharp artefacts can be seen at
+places where the tiles were touching, as there was some leftover information
+from neighbouring tiles, but not a good view of the whole object. The network
+probably got confused and mistook the feature for a very short tunnel. This led
+us to the idea that if we use larger overlaps and aggregate them, these effects
+on boundaries might get fixed. As can be seen in the figure, using a larger
+overlap and averaging the predictions suppresses a lot of these artefacts.
 % todo in discussion mention that maybe this was not the best idea, maybe we
 % should have chosen larger context. The context x precision tradeoff.
 
@@ -665,13 +664,42 @@ clear they correspond to various noise inside the original input.
 % todo: add arrow or something
 
 % TODO: consider drawing there
-Even after this step there still might be some leftover artifacts as can be seen
-in Figure \ref{fig:stitchingoverlap}, which is not ideal, but these artifacts
-are generally, from the way how they arrived small. This leads us to how the
-predictions are processed.
+Even after this step, there still might be some leftover artefacts, as can be
+seen in Figure \ref{fig:stitchingoverlap}, which is not ideal, but these
+artefacts are generally small from the way they arrived. This leads us to how
+the predictions are processed.
+
+\section{Postprocessing}
+\label{sec:postprocessing}
+
+As mentioned in the previous section, even after applying the overlap strategy,
+some artefacts remain. Moreover, some artefacts actually closely resemble thin
+structures but are not true tunnels. Many of these false tunnels seem to be
+small and not connected to any cell, nor really have a 3D structure. Therefore,
+we decided that an easy filtering would be using their volume.
+
+We can think of the tunnels as individual connected components. In general, only
+if at some z height the tunnel is not from a single connected component we are
+assuming that this will hold if we are looking at the tunnels in 3D instead.
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.6\linewidth]{resources/histogramofsizes.png}
+    \end{center}
+    \caption{Histogram of the volume (in pixels) of all labeled tunneling
+    nanotubes with median and mean highlighted.}.
+    \label{fig:histogramoflabelsizes}
+\end{figure}
+
+Given this assumption, we can filter the tunnels also based on their sizes. I
+chose the value of 100 pixels, realising that some of the tiny tunnels might get
+removed, but as will later be shown, the network tends to find more tunnels than
+the biologist. Hence, I believe this to be a reasonable assumption to make.
+Finally, the predictions are thresholded by the value of 0.5. This was chosen as
+a reasonable threshold.
+% todo: mention in discussion that this prob. could have been more studied
 
 \chapter{Implementation}
-
 
 \section{Used technologies}
 Python, mlflow, Bash, uv, the shuffling, setting explicit seeds, issues with
@@ -790,34 +818,6 @@ images.
 
 \section{Running the network}
 
-\section{Postprocessing}
-\label{sec:postprocessing}
-
-As mentioned in the previous section even after applying the overlap strategy
-some artifacts remain. Moreover, some artifacts actually closely resemble thin
-structures but are not a true tunnels. In general to further cleanup this
-prediction we decided to use area size.
-
-We can think of the tunnels as individual connected components. In general, only
-if at some z height the tunnel is not from a single connected component we are
-assuming that this will hold if we are looking at the tunnels in 3D instead.
-
-\begin{figure}
-    \begin{center}
-        \includegraphics[width=0.6\linewidth]{resources/histogramofsizes.png}
-    \end{center}
-    \caption{Histogram of the volume (in pixels) of all labeled tunneling
-    nanotubes with median and mean highlighted.}.
-    \label{fig:histogramoflabelsizes}
-\end{figure}
-
-Given this assumption we can filter the tunnels also based on their sizes. I
-chose the value of 100px, realising that some of the tiny tunnels might get
-removed, but as will later be shown, the network tends to find more tunnels than
-the biologist. Hence, I believe this to be a reasonable assumption to make.
-Finnaly, the predictions are thresholded by the value of 0.5. This was chosen as
-a reasonable threshold.
-% todo: mention in discussion that this prob. could have been more studied
 
 \subsection{Mapping}
 \label{section:mapping}
