@@ -85,6 +85,8 @@
 \usepackage{markdown} %% Lightweight markup
 \usepackage{listings} %% Source code highlighting
 \usepackage{subcaption}
+\subcaptionsetup{font=small}      % For subcaptions
+
 \lstset{
   basicstyle      = \ttfamily,
   identifierstyle = \color{black},
@@ -821,7 +823,7 @@ well does it segment tunnels which are really present as compared to faint
 artefacts.
 
 \subsection{Mapping}
-\label{section:mapping}
+\label{sec:mapping}
 It is obviously important to calculate Dice on the whole images for
 the final evaluations, but is it sometimes quite important to also see how well
 the network segments tunnels is correctly identifies. For this purpose we
@@ -1154,10 +1156,10 @@ Since the error bars are quite large even tough the value is calculated from 12
 values for each bar, it would be insightful to find out what causes this.
 Inspired by the previous hyperparameter search section, additional graphs, where
 the performance is analysed per quadrant were created in Figures
-\ref{eval-diff-arch-dice-quads}-\ref{eval-diff-arch-tunnel-quads}.
+\ref{fig:eval-diff-arch-dice-quads}-\ref{fig:eval-diff-arch-tunnel-quads}.
 
-In Figure \ref{eval-diff-arch-dice-quads} the overall evaluation dice is shown
-and in Figure \ref{eval-diff-arch-dice-overall-quads} are results with the
+In Figure \ref{fig:eval-diff-arch-dice-quads} the overall evaluation dice is shown
+and in Figure \ref{fig:eval-diff-arch-dice-overall-quads} are results with the
 postprocessing applied. Looking at the dice results it is clear that the
 postprocessing neealy always helps increase the metric's value, but it is rather
 on the second decimal position. And the effect is largest on the third quadrant.
@@ -1169,8 +1171,8 @@ score is being lowered by false predictions, which even the postprocessing is
 not able to remove.
 
 Lastly, we will talk about the Dice score on the level of tunnel detection as
-was described in Section \ref{sec:matching}. Compared to the overall Tunnel
-scores in Figure \ref{fig:eval-diff-arch-tunnels}, where it seemed according to
+was described in Section \ref{sec:mapping}. Compared to the overall Tunnel
+scores in Figure \ref{fig:eval-diff-arch-tunnel-quads}, where it seemed according to
 the average values, that the 2D version have slight advantage, here it is not so
 clear, there also seems not be any clear clearly better architecture than the
 rest.
