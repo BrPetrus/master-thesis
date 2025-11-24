@@ -1252,7 +1252,39 @@ rest.
 \section{Recommended values}
 As was discussed in the previous sections using the hyperparameter study and 
 
-\chapter{Discussion}
-what to do next
+\chapter{Discussion and conclusion}
+% what to do next
+% talk about:
+% - stitching x overlap size x size
+% - recall threshold
+% - size of network connected to the complexity
+% - performance differences due to luck
+
+% what could be done
+% - 
+In this work we took on a journey to investigate the feasibility of using
+U-Net-like neural networks for segmenting nanotubular structures. Facing a very
+sparsely labeled dataset of just two images we were able to train several neural
+networks with various depths and attention mechanism. This was achieved through
+the use of cross-fold learning and training the network on just cutouts of the
+data where the tunnels were present.
+
+Given the sparse annotations we were unable to explore how the different cutout
+sizes influence the need for more complex network with deeper layers. In the
+future another interesting topic would be to explore how the results could be
+post-processed to further cleanup unwanted artefacts in the predictions.
+
+Nevertheless, given the cirmustances and sometimes imperfect labels the neural
+networks can be used to find predictions which are meaningful, even if the
+network has a tendency to oversegment and flag various protrusion as false
+tunnels with the correctly matched tunnels having Dice scores of around 0.6-0.7.
+Mutltiple architectures with various attension mechanism were explored and shown
+to provide small improvements on certains quadrants, but unfortunately no
+architecture was found to have the best performance compared to the others.
+
+As such the current implementation can be easily used by any machine equiped
+with a GPU and the inference code deals automatically with the tiling and
+stitching providing an easy to use interface for the user.
+
 
 \end{document}
