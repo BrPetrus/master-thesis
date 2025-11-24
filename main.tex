@@ -521,7 +521,7 @@ $L_{Dice} = 1 - \text{Dice}$, meaning that as we get segmentation results closer
 to the ideal mask, we get closer to 0. The loss function was defined using as in
 the paper \parencite{ma2020segmentationlossodyssey} as:
 
-\[L_{Dice}=1-\frac{2\Sum_{i=1}^{N}g_i*s_i}{\Sum_{i=1}^{N}{g_i^2}+\Sum_{i=1}^{N}{s_i^2}}\]
+\[ L_{Dice}=1-\frac{2\sum_{i=1}^{N}{g_i*s_i}}{\sum_{i=1}^{N}{g_i^2}+\sum_{i=1}^{N}{s_i^2}} \]
 
 where $g_i$ is the binary indicator for the foreground and $s_i$ is the
 probability of assigning the pixel to the foreground class.
