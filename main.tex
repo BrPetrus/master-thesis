@@ -158,7 +158,7 @@ rest of this work we will be primarily
         \includegraphics[width=0.6\linewidth]{resources/t017z0_saturated1percent.png}
     \end{center}
     \caption{First slice of the data at time step 17, after the biologist
-    preprocessing pipeline}.
+    preprocessing pipeline}
     \label{fig:biologistpreprocessing}
 \end{figure}
 
@@ -412,72 +412,94 @@ step as is shown in Figure \ref{fig:se_unet}.
 
 \chapter{Training}
 This chapter explains how the aforementioned neural networks were trained. How
-the data was split and handled.
+the data was split and handled. %todo: rework this
 
-\section{Processing data}
+\section{Splitting the data}
 \label{sec:processing_data}
 [TODO mention alternatives to supervised learning somewhere]
 
-As mentioned in the previous Chapter [TODO cite], we have 2 time frames of
-7x512x512 voxels. As we in some sense only have 2 full images the splitting of
-the dataset proved somewhat complicated. We wanted to experiment with using full
-3D U-Nets therefore using full sized images would lead to using just one image
-for training and one for testing. However, it is no reasoanble to think that
-this would be enough to teach the network any reasonable decision. As already
-mentioned in Chapter \ref{sec:unet} a nice feature the U-Net architecture is
-that it can be learned on much smaller datasets as was demonstrated in the
-original U-Net Paper \parencite{Ronneberger2015} [TODO check] and also in the
-CS-Net paper \parencite{Mou2021} were few dozens of images were used to train a
-neural network to segment medical images. As such a way to extract about a
-hundred images was needed.
+As mentioned in the previous Chapter [TODO cite], we have just two fully
+annotated time frames of 7x512x512 voxel size. Splitting such a small dataset
+into training and testing sets is difficult and is further complicated by the
+fact that we want to experiment with using fully 3D convolutional networks.
+Since we do not want to mix testing and training data together, if we were to
+cut the data accross the depth axis, we would introduce some bias, as the pillar
+are nearly horizontal and the tunnels can go through multiple of this slices.
+Moreover, if we were to always take all seven depth slices this would lead to
+basically using one time frame for training and the other for testing, and using
+a single image is in our opinion unfeasible.
 
-Splitting the dataset into quadrants would still yield only about 8 7x256x256
-images. Importantly, we have about 150 [TODO check] labeled tunnels, which would
-suffice the needed number of images. Hence, we decided to cut out the tunnels
-and train the network on the these subparts. Note that we still need to run the
-network on the whole images, but for training purposes this will suffice.
+However, this is not a lost cause, as UNets have demonstrated that compared to
+some other architectures they do not need as much data to train. In the original
+paper just a few dozen images were used to train the networks to segment medical
+images \parencite{Ronneberger2015}. Similarly we were able to reproduce the
+results of the CS-Net paper \parencite{Mou2021} and train a retina vessel
+segmentation network with just a few dozen images.
 
-The splitting logic iterates through every single tunnel and cuts it out. As the
-tunnels have different sizes we decided to cut out the bounding boxes of the
-tunnels with a set of minimum size. For the minimum size we decided to go for a
-7x90x90 shape as that confortably fits majority of tunnels and provides a decent
-context around it. [TODO mention expansion after explaining the splits]
+To find the few dozen images we decided to take a different approach. While
+splitting the dataset into quadrants would still yield only about 8 images, so
+instead we decided to look at the level of the annotated instanced of tunnels.
+Since there are more than 100 of these tunnels, we can train a network on just
+cut outs of the tunnels. Then we can tile the whole images and stitch the
+predictions of the neural networks similarly as was done in
+\parencite{Ronneberger2015}.
+
+The actual splitting logic iterates through every single tunnel and cuts it out.
+As the tunnels have different sizes we decided to cut out the bounding boxes of
+the tunnels with a set of minimum size. For the minimum size we decided to go
+for a 7x90x90 shape as that confortably fits majority of tunnels and provides a
+decent context around it. Decent number of tunnels are smaller than this. To
+expand the size to fit the minimum volume size we decided to expand them with
+relevant data.
 
 \begin{figure}
     % TODO: replace with nicer image.
     \begin{center}
         \includegraphics[width=0.6\linewidth]{resources/tmp/t017_upperright.png}
     \end{center}
-    \caption{}
+    \caption{Subpart of the original data showing noise and artifacts.}
     \label{fig:upperright}
 \end{figure}
 
-It is still important to be somehow able to split the dataset into the train,
-test and evalution subset. As the dataset is quite limited choosing a random
-sybpart to evaluate the perfomance is not ideal. The various parts of the
-dataset do not have the same number of tunnels, tunnels of the same morphology
-and the same amount of noise and irrelevant structures. For example in the upper
-right corner in Figure \ref{fig:upperright} we can find some irrelevant
-structures which are not present in the rest of the dataset.
+It is still important to be somehow able to split the dataset into the training
+and testing sets. As the dataset is quite limited choosing a random
+subset to evaluate the perfomance is not ideal as then there could be a random
+chance that some tunnel from testing set will be visible in a cutout of a tunnel
+in the training set. Another proble is how the various parts of the dataset do
+not have the same number of tunnels, tunnels of the same morphology and the same
+amount of noise and irrelevant structures. For example in the upper right corner
+in Figure \ref{fig:upperright} we can find some irrelevant structures which are
+not present in the rest of the dataset. Given these problems it is quite
+difficult to split the dataset in such a way, that all possible types of
+artifacts and tunnel structures would be visible in both testing and training
+subsets.
 
-%As somehowe quantifying the ideal split would be a very demanding task we 
-Somehow quantifying the ideal split would be a very challenging and unclear task
-so we are always doing something similar to a leave one out [TODO cite] cross
-validation. Each time four different models are trained and in each run a
-different quadrant is considered to be the testing subset and the remaining
-three quandarnt are used for training the model.
+We solved this problem by doing a quadrant-based spatial 4-fold
+cross-validation. In each training run, one of the four quadrants is chosen to
+be the testing quadrant and all cutouts belonging to this quadrant form the
+testing subset. This helps mitigate the small dataset and enables us to study
+how the different folds affect the performance of the neural network.
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.6\linewidth]{resources/dataset/vis_split_t0.png}
+    \end{center}
+    \caption{A visualisation of the division into a training and testing subset
+    for one of the folds.}
+    \label{fig:folding-visualisation}
+\end{figure}
 
 This is still quite challenging to do properly as not every tunnel lies neatly
 inside one of the quadrants. A split that is used in training is visualised in
-Figure [TODO] where a possible split is shown in two colours.
+Figure \ref{fig:folding-visualisation} where a possible split is shown in two
+colours, red stands for cutouts belonging to the testing subset. The decision if
+a cutout belongs to the testing subset or not is dictated by looking at the
+overlap with the training quadrant. If the cutout lies with more than 20\% or
+has more than 50 pixels in the testing quadrant, it will not be included in the
+training subset. If at least 80\% of the cutout is inside the testing quadrant,
+it is considered to be part of the testing subset.
 
-The decision if a particular tunnel belongs in test or train subset is made by
-the following decision. [TODO check the numbers and finalise this section.]
-
-\section{Training and Running}
-
-
-\subsection{Loss funtions}
+\section{Loss funtions}
 Since we can look at finding tunneling nanotubes as a binary classification
 problem applied at every pixel, it naturally comes to use a binary cross-entropy
 loss to teach the network to learn to segment the images. However, our dataset
@@ -485,15 +507,25 @@ is very heavily imbalanced as the data contains a lot more negative examples. To
 somewhat help the training to pay more attention to the tunnels, the
 cross-entropy was weighted by a factor or 50, which was estimated by taking the
 calculating the ration of pixels classified as background and pixels assigned to
-some tunnel by the biologist.
+some tunnel by the biologist. The BCE loss is defined as:
+
+\[ L_{BCE} = -w \] %TODO: finish
 
 To further improve the performance of the training, we got inspired CS-Net paper
 which uses Dice loss, and some papers claim that the combination of Dice loss
 and cross-entropy loss lead to better performance in many segmentation tasks
-\parencite{ma2020segmentationlossodyssey}. By using Dice loss it is meant to
+\parencite{ma2020segmentationlossodyssey}. As Dice is a common metric to
+evaluate segmentation performance it is  By using Dice loss it is meant to
 optimize the value of the Dice coefficient. This is defined as taking
 $L_{Dice} = 1 - \text{Dice}$, meaning that as we get segmentation results closer
-to the ideal mask, we get closer to 0.
+to the ideal mask, we get closer to 0. The loss function was defined using as in
+the paper \parencite{ma2020segmentationlossodyssey} as:
+
+\[L_{Dice}=1-\frac{2\Sum_{i=1}^{N}g_i*s_i}{\Sum_{i=1}^{N}{g_i^2}+\Sum_{i=1}^{N}{s_i^2}}\]
+
+where $g_i$ is the binary indicator for the foreground and $s_i$ is the
+probability of assigning the pixel to the foreground class.
+
 
 % TODO: full loses
 
@@ -512,7 +544,7 @@ a 50 [TODO check] ratio of these two classes.
 [TODO defi. of Dice]
 [TODO defi. of Jaccard]
 
-\subsection*{Optimizers, learning rates, regularization}
+\section{Optimizers, learning rates, regularization}
 The neural network was trained using Adam optimzizer, but soon switched as we
 are also using weight decay, equal to 1e-4, it is commonly advised to use the
 AdamW variant as it correctly decouples the weight decay from the gradient
@@ -1261,6 +1293,8 @@ As was discussed in the previous sections using the hyperparameter study and
 % - recall threshold
 % - size of network connected to the complexity
 % - performance differences due to luck
+% - myabe mention that the neural network could be trained using semi-supervised
+%   approach?
 
 % what could be done
 % - 
