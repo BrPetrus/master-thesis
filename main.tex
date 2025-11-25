@@ -85,6 +85,7 @@
 \usepackage{markdown} %% Lightweight markup
 \usepackage{listings} %% Source code highlighting
 \usepackage{subcaption}
+\usepackage[style=numeric]{biblatex}
 \subcaptionsetup{font=small}      % For subcaptions
 
 \lstset{
@@ -234,122 +235,136 @@ The other paper which specificaly mentiones tunneling nanotubes is
 \parencite{Ceran2022TNTdetect}. This paper provides consists of three parts.
 They describe how to improve the labels and make it easier 
 
-\section{U-Net}
+% TODO make this work
+The CS-Net paper's authors tried to improve the performance of UNet architecture
+on curvilinear structures, which are generally thin and curvy structures found
+in many places in biology like blood vessels in images of retina. The authors
+noted that many neural networks have trouble connecting faint blood vessels
+leading to connectivity issues. Their solution was to introduce so called CSAM
+into the standard U-Net like network.
+
+\section{U-Net and BasicUNet}
 \label{sec:unet}
 
 In 2015 a seminal paper by Rossenberger et al. \parencite{Ronneberger2015} was
 published dealing with semantic segmentation of medicine data. The paper
 achieved impressive results with very limited dataset. The neural network
 architecture is called U-Net and has been behind many models later to come.
-[TODO citation]
 
 \begin{figure}
     \begin{center}
-        \includegraphics[width=0.6\linewidth]{resources/placeholder.png}
+        \includegraphics[width=0.9\linewidth]{resources/architecture_diagrams/unet.png}
     \end{center}
-    \caption{A UNet architecure diagram}.
+    \caption{U-Net architecture as described in \parencite{Ronneberger2015}.
+    Several upsampling layers follow the encoder with concatonation steps
+    between corresponding layers.}
     \label{fig:unetdiagram}
 \end{figure}
 
-The key architectural part of the U-Net lays in the introduction of transposed
-convolution layers which upsample the result of the encoder. This is placed
-after what traditionally like in the neck in VGGNet [TODO citation] was followed
-by a classification head now follows the decoder. A diagram can be seen in
-Figure \ref{fig:unetdiagram}. As can be seen in the figure, on input it takes an
-image and it is followed by a horizontal block formed of two convolutions,
-followed by a max pool operation which downsamples the image by a factor of 2.
-After this is done numerous times, which depends on the depth of the network set
-by the user, additional convolution is applied. The results of the neural
-network before the downsample operation is taken is also saved. After the neck
-part a series of upsampling operations take place. This is achieved using a
-transposed convolution operation and the weights are learned automatically by
-the network. Note that other possibilities, like using interpolation in [TODO
-citation] was not researched in this work. This upsampling operation doubles the
-spatial resolution at the cost of halving the number of channels. Each time such
-operation takes place the result of relevant encoder layer is concatonated,
-followed by two additional convolutions. Finally we do a final convolution
-operation to ouput the right amiunt of classes, which in our case is equal to
-two (tunnel or BG/pillar).
+Tasks like image classification which fueled a lot of research in deep learning
+is concerned with assigning a single label to the whole image; however, in our
+domain we are concerned with finding the binary masks of TNTs. The seminal paper
+which introduced the U-Net architecture \parencite{Ronneberger2015} instead
+introduces several upsampling layers after the encoder. 
 
-The two main reasons for choosing this architecture compared to other was that
-the U-Net architecure is well estabilished, widely used, achieves good
-performance [TODO citation], but mainly due its nice property that Rossenberger
-et al. \parencite{Ronneberger2015} demonstrated that you do not need a huge
-dataset to teach the neural network. As our data is quite limited in terms of
-size this is a very usefull feature.
+The overall diagram is shown in Figure \ref{fig:unetdiagram}. In the encoder
+part, two convolution layers of size 3x3 are applied, folled by a downsampling
+layer, which halves the dimensions. This is repeated for four times, after which
+an extra convolutional layer is applied.
+
+After downsampling the data, the upsampling is introduced to revert the image to
+roughly the same size as in the beginning. This is achieved by applying
+transposed convolution layer, which doubles the spatial diemnsions at the cost
+of halving the number of channels. Each upsampling is followed by concatonating
+the upsampled data with the output of the corresponding convolutional block in
+the encoder, followed by another convolutional layer. This is better seen on the
+diagram, where the concationations are shown by the horizontal lines.
+
+Finally we do a final convolution operation to ouput the right
+amiunt of classes, which in our case is equal to a signle one, where 0 indicates
+a background or pillar and 1 means a TNT.
+
+The main reasons for choosing this architecture compared to other are that
+the U-Net architecure is well estabilished, widely used, and achieves very good
+performance. Crucially, it has a usefull property that it does not need a vast
+dataset to train properly. This is demonstrated in \parencite{Ronneberger2015},
+where they trained the network with just 30 images.
 
 The Figure \ref{fig:unetdiagram} is visualising how the UNet architecure can be
 used to train a 2D model, but there is not reason why we could not use 3D
-versions of convolution, maxpool and transposed upconvolution. 
+versions of convolution, maxpool and transposed upconvolution and in fact this
+version is used in this work. We refer to this model as the BasicUNet. Such
+network uses 2x2x2 kernels in the downsampling and upscaling layers, while 3x3x3
+kernels are used in the convolutional layers.
 
-\subsection{Anisotropic U-Net}
+\section{Anisotropic U-Net (AnisoUNet)}
 
-In machine learning it is often tried to increase the model depth to improve the
-perfomance of the neural network. This is of course not true universaly as this
-can make the network harder to train can cause the network to overtrain [TODO
-citation needed]. Since our data is heavily anisotropic we are limited in how
-much we can downsample in the z direction, as we have only 7 voxel inside the z
-dimension, it is possible to downsample just two times before reaching depth
-equal to 2. Moreover, it would probably be reasonable to assert that compressing
-all the depth information into a single channel is asking the neural network to
-do a lot of work compressing the info.
+Papers such as the influential VGGNet \parencite{simonyan2015vgg} demonstrated
+that model depth is one of the critical hyperparameters of a network that can be
+optimized to improve their accuracy. This inspired us to create the following
+architecture.
 
-This problem motivated us to create a new version of the U-Net which uses
-anisotropic kernels instead of isotropic kernels for both convolution and the
-maxpool operation.
+Since our data is heavily anisotropic we are limited in how much we can
+downsample in the z axis, as we have only 7 voxel inside the z dimension,
+meaning we can downsample just two times. This presents two issues - one is that
+the depth cannot be changes, and that the information about the whole data is
+very quickly compressed into a single dimensions, potentially inhibiting the
+expressive performance of the network.
 
-\begin{figure}
-    \begin{center}
-        \includegraphics[width=0.6\linewidth]{resources/placeholder.png}
-    \end{center}
-    \caption{Visualisation of 3D convolution and maxpool operation}.
-    \label{fig:visanisooperations}
-\end{figure}
+Our solution was to introduce anisotropic kernels into the design. Instead of
+using the isotropic 2x2x2 kernel shapes for both downsampling and upsampling,
+instead 1x2x2 kernel shapes are used to keep the z dimension constant. As such,
+this allows us to train deeper networks and does not force the network to
+compress all depth information like before.
 
-As is ilustrated in Figure \ref{fig:visanisooperations} a 3D convolution
-uses a 3D kernel to look into a 3D part of the input. By appriopriately padding
-the output, we can keep the same dimension in the z axis. Moreover, to prevent
-early downsampling in the z dimension we can use anisotropic versions of these
-operators. Instead of downsampling by a factor of 2 in all directions, we can
-ignore downsampling in the z dimension by setting the kernel size in that
-direction equal to 1 [TODO or 0?].
+There is still the question of what kernel size to use for the horizontal
+layers. In the Section \ref{sec:diff-architectures} we will study this choice in
+more details. We are going to defined 3D and 2D version of the network, by which
+we mean that 3D networks are using 3x3x3 while 2D networks are using 1x3x3
+kernel shapes in their convolutional layers.
+
+The idea to test the difference in their performance came from the following two
+concepts: when I as a human am looking at the images, I can roughly estimate
+what are tunnels and what is a pillar based on the overall shape, but it is
+significantly easier if I am allowed to see multiple slices; hence, the 3D
+version with their greater receptive fields reaching other z slices, would
+benefit in terms of their accuracy. On the other hand, network with 3D kernels
+have more trainable parameters; thus, might be harder to train and as we have
+sparsely annotated dataset this could become a hurdle causing the 2D version to
+perform better.
+
+Overall such network with anisotropic pooling operations will be refered to as
+AnisoUNet(3D) in the rest of the thesis.
 
 \section{The CSAM module}
 \label{sec-csammodule}
 
 This section talks about the channel and spatial attention module (further
-refered to as the CSAM) mentioned in the CS-Net paper \parencite{Mou2021}. In
-this paper the author tried to improve the performance of UNet architecture by
-incorporating attention into the model. This was motivated by using the
-architecture for segmenting blood vessels and related biological features and
-seeing that one of the problems which was often encoutnered is the fact that
-these network had trouble connecting faint blood vessels leading to a
-connectivity issues. The attention models helps with connecting them together.
-
-Even though we are not dealing with vessels in our case, the tunnels do visually
-resemble some curvilinear structures. We also encountered some of these issues
-with connectivity, and as such this might also alleviate the our problems [TODO
-reference].
+refered to as the CSAM) mentioned in the CS-Net paper \parencite{Mou2021}. 
 
 \begin{figure}
     \begin{center}
-        \includegraphics[width=0.6\linewidth]{resources/placeholder.png}
+        \includegraphics[width=0.9\linewidth]{resources/architecture_diagrams/csam.png}
     \end{center}
-    \caption{The CSAM module from Paper [TODO CITE]}.
+    \caption{The CSAM from Paper \parencite{Mou2021}. This module is inserted in
+    the neck part of an U-Net neural network.}
+    %todo: check if my implementation is correctly doing this
     \label{fig:csammodule}
 \end{figure}
 
-The Figure \ref{fig:csammodule} by \parencite{Mou2021} explain the working
-principle behind the CSAM module. It is formed of two paths, the spatial
-attention block SB and the channel attention block CAB. One is designed to help
-the network find tubular structures inside the spatial direction while the other
-is used for helping the network learn inter-channel dependency.
+The Figure \ref{fig:csammodule} shows the overall architecture of the CSAM. It
+is formed of two paths, the spatial attention block SB and the channel attention
+block CAB. One is designed to help the network find tubular structures inside
+the spatial direction while the other is used for helping the network learn
+inter-channel dependency. In the following section I will talk about the main
+principles behind their design, but for full explanation refer to the original
+paper.
 
 \subsection*{SAB}
-The design is motivated by the detection of tubular structures such as blood
-vessels in retina images. The detection of such features might require
-contextual information rather than purely local information. This lead the
-author to use anisotropic kernels 
+The design of the spatial attention block is motivated by the detection of
+tubular structures such as blood vessels in retina images. The detection of such
+features might require contextual information rather than purely local
+information. This lead the author to use anisotropic kernels 
 
 \subsection*{CAB}
 The design ...
@@ -358,16 +373,17 @@ The design ...
 
 \section{Squeeze and excitation block}
 \label{sec-seblock}  % consider adding a usenet paragraph
-In Paper \parencite{Hu2018} researchers demonstrated how a simple small block
-can be inserted inside deep neural networks to improve their performance accross
-various datasets and tasks. The researchers postulate that this block helps the
-network learn inter channel dependecies [TODO where in paper].
+
+In Paper \parencite{Hu2018} researchers demonstrated how a simple small block,
+called the squeeze and excitation blockm, can improve the performance across
+various datasets and tasks. 
 
 \begin{figure}
     \begin{center}
         \includegraphics[width=0.6\linewidth]{resources/t017z0_saturated1percent.png}
     \end{center}
-    \caption{Squeeze and exciation block from Paper \parencite{Hu2018}}
+    \caption{Squeeze and exciation block from Paper \parencite{Hu2018} where the
+    network automatically learns to weight different channels.}
     \label{fig:se_diagram}
 \end{figure}
 
@@ -375,6 +391,10 @@ The general principle of a squeeze and excitation block is illustrated in Figure
 \ref{fig:se_diagram}. The main idea is that we let the network learn
 significance of each channel. This is technically done by multiplying the data
 $U$ by a number from 0 to 1 in each channel separately.
+
+The researchers postulate that this improves the network's quality of
+representation by modeling the interpedencies between channels of the output of
+the convolution layers \parencite{Hu2018}.
 
 The squeeze and excitation block consists of four operations: truncate, squeeze,
 excitation, and scaling. The truncate operation shown as $F_{TR}$ is a general
@@ -828,19 +848,11 @@ reasonably easy interface for training and then an interface for evaluating the
 models given some training data. For this purpose a single Bash script called
 wasc created which serves the 
 
-\section{Loss and metrics implementation}
-
-\section{SE implementation}
-
-\section{NN implementation}
-
-
-
 \chapter{Evaluation}
 In this chapter we describe how and evaluate the different networks on the whole
 dataset and how a study on the depth and overlap was done.
 
-\section{Metrics}  % todo: prob. make this not a section
+\section{Metrics}
 For evaluating the resulting predictions we decided to use Dice scores as they
 are commonly used in many biomedical papers [TODO citation needed] but the end
 user is not interested in the quality of the scores on cutouts around tunnels,
@@ -1131,6 +1143,7 @@ parameters than the larger networks.
 \end{figure}
 
 \subsection*{Different architectures}
+\label{sec:diff-architectures}
 As we have discussed in the previous section, we did a 2D hyperparameter search
 to choose a good estimate of the depth and overlap values, since these are used
 by our advance neural networks, we picked 3 downsampling layers and an overlap
@@ -1143,21 +1156,7 @@ as described in Section [TODO]. Its anisotropic version as described in Section
 Section \ref{sec-csammodule}, and finally the UseNet architecture from Section
 \ref{sec-seblock}. All models are using 10 pixel overlap and their depth is
 equal to three downsampling blocks, with the exception of BasicUNet, which has
-two downsampling blocks. Lastly, what is referred to as a 2D and 3D version of
-most complex models were created. In the 3D versions all convolution blocks,
-which are technically refered to as Horizontal blocks, are using 3x3x3 sized
-kernels to perform all convolutions, while the 2D versions are using 1x3x3 sized
-kernels. Note that the first dimension is equal to the depth or the z slices.
-
-The idea to test the difference in their performance came from the following two
-concepts: when I as a human am looking at the images, I can roughly estimate
-what are tunnels and what is a pillar based on the overall shape, but it is
-significantly easier if I am allowed to see multiple slices; hence, the 3D
-version with their greater receptive fields reaching other z slices, would
-benefit in terms of their accuracy. On the other hand, network with 3D kernels
-have more trainable parameters; thus, might be harder to train and as we have
-sparsely annotated dataset this could become a hurdle causing the 2D version to
-perform better.
+two downsampling blocks.
 
 Moving on to the results Figures \ref{fig:eval-diff-arch-dice}-
 \ref{fig:eval-diff-arch-tunnel} shows the same metrics we discussed in Section
