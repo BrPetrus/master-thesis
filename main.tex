@@ -378,17 +378,8 @@ In Paper \parencite{Hu2018} researchers demonstrated how a simple small block,
 called the squeeze and excitation blockm, can improve the performance across
 various datasets and tasks. 
 
-\begin{figure}
-    \begin{center}
-        \includegraphics[width=0.6\linewidth]{resources/t017z0_saturated1percent.png}
-    \end{center}
-    \caption{Squeeze and exciation block from Paper \parencite{Hu2018} where the
-    network automatically learns to weight different channels.}
-    \label{fig:se_diagram}
-\end{figure}
-
 The general principle of a squeeze and excitation block is illustrated in Figure
-\ref{fig:se_diagram}. The main idea is that we let the network learn
+\ref{fig:seblock}. The main idea is that we let the network learn
 significance of each channel. This is technically done by multiplying the data
 $U$ by a number from 0 to 1 in each channel separately.
 
@@ -396,39 +387,54 @@ The researchers postulate that this improves the network's quality of
 representation by modeling the interpedencies between channels of the output of
 the convolution layers \parencite{Hu2018}.
 
-The squeeze and excitation block consists of four operations: truncate, squeeze,
-excitation, and scaling. The truncate operation shown as $F_{TR}$ is a general
-convolution operator, which reduces the dimension. This step is not crucial in
-the scheme, but it is mainly to illustrate the point, that SE block is usually
-built upon some operation. More importantnly, the transdormed data is taken and
-run through a squeeze operation, which basically does some global operation in the
+The squeeze and excitation (SE) block, shown in Figure \ref{fig:seblock}, consists of
+four operations: truncate, squeeze, excitation, and scaling. The truncate
+operation shown as $F_{TR}$ is a general convolutional operator, which reduces the
+dimension. This step is not crucial in the scheme, but it is mainly to
+illustrate the point, that SE block is usually built upon some operation. More
+importantnly, the transdormed data is taken and run through a squeeze operation,
+which performs some global operation - our case global average pooling - in the
 whole channel. After that, the excitation operation comes. This operation was
 designed to have the following properties: they wanted to create a flexible
 operation --- meaning an operation capable of learning non-linear dependecies
---- and they wanted it to be non-mutually exclusive between channels. This is
-done by applying two convolutions followed by ReLU and sigmoid respectively.
-Note that the first convolution produces output with less than the original
-number of channels and the ratio is called the reduction factor. Finally the
-last convolution expands the number of channels to the original size. The
-comvination of squeeze and excitation allows the network to learn how to weight
-each channel (the scale operation mentioned above) by considering multiple
-channels.
+--- and they wanted it to be non-mutually exclusive between channels. These
+properties are fullfilled by applying two convolutions followed by ReLU and
+sigmoid respectively. Note that the first convolution produces output with less
+than the original number of channels and the ratio is called the reduction
+factor. Finally the last convolution expands the number of channels to the
+original size. The comvination of squeeze and excitation allows the network to
+learn how to weight each channel (the scale operation mentioned above) by
+considering multiple channels.
+% todo: check if it is global average pooling
 
 \begin{figure}
     \begin{center}
-        \includegraphics[width=0.6\linewidth]{resources/placeholder.png}
+        \includegraphics[width=\linewidth]{resources/architecture_diagrams/seblock.png}
     \end{center}
-    \caption{Placement of SE blocks inside the U-Net by \parencite{Rundo2019}}
-    \label{fig:se_unet}
+    \caption{A squeeze and excitation block \parencite{Hu2018}}
+    \label{fig:seblock}
 \end{figure}
 
-Another issue is where to put this block, as I already mentioned the truncate
-operation, the authors suggest placing it after applying convolution, they also
-suggest placement in the Inception and ResNet blocks [TODO citation?]; however,
-placement inside a UNet architecture is not mentioned. After further
-considerations [TOOD what options] the blocks were placed according to Paper
-\parencite{Rundo2019} after every step in the decoder and after each upsampling
-step as is shown in Figure \ref{fig:se_unet}.
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=\linewidth]{resources/architecture_diagrams/usenet.png}
+    \end{center}
+    \caption{Placement of the SE blocks inside U-Net in the USE-Net architecture
+    \parencite{Rundo2019}.}
+    \label{fig:usenet}
+\end{figure}
+
+While the authors talk about placing this object after the truncate operation,
+and give concrete examples of where to place it in Inception and ResNet blocks,
+not mention of U-Net is found. We briefly experimented with placing a single SE
+block in the neck part of the U-Net, similarly to how the CSAM was used, but
+this was later replaced instead by using the architecture described in
+\parencite{Rundo2019}. In their work thet suggested a different placement of the
+SE blocks inside a U-Net like architecture. It is called USE-Net and the
+placement is visible in Figure \ref{fig:usenet}. The authors are placing a SE
+block before the concationation and also at every step of the upsampling. 
+
+This is the last architecture we will explore in this work.
 
 \chapter{Training}
 This chapter explains how the aforementioned neural networks were trained. How
