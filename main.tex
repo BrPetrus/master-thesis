@@ -224,16 +224,17 @@ this makes the tunnels easier to see at the cost making noise more visible.
 
 After the preprocessing is done, the protocol states that picking random time
 slots at least 100 instances of tunnels must be annotated, and each frame has to
-be fully annotated. According to this protocol the biologists picked two time
-steps --- the 0th and 17th step ---  to label. The
-ground truth created by a biologist for the 0th time slot is visible in the left
-part of Figure \ref{fig:gt-slice-3}. In the right part of the mentioned figure
-a composition was created with gray data and the binarised ground truth in
-magenta colour. As can be seen in the image, sometimes it is rather difficult to
-decide if the protrusion is a TNT or not, in the figure, two areas are
-highlighted by a red circle, where it is not clear why the biologist did not
-also label the TNTs. This illustartes a possible difficulty when assesing the
-segmentation accuracy later on.  % todo: make this more natural
+be fully annotated. Also segments ougoing from the surrounding tissue should be
+ignored.According to this protocol the biologists picked two time steps --- the
+0th and 17th step ---  to label. The ground truth created by a biologist for the
+0th time slot is visible in the left part of Figure \ref{fig:gt-slice-3}. In the
+right part of the mentioned figure a composition was created with gray data and
+the binarised ground truth in magenta colour. As can be seen in the image,
+sometimes it is rather difficult to decide if the protrusion is a TNT or not, in
+the figure, two areas are highlighted by a red circle, where it is not clear why
+the biologist did not also label the TNTs. This illustartes a possible
+difficulty when assesing the segmentation accuracy later on.  % todo: make this
+more natural
 
 \begin{figure}
     \begin{center}
