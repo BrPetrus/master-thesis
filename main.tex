@@ -250,25 +250,49 @@ The flawed labels were 33 located in top right quadrant and label 32 located
 bottom right quadrant as can be seen in Figure \ref{fig:duplicatedlabel}.
 
 \chapter{Architectures}
-This chapter deals with what neural network architectures were used in
-developing the solution.
+This chapter deals with research into the topic and what architectures were
+tried and tested.
 
 \section{Preliminary research}
-We began by researching similar papers dealing with segmenting nanotubular
-structures. Two promising papers we found are ..[TODO]. In
+We began by researching similar papers dealing with TNTs
+\parencite{Ceran2022TNTdetect} \parencite{Hodneland2006Automated}, paper about
+curvilinear structure segmentation \parencite{Mou2020}, and improvements to
+U-Net networks \parencite{Rundo2019}.
 
-\parencite{Hodneland2006Automated} the researchers are similar to use dealing
-with tunnels between cells, but in their case the tunnels form a long straight
-lines. In the paper they describe a multistep algorithm which takes employ two
-channels, one is for segmenting cell borders and tunnels, while in the other
-channel the cells inside are much more visible, hence, this can be used to
-better separate cells and tunnel.
+We began by looking at papers which explicitly mention the segmentation of TNTs
+and were able to find two working methods. In \parencite{Hodneland2006Automated}
+the researchers have similarly looking TNTs connecting cells, but in their case
+the tunnels form long straight lines. In the paper they describe a multistep
+algorithm which takes employ two channels, one is for segmenting cell borders
+and tunnels, while in the other channel the cells inside are much more visible,
+hence, this can be used to better separate cells and tunnel. As our data has
+different modality, this approach could not be used. They also assume that the
+tunnels are straight which is not true in our case.
 
-As our data has different modality, this approach could not be used. They also
-assume that the tunnels are straight which is not true in our case.
 The other paper which specificaly mentiones tunneling nanotubes is
-\parencite{Ceran2022TNTdetect}. This paper provides consists of three parts.
-They describe how to improve the labels and make it easier 
+\parencite{Ceran2022TNTdetect}. In this paper the authors talk about how to deal
+with the difficulty of hand marking the tunnels. They talk about how they used
+four human experts to correctly identify TNTs (as individual experts' label
+varied), and what was done to make the labels as clear as possible. Then they
+divised a two step procedure, in the first a classification network works on
+tiles to identifies where a TNT possible is, and then a second network is used
+to finely segment the TNTs pixel wise. Unfortunately they do not go into details
+of their networks. I tried to contact one of the authors to get the code and
+data, but they did not respond. In the paper they talk about using a U-Net like
+architecture for the segmentation part, formed of ResNet blocks. They also used
+a pretrained encoder. The architecture is called AuraNet [TODO cite].
+
+As neither of these papers provide working code examples or are not applicable
+for our data, we decided to look at the tunnels as what is called a curvliniear
+structures. Bibiloni et al. provides a full definition based on their geometric
+and photometric characteristics, but they also provide a simpler rough
+definition which is enough for our purposes. They can be defined as thin, long,
+line-like regions with different intensities than their neighbouring pixels
+\parencite{bibiloni2016curvilinear}. Some examples of cuvilinear structures
+include river finding, blood vessel segmentation, or lung airways segmentation
+\parencite{kong2018roadsensing} \parencite{Ceran2022TNTdetect}. Our TNTs mostly
+fit this description as their shape is thinner compared to the vertical
+protrusion, and are clearly different intesity than the background.
 
 % TODO make this work
 The CS-Net paper's authors tried to improve the performance of UNet architecture
