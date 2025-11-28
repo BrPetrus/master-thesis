@@ -85,7 +85,7 @@
 \usepackage{markdown} %% Lightweight markup
 \usepackage{listings} %% Source code highlighting
 \usepackage{subcaption}
-\usepackage[style=numeric]{biblatex}
+\usepackage[style=numeric]{biblatex}  %% use square brackets for citations
 \subcaptionsetup{font=small}      % For subcaptions
 
 \lstset{
@@ -101,6 +101,8 @@
 \usepackage{floatrow} %% Putting captions above tables
 \floatsetup[table]{capposition=top}
 \usepackage[babel]{csquotes} %% Context-sensitive quotation marks
+\usepackage{algorithm2e}
+
 \begin{document}
 %% The \chapter* command can be used to produce unnumbered chapters:
 \chapter*{Introduction}
@@ -605,6 +607,10 @@ more than 50 pixels in the testing quadrant, it will not be included in the
 training subset. If at least 80\% of the cutout is inside the testing quadrant,
 it is considered to be part of the testing subset.
 
+Finally, during the training we need the be able to know when to stop. For this
+purpose during each run, roughly 30\% of the crops used for training are used as
+a validation set.
+
 \section{Loss funtions}
 Since we can look at finding tunneling nanotubes as a binary classification
 problem applied at every pixel, it naturally comes to use a binary cross-entropy
@@ -643,13 +649,14 @@ The final loss is the combination of $L_{BCE}$ and $L_{Dice}$:
 We used a linear combination of the losses as was mentioned in
 \parencite{ma2020segmentationlossodyssey}.
 
-\section{Optimisers, learning rates, regularisation}
 During the development of the training loop, we observed that setting the
 learning rate to 0.0001 and weight decay to 0.0001 provided a stable learning.
 As such, we maintained a constant learning rate during training and did not
 experiment with these values due to time constraints. We chose to use an
 adaptive gradient algorithm for training the neural networks called AdamW, which
 is a variant of the commonly used Adam optimiser.
+
+\section{Optimisers, learning rates, regularisation}
 
 Regularisation is a common technique in machine learning that reduces
 overfitting by discouraging values with large magnitudes
@@ -663,12 +670,7 @@ performance as it properly decouples the weight decay
 the weight decay regularisation technique. However, no significant difference in
 the training performance was observed.
 
-\subsection*{Training the network}
-
-As was mentioned in Section \ref{sec:processing_data}, the overall size of the
-dataset was relatively tiny, comprising just a few images. To alleviate this, we
-instead started focusing on training a network on smaller patches of 7x64x64
-size.
+\section{Augmentations}
 
 A common problem with training neural networks is their capacity to overtrain on
 the training part of the dataset. This often leads to poor generalisation
@@ -699,96 +701,107 @@ find the tunnel in the middle. The design designation behind using random
 spatial crop was to try to suppress this, as the program now randomly finds a
 crop of the wanted size, which reduces this problem.
 
-\section{Running the network}
-\label{sec:runningthenetwork}
+\section{Training loop}
+Overall the network training loop is shown in Algorithm \ref{alg:training}. Just
+a note the evaluation here is just calculating the Dice score on top of the
+crops belonging to the training quad.
+
+\begin{algorithm}[H]
+    \setlength{\lineskip}{-3pt}        % Reduce line spacing
+    \setlength{\baselineskip}{8pt}      % Reduce baseline spacing
+    \setlength{\parskip}{0pt}           % Remove paragraph spacing
+    \small  
+    \caption{Quadrant-based Model Training}
+    \label{alg:training}
+    \KwData{Four quadrants, model configuration}
+    \KwResult{Four trained models}
+
+\For{$quad \in quadrants$}{
+    $Reseed()$\;
+    
+    \tcp{Data preparation}
+    $full\_train\_data, full\_test\_data \gets LoadQuadrantData(quad)$\;
+    $mean, std \gets ComputeStats(full\_train\_data)$\;
+    $train_{set}, val_{set} \gets SplitData(full\_train\_data, ratio=1/3)$\;
+    
+    \tcp{Model training with early stopping}
+    $model \gets CreateNeuralNetwork(config)$\;
+    $best_{loss} \gets \infty$\;
+    
+    \For{$epoch \gets 1$ \KwTo $1000$ \textbf{or until} $val\_loss$ hasn't improved for 50 epochs}{
+        $loss_{train} \gets TrainEpoch(model, train_{set}, mean, std)$\;
+        $loss_{val} \gets ValidateEpoch(model, val_{set}, mean, std)$\;
+        
+        \If{$loss_{val} < best_{loss}$}{
+            $best_{loss} \gets loss_{val}$\;
+            $SaveBestWeights(model)$\;
+        }
+    }
+    
+    $LoadBestWeights(model)$\;
+    $SaveFinalModel(model, quad)$\;
+    $EvaluateModel(model, full\_test\_data)$\;
+}
+\end{algorithm}
+
+\section{Inference on large images}
+
+Our network has been trained on square crops of size 7x64x64 voxels, but the
+original images are larger at 7x512x512 voxels. This is solved by using an
+overlap-tiling strategy similar to the one by Ronneberger et al.
+\parencite{Ronneberger2015}. The original images a re split into tiles first
+with configurable amount of overlap in pixels, this is visualised in Figure
+\ref{fig:tiling}. The tiles are sequentially processed by the network and then
+stitched together to create the final prediction.
+
 \begin{figure}
     \centering
-    \begin{subfigure}[b]{0.45\textwidth}
+    \begin{subfigure}[t]{0.5\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{resources/tile0px.png}
-        \caption{0px overlap}
-        \label{fig:tile0px}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.45\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{resources/tile10px.png}
-        \caption{10px overlap}
-        \label{fig:tile10px}
-    \end{subfigure}
-    \caption{Visualisation of overlaps for 0 and 10px overlaps.}
-    \label{fig:tiling}
-\end{figure}
-
-Since our neural network works on square cutouts of 7x64x64 size, we decided to
-solve this problem by tiling the original images and then stitching them
-together. This overlap-tile strategy is used in several papers, such as
-\parencite{Ronneberger2015} [TODO]. There are roughly two strategies for
-handling the edges. In works such as \parencite{Ronneberger2015}, the neural
-network's prediction is smaller than the original size since they do not pad the
-intermediate results. Then the sampling of images is done in such a way that
-every output pixel has a prediction.
-
-Since our crop size is rather small, given the problems with dataset size
-described in [TODO], we decided to use padding and always output the same size,
-and to have a configurable overlap size between the neighbouring tiles. The idea
-is better visualised in Figure \ref{fig:tiling}, where the various overlaps are
-visualised.
-
-\begin{figure}
-    \centering
-    \begin{subfigure}[b]{0.45\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{resources/t000-3-0verlap.png}
+        \includegraphics[width=\textwidth]{resources/t000-3-0verlap.png}
         \caption{0px overlap}
         \label{fig:stitchingoverlap0}
     \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.45\textwidth}
+    \begin{subfigure}[t]{0.5\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{resources/t000-3-30overlap.png}
+        \includegraphics[width=\textwidth]{resources/t000-3-30overlap.png}
         \caption{30px overlap}
         \label{fig:stitchingoverlap30}
     \end{subfigure}
-    \begin{subfigure}[b]{0.45\textwidth}
+    \begin{subfigure}[t]{0.5\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{resources/t000-3-orig-stretched.png}
-        \caption{Original image (stretched).}  % todo: maybe mention the quad
+        \includegraphics[width=\textwidth]{resources/t000-3-orig-stretched.png}
+        \caption{Original image (stretched).}
+    \end{subfigure}
+    \begin{subfigure}[t]{0.5\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{resources/placeholder.png}
+        \caption{30px overlap with postprocessing} 
     \end{subfigure}
     \caption{This figure shows how choosing different amount of overlap in
-    pixels has an effect on suppresing some of the artifacts at the edges of
+    pixels has an effect on suppresing some of the artifacts at the borders of
     stitched tiles.}
     \label{fig:stitchingoverlap}
 \end{figure}
 
-%todo how to cite subfigure?
-
 The idea to use a configurable overlap size came from the following observation.
 In Figure \ref{fig:stitchingoverlap0}, several sharp artefacts can be seen at
-places where the tiles were touching, as there was some leftover information
-from neighbouring tiles, but not a good view of the whole object. The network
-probably got confused and mistook the feature for a very short tunnel. This led
-us to the idea that if we use larger overlaps and aggregate them, these effects
-on boundaries might get fixed. As can be seen in the figure, using a larger
-overlap and averaging the predictions suppresses a lot of these artefacts.
+tile borders, possibly because only part of the structure is vissible, leading
+the network to classify it as a tunnel. This led us to the idea that if we use
+larger overlaps and aggregate them, these effects on tile borders will get
+suppressed. As can be seen in Figure \ref{fig:stitchingoverlap30}, using a
+larger overlap suppresses some of these artefacts. For aggregating the overlaps,
+a simple averaging was chosen due to its simplicity
+
 % todo in discussion mention that maybe this was not the best idea, maybe we
 % should have chosen larger context. The context x precision tradeoff.
 
-For the purpose of aggregating the overlaps, simple averaging was chosen due to
-its simplicity. The main idea was, that if the network predicts a false tunnel
-on the edge, due to the limited context, it might assign a high probability
-there, but as the other tile has more context, it will say that the tunnel is
-there with smaller probability; hence, by averagint them we will get hopefully
-small enough probability that the artifact is removed.
-
-Interestingly, some new artifacts appear, which at first glance might seem
-strange, but if we compare the locations of some of these artifacts it becomes
-clear they correspond to various noise inside the original input.
-% todo: add arrow or something
-
 % TODO: consider drawing there
-Even after this step, there still might be some leftover artefacts, as can be
-seen in Figure \ref{fig:stitchingoverlap}, which is not ideal, but these
-artefacts are generally small from the way they arrived. This leads us to how
-the predictions are processed.
+Even after this step, there still might be some leftover artefacts, some of
+which are linked to noisy input, but others are showcase that is is not a
+perfect solution to the artefacts caused by partial context. Some of these false
+TNTs at the border of tiles are quite small compared to real tunnels, which
+lead us to the final piece of the inference - the postprocessing.
 
 \section{Postprocessing}
 \label{sec:postprocessing}
@@ -796,12 +809,9 @@ the predictions are processed.
 As mentioned in the previous section, even after applying the overlap strategy,
 some artefacts remain. Moreover, some artefacts actually closely resemble thin
 structures but are not true tunnels. Many of these false tunnels seem to be
-small and not connected to any cell, nor really have a 3D structure. Therefore,
-we decided that an easy filtering would be using their volume.
-
-We can think of the tunnels as individual connected components. In general, only
-if at some z height the tunnel is not from a single connected component we are
-assuming that this will hold if we are looking at the tunnels in 3D instead.
+small and not connected to any cell, nor are significantly present at multiple
+depth slices. Therefore, we decided that an easy filtering would be using their
+volume.
 
 \begin{figure}
     \begin{center}
@@ -812,12 +822,9 @@ assuming that this will hold if we are looking at the tunnels in 3D instead.
     \label{fig:histogramoflabelsizes}
 \end{figure}
 
-Given this assumption, we can filter the tunnels also based on their sizes. I
-chose the value of 100 pixels, realising that some of the tiny tunnels might get
-removed, but as will later be shown, the network tends to find more tunnels than
-the biologist. Hence, I believe this to be a reasonable assumption to make.
-Finally, the predictions are thresholded by the value of 0.5. This was chosen as
-a reasonable threshold.
+I chose the value of 100 pixels, realising that some of the tiny tunnels might
+get removed, but as will later be shown, the network tends to find more tunnels
+than the biologist. Hence, I believe this to be a reasonable assumption to make.
 % todo: mention in discussion that this prob. could have been more studied
 
 \chapter{Implementation}
