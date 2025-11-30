@@ -121,13 +121,13 @@ have a diploma under my belt. Wish me luck!
 \label{sec:data}
 % todo: probably add some more examples
 During the cell's morphogenesis a growth of protrusion have been observed using
-fluorescent micrscopy. Their effect in the growth is still not fully understood,
+fluorescent microscopy. Their effect in the growth is still not fully understood,
 but have sparked multiple theories. Some researchers speculate these tunnels are
 used for long range signaling, they may be part of an pathological conditions,
 where they are used by viruses [TODO CITE] [Add more Examples].
 
 Our partner professor Osamu Shimmi from the Institute of Molecular and Cell
-biology at the University of Tartu in Estonia were instered in studying one of
+biology at the University of Tartu in Estonia were inserted in studying one of
 such places where these protrusions are visible - the Drosophila wings. They
 have used in vivo imaging to study the cellular structures.
 
@@ -142,19 +142,19 @@ have used in vivo imaging to study the cellular structures.
     \label{fig:wingsdiagram}
 \end{figure}
 
-During the development of the larva, specificaly in the pre-pupal stage, the
+During the development of the larva, specifically in the pre-pupal stage, the
 pupal wing is formed. Afterwards the single layer wing separates into two
 individual layers of epithelium cells shown in Figure \ref{fig:wingsdiagram}.
-The vertical protrusion connecting the layers will be refered to as the pillars,
+The vertical protrusion connecting the layers will be referred to as the pillars,
 while the vertical microtubular protrusion will be called tunneling nanotubes
 (TNTs).
 
-The overall structure, refered by them as Interplanar Amida Network (IPAN) is
+The overall structure, referred by them as Interplanar Amida Network (IPAN) is
 dynamic and as they note in their research, can change quite a lot in just half
 an hour, during which the TNTs might connect with different vertical pillars or
 completely disappear, while some TNTs exhibit stability. While the authors go
 into greater depth as what exactly happen during the creation and disappearance
-of these strcutres, they are limited to a qualitative investigation. The goal of
+of these structures, they are limited to a qualitative investigation. The goal of
 this thesis was to explore U-Net like models to find the segment the tunneling
 nanotubes in these 3D images, to help the researchers analyze the properties
 like how long do these tunnels stay on average.
@@ -168,8 +168,8 @@ waiting, which complicated our work. Fortunately our collegues at the Faculty of
 Science helped us and annotated two time slots from the last dataset. Hence for
 the rest of this thesis we will talk only about this dataset.
 
-The dataset is comprised of TODO time slots and was captured by using a
-single dye in flueorescent microscopy technique. Each time snapshot consists of
+The dataset is comprised of 20 time slots [todo check] and was captured by using a
+single dye in fluorescent microscopy technique. Each time snapshot consists of
 seven 512x512 grayscale, 16-bit images. Due to the work detailed in
 \parencite{Tran2024Programmed} the particular dye and strain of the Drosophila
 fly allows us to see the membranes of both horizontal tunnelling nanotubes and
@@ -201,22 +201,18 @@ reacts with the membranes, in this dataset the pillars appear hollow.
 The biologist created a protocol which they followed by annotating the samples.
 They decided to preprocess the data by converting the images from 16bit
 grayscale image into 8bit grayscale images, then a 1\%-percentile stretch was
-applied to further enhance the images. The result of the preprocessing is
-visible in Figure \ref{fig:biologistpreprocessing}. As can be seen on the figure,
-this makes the tunnels easier to see at the cost making noise more visible.
+applied to further enhance the images. 
 
 \begin{figure}
     \centering
     \begin{subfigure}[b]{0.45\textwidth}
         \centering
         \includegraphics[width=\linewidth]{resources/mask000-slice3-saturated.png}
-        \caption{}
-        \label{fig:gt-slice-3}
+        \label{fig:gt-slice-3-saturated}
     \end{subfigure}\hfill
     \begin{subfigure}[b]{0.45\textwidth}
         \centering
         \includegraphics[width=\linewidth]{resources/mask000-slice3-composite-circles.png}
-        \caption{}
         \label{fig:gt-slice-3-composition}
     \end{subfigure}
     \caption{Labeled tunnels by a biologist at 0th time slot on the left. On the
@@ -227,7 +223,7 @@ this makes the tunnels easier to see at the cost making noise more visible.
 
 After the preprocessing is done, the protocol states that picking random time
 slots at least 100 instances of tunnels must be annotated, and each frame has to
-be fully annotated. Also segments ougoing from the surrounding tissue should be
+be fully annotated. Also segments outgoing from the surrounding tissue should be
 ignored.According to this protocol the biologists picked two time steps --- the
 0th and 17th step ---  to label. The ground truth created by a biologist for the
 0th time slot is visible in the left part of Figure \ref{fig:gt-slice-3}. In the
@@ -235,9 +231,14 @@ right part of the mentioned figure a composition was created with gray data and
 the binarised ground truth in magenta colour. As can be seen in the image,
 sometimes it is rather difficult to decide if the protrusion is a TNT or not, in
 the figure, two areas are highlighted by a red circle, where it is not clear why
-the biologist did not also label the TNTs. This illustartes a possible
-difficulty when assesing the segmentation accuracy later on.  % todo: make this
+the biologist did not also label the TNTs. This illustrates a possible
+difficulty when assessing the segmentation accuracy later on.  % todo: make this
 more natural
+
+Afterwards the labels were checked manually and two cases of label duplicity were
+found and fixed, by assigning a unique number to the new connected component.
+The flawed labels were 33 located in top right quadrant and label 32 located
+bottom right quadrant as can be seen in Figure \ref{fig:duplicatedlabel}.
 
 \begin{figure}
     \begin{center}
@@ -246,11 +247,6 @@ more natural
     \caption{Maximum projection of the data highlighting problematic tunnel with id 32 located in bottom right quadrant}.
     \label{fig:duplicatedlabel}
 \end{figure}
-
-Afterwards the labels were checked manually and two cases of label duplicity were
-found and fixed, by assigning a unique number to the new connected component.
-The flawed labels were 33 located in top right quadrant and label 32 located
-bottom right quadrant as can be seen in Figure \ref{fig:duplicatedlabel}.
 
 \chapter{Architectures}
 This chapter deals with research into the topic and what architectures were
@@ -275,12 +271,12 @@ hence, this can be used to better separate cells and tunnel. As our data has
 different modality, this approach could not be used. They also assume that the
 tunnels are straight which is not true in our case.
 
-The other paper which specificaly mentiones tunneling nanotubes is
+The other paper which specifically mentions tunneling nanotubes is
 \parencite{Ceran2022TNTdetect}. In this paper the authors develop a tool for
 segmenting TNTs called TNT.AI. They discuss about how to deal with the
 difficulty of hand marking the tunnels. Four human experts were involved to
 correctly identify TNTs (as individual experts' label varied), and what was done
-to make the labels as clear as possible. Then they divised a two step procedure,
+to make the labels as clear as possible. Then they devised a two step procedure,
 in the first a classification network works on tiles to identifies where a TNT
 possible is, and then a second network is used to finely segment the TNTs pixel
 wise. Unfortunately they do not go into details of their networks. I tried to
@@ -291,12 +287,12 @@ The architecture is called AuraNet [TODO cite].
 % todo: mention we do not need the classification part?
 
 As neither of these papers provide working code examples or are not applicable
-for our data, we decided to look at the tunnels as what is called a curvliniear
+for our data, we decided to look at the tunnels as what is called a curvilinear
 structures. Bibiloni et al. provides a full definition based on their geometric
 and photometric characteristics, but they also provide a simpler rough
 definition which is enough for our purposes. They can be defined as thin, long,
 line-like regions with different intensities than their neighbouring pixels
-\parencite{bibiloni2016curvilinear}. Some examples of cuvilinear structures
+\parencite{bibiloni2016curvilinear}. Some examples of curvilinear structures
 include river finding, blood vessel segmentation, or lung airways segmentation
 \parencite{kong2018roadsensing} \parencite{Mou2021}. Our TNTs mostly
 fit this description as their shape is thinner compared to the vertical
@@ -345,11 +341,11 @@ an extra convolutional layer is applied.
 
 After running the encoder, the upsampling is introduced to revert the image to
 roughly the same size as in the beginning. This is achieved by applying
-transposed convolution layer, which doubles the spatial diemnsions at the cost
-of halving the number of channels. Each upsampling is followed by concatonating
+transposed convolution layer, which doubles the spatial dimensions at the cost
+of halving the number of channels. Each upsampling is followed by concatenating
 the upsampled data with the output of the corresponding convolutional block in
 the encoder, followed by another convolutional layer. This is better seen on the
-diagram, where the concationations are shown by the horizontal lines.
+diagram, where the concatenations are shown by the horizontal lines.
 
 Finally we do a final convolution operation to ouput the right
 amiunt of classes, which in our case is equal to a signle one, where 0 indicates
@@ -359,9 +355,9 @@ Crucially, it has a usefull property that it does not need a vast
 dataset to train properly. This is demonstrated in \parencite{Ronneberger2015},
 where they trained the network with just 30 annotated images.
 
-The Figure \ref{fig:unetdiagram} is visualising how the UNet architecure can be
+The Figure \ref{fig:unetdiagram} is visualising how the U-Net architecture can be
 used to train a 2D model, but there is not reason why we could not use 3D
-versions of convolution, maxpool and transposed upconvolution and in fact this
+versions of convolution, maxpool and transposed convolution and in fact this
 version is used in this work. We refer to this model as the BasicUNet. Such
 network uses 2x2x2 kernels in the downsampling and upscaling layers, while 3x3x3
 kernels are used in the convolutional layers.
@@ -402,7 +398,7 @@ have more trainable parameters; thus, might be harder to train and as we have
 sparsely annotated dataset this could become a hurdle causing the 2D version to
 perform better.
 
-Overall such network with anisotropic pooling operations will be refered to as
+Overall such network with anisotropic pooling operations will be referred to as
 AnisoUNet(3D) in the rest of the thesis.
 
 \section{The CSAM module}
@@ -466,10 +462,10 @@ mechanism to explore in this thesis.
 The general principle of a squeeze-and-excitation block is illustrated in Figure
 \ref{fig:seblock}. The main idea is that we let the network learn significance
 of each channel automatically during the training. As its name suggest there is
-a squeeze operation where the channels are compressed and then an exictaion
+a squeeze operation where the channels are compressed and then an excitation
 step, which produce channel weights between 0.0 and 1.0, which multiply the
 values in the original data. The researchers postulate that this improves the
-network's quality of representation by modeling the interpedencies between
+network's quality of representation by modeling the interdependencies between
 channels of the output of the convolution layers \parencite{Hu2018}.
 
 Let's look at it in more detail, the SE block, shown in Figure
@@ -477,17 +473,17 @@ Let's look at it in more detail, the SE block, shown in Figure
 and scaling. The truncate operation shown as $F_{TR}$ is a general convolutional
 operator, which reduces the dimension. This step is not crucial in the scheme,
 but it is mainly to illustrate the point, that SE block is usually built upon
-some operation. More importantnly, the transdormed data is taken and run through
+some operation. More importantly, the transformed data is taken and run through
 a squeeze operation, which performs some global operation - our case global
 average pooling - in the whole channel. After that, the excitation operation
 comes. This operation was designed to have the following properties: they wanted
 to create a flexible operation --- meaning an operation capable of learning
-non-linear dependecies --- and they wanted it to be non-mutually exclusive
-between channels. These properties are fullfilled by applying two convolutions
+non-linear dependencies --- and they wanted it to be non-mutually exclusive
+between channels. These properties are fulfilled by applying two convolutions
 followed by ReLU and sigmoid respectively. Note that the first convolution
 produces output with less than the original number of channels and the ratio is
 called the reduction factor. Finally the last convolution expands the number of
-channels to the original size. The comvination of squeeze and excitation allows
+channels to the original size. The combination of squeeze and excitation allows
 the network to learn how to weight each channel (the scale operation mentioned
 above) by considering multiple channels.
 % todo: check if it is global average pooling
@@ -611,7 +607,7 @@ Finally, during the training we need the be able to know when to stop. For this
 purpose during each run, roughly 30\% of the crops used for training are used as
 a validation set.
 
-\section{Loss funtions}
+\section{Loss functions}
 Since we can look at finding tunneling nanotubes as a binary classification
 problem applied at every pixel, it naturally comes to use a binary cross-entropy
 loss to teach the network to learn to segment the images. However, our dataset
@@ -630,9 +626,7 @@ weight.
 To further improve the performance of the training, we got inspired CS-Net paper
 which uses Dice loss, and some papers claim that the combination of Dice loss
 and cross-entropy loss lead to better performance in many segmentation tasks
-\parencite{ma2020segmentationlossodyssey}. As Dice is a common metric to
-evaluate segmentation performance it is  By using Dice loss it is meant to
-optimize the value of the Dice coefficient. This is defined as taking $L_{Dice}
+\parencite{ma2020segmentationlossodyssey}. This is defined as taking $L_{Dice}
 = 1 - \text{Dice}$, meaning that as we get segmentation results closer to the
 ideal mask, we get closer to 0. The loss function was defined using as in the
 paper \parencite{ma2020segmentationlossodyssey} as:
@@ -672,7 +666,7 @@ the training performance was observed.
 
 \section{Augmentations}
 
-A common problem with training neural networks is their capacity to overtrain on
+A common problem with training neural networks is their capacity to overfit on
 the training part of the dataset. This often leads to poor generalisation
 performance. This is especially true for tiny datasets such as ours. One of the
 common ways to address this problem, as mentioned in the original U-Net paper,
@@ -690,7 +684,7 @@ we are:
         standard deviation with probability 0.5, which adds very faint noise.
         This is a relatively low amount of noise and was chosen during the
         development of the network as we did not want to change the images to
-        look completely different to the orignal ones.}
+        look completely different to the original ones.}
     \item{Random flipping in every axes.}
     \item{Random spatial crop which always crops to the preset size 7x64x64 from
         any other size.}
@@ -745,58 +739,63 @@ crops belonging to the training quad.
 \end{algorithm}
 
 \section{Inference on large images}
+\label{sec:runningthenetwork}
 
 Our network has been trained on square crops of size 7x64x64 voxels, but the
 original images are larger at 7x512x512 voxels. This is solved by using an
 overlap-tiling strategy similar to the one by Ronneberger et al.
 \parencite{Ronneberger2015}. The original images a re split into tiles first
 with configurable amount of overlap in pixels, this is visualised in Figure
-\ref{fig:tiling}. The tiles are sequentially processed by the network and then
-stitched together to create the final prediction.
+\ref{fig:stitchingoverlap}. The tiles are sequentially processed by the network and then
+stitched together to create the final prediction. The predictions are then
+thresholded with value of 0.5.
 
 \begin{figure}
     \centering
-    \begin{subfigure}[t]{0.5\textwidth}
+    \begin{subfigure}[t]{0.45\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{resources/t000-3-0verlap.png}
+        \includegraphics[width=\textwidth]{resources/overlaps_and_processing/quad3_0px_threshold_0.png}
         \caption{0px overlap}
         \label{fig:stitchingoverlap0}
     \end{subfigure}\hfill
-    \begin{subfigure}[t]{0.5\textwidth}
+    \begin{subfigure}[t]{0.45\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{resources/t000-3-30overlap.png}
-        \caption{30px overlap}
-        \label{fig:stitchingoverlap30}
+        \includegraphics[width=\textwidth]{resources/overlaps_and_processing/quad3_10px_threshold_0.png}
+        \caption{10px overlap}
+        \label{fig:stitchingoverlap10}
     \end{subfigure}
-    \begin{subfigure}[t]{0.5\textwidth}
+    \begin{subfigure}[t]{0.45\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{resources/t000-3-orig-stretched.png}
+        \includegraphics[width=\textwidth]{resources/overlaps_and_processing/quad3.png}
         \caption{Original image (stretched).}
-    \end{subfigure}
-    \begin{subfigure}[t]{0.5\textwidth}
+        \label{fig:stitchingoverlaporig}
+    \end{subfigure}\hfill
+    \begin{subfigure}[t]{0.45\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{resources/placeholder.png}
-        \caption{30px overlap with postprocessing} 
+        \includegraphics[width=\textwidth]{resources/overlaps_and_processing/quad3_10px_postprocessed.png}
+        \caption{10px overlap with postprocessing applied.} 
+        \label{fig:stitchingoverlappost}
     \end{subfigure}
-    \caption{This figure shows how choosing different amount of overlap in
-    pixels has an effect on suppresing some of the artifacts at the borders of
-    stitched tiles.}
+    \caption{\ref{fig:stitchingoverlap0} and \ref{fig:stitchingoverlap10} show
+    how different amount of overlap has effect on the prediction of TNTs for
+    image \ref{fig:stitchingoverlaporig}. The effect of postprocessing is seen
+    in \ref{fig:stitchingoverlappost}.}
     \label{fig:stitchingoverlap}
 \end{figure}
 
 The idea to use a configurable overlap size came from the following observation.
 In Figure \ref{fig:stitchingoverlap0}, several sharp artefacts can be seen at
-tile borders, possibly because only part of the structure is vissible, leading
+tile borders, possibly because only part of the structure is visible, leading
 the network to classify it as a tunnel. This led us to the idea that if we use
 larger overlaps and aggregate them, these effects on tile borders will get
-suppressed. As can be seen in Figure \ref{fig:stitchingoverlap30}, using a
+suppressed. As can be seen in Figure \ref{fig:stitchingoverlap10}, using a
 larger overlap suppresses some of these artefacts. For aggregating the overlaps,
-a simple averaging was chosen due to its simplicity
+a simple averaging was chosen due to its simplicity.
 
 % todo in discussion mention that maybe this was not the best idea, maybe we
 % should have chosen larger context. The context x precision tradeoff.
-
 % TODO: consider drawing there
+
 Even after this step, there still might be some leftover artefacts, some of
 which are linked to noisy input, but others are showcase that is is not a
 perfect solution to the artefacts caused by partial context. Some of these false
@@ -815,7 +814,7 @@ volume.
 
 \begin{figure}
     \begin{center}
-        \includegraphics[width=0.6\linewidth]{resources/histogramofsizes.png}
+        \includegraphics[width=\textwidth]{resources/histogramofsizes.png}
     \end{center}
     \caption{Histogram of the volume (in pixels) of all labeled tunneling
     nanotubes with median and mean highlighted.}.
@@ -825,9 +824,10 @@ volume.
 I chose the value of 100 pixels, realising that some of the tiny tunnels might
 get removed, but as will later be shown, the network tends to find more tunnels
 than the biologist. Hence, I believe this to be a reasonable assumption to make.
+The Figure 
 % todo: mention in discussion that this prob. could have been more studied
 
-\chapter{Implementation}
+\chapter{Implementation [WIP]}
 
 \section{Used technologies}
 Python, mlflow, Bash, uv, the shuffling, setting explicit seeds, issues with
