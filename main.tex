@@ -870,44 +870,47 @@ As for the other tooling, here I list the most important tools:
     \item{MLflow is a tool for handling machine learning pipelines. It allows
         for tracking experiments, comparing results, saving and loading models,
         deploying models, and more. In this work it is nice to use UI was used
-        to keep track of the experiments}[CITE]}  % cite
+        to keep track of the experiments \parencite{Zaharia2018MLflow}}  % cite
         https://mlflow.org/docs/latest/ml/
     \item{ruff linter cite is an extremely fast Python linter which was
         developed by the company Astra. It automatically formats code and can
-        even correct some basic lint errors. [CITE]} 
+        even correct some basic lint errors. \parencite{Ruff2025}} 
     \item{NumPy has become one of the fundamental packages in scientific
         computing in the Python ecosystem. It provides a very efficient
         implementation of many common operations on N-dimensional arrays.
-        [CITE]}
+        \parencite{Harris2020Numpy}}
     \item{scikit-learn provides a great framework for building machine learning
         models, not just deep learning models. The library was primarily used
         for splitting datasets and utilising its framework for handling
-        batching. [CITE]}  % TODO: https://scikit-learn.org/stable/index.html
+        batching. \parencite{Pedregosa2011scikit}}
     \item{scikit-image is a package providing various algorithms for processing
         images, e.g. segmentation algorithms, point transform, and mathematical
         morphology. I used it to handle the postprocessing of masks and to find
-        connected components.} % TODO: https://scikit-image.org/
-    \item{Pytorch is a popular deep learning framework with a focus on
+        connected components.\parencite{vanderWalt2014skimage}}
+    \item{PyTorch is a popular deep learning framework with a focus on
         flexibility and speed. This enables the user to create a highly
         performing neural network quickly. It automatically creates
         computational graphs, allowing it to compute gradient updates
         efficiently. It automatically handles connecting to various hardware,
         such as CPUs and GPUs. This has allowed PyTorch to become one of the
         most used packages in the Python ecosystem and is why I chose it to
-        develop the program [CITE]} %https://pytorch.org/projects/pytorch/ 
+        develop the program \parencite{Ansel2024PyTorch}}
     \item{MONAI is another open-source framework for building neural networks on
         top of PyTorch. It focuses on building models used in the medical area.
         In the project, I used this package to handle augmentations of the
-        dataset, as it provides first-class support for 3D data. [CITE]} % cite https://github.com/Project-MONAI/MONAI 
+        dataset, as it provides first-class support for 3D data.
+        \parencite{Cardoso2022Monai}}
     \item{Matplotlib is a library for visualising data in an interactive
         fashion. The vast majority of graphs in this text were created using
-        it.}  % cite
+        it. \parencite{Hunter2007Matplotlib}}
+
+        % TODO add pandas
 \end{itemize}
 
 \section{Environment}
 Handling dependencies in Python can become tricky, especially for reproducing
 the environments. For this purpose, the environment's dependencies and building
-a virtual environment are resolved by a tool called uv [CITE], developed by
+a virtual environment are resolved by a tool called uv \parencite{uv2025}, developed by
 Astral. The developer uses a TOML file to specify project dependencies. This
 file is then used by uv to recreate the environment.
 
