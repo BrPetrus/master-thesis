@@ -518,6 +518,7 @@ block before the concationation and also at every step of the upsampling.
 This is the last architecture we will explore in this work.
 
 \chapter{Training}
+\label{}
 This chapter explains how the aforementioned neural networks were trained. How
 the data was split to allow cross fold learning and finally how the network can
 be run to segment any size of the network.
@@ -827,7 +828,7 @@ than the biologist. Hence, I believe this to be a reasonable assumption to make.
 The Figure  % todo: finish 
 % todo: mention in discussion that this prob. could have been more studied
 
-\chapter{Implementation [WIP]}
+\chapter{Implementation}
 
 
 In the training Chapter [REF], the training procedure and the previously
@@ -836,7 +837,7 @@ collection of Bash scripts, Python scripts and a Python module. All of the code
 is available as part of the master's thesis, alongside several trained networks
 for the user's reference.
 
-I decided to use a combination of Python and Bash to implement the thesis. The
+I decided to use a combination of Python \parencite{Python2025} and Bash to implement the thesis. The
 overall structure of the project code is as follows: a single TNTSegment package
 is available, which handles data loading, data splitting, and defining the
 neural networks and their modules. Outside of the package, the training script,
