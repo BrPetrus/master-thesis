@@ -824,102 +824,121 @@ volume.
 I chose the value of 100 pixels, realising that some of the tiny tunnels might
 get removed, but as will later be shown, the network tends to find more tunnels
 than the biologist. Hence, I believe this to be a reasonable assumption to make.
-The Figure 
+The Figure  % todo: finish 
 % todo: mention in discussion that this prob. could have been more studied
 
 \chapter{Implementation [WIP]}
 
-\section{Used technologies}
-Python, mlflow, Bash, uv, the shuffling, setting explicit seeds, issues with
-batch vs loss, implementing the loss functions in pytorch
-implementing the squeeze and excitation.
 
-\section{Environment}
+In the training Chapter [REF], the training procedure and the previously
+described training and preprocessing in previous chapters were implemented as a
+collection of Bash scripts, Python scripts and a Python module. All of the code
+is available as part of the master's thesis, alongside several trained networks
+for the user's reference.
 
-\subsection{Justification for the used technologies}
-The previously described training and preprocessing in previous chapters was
-implemented as collection of Bash scripts, python scripts and a python module.
-All of the code is available as part of the master thesis alongside several of
-the trained networks for the user.
+I decided to use a combination of Python and Bash to implement the thesis. The
+overall structure of the project code is as follows: a single TNTSegment package
+is available, which handles data loading, data splitting, and defining the
+neural networks and their modules. Outside of the package, the training script,
+evaluation script, and postprocessing script are available. Finally, to connect
+it all, running the automated training pipeline that respects the cross-folds
+and aggregates the results involves a mix of Bash and Python scripts. In-depth
+instructions as to how to run these scripts are available alongside the code in
+the thesis archive.
 
-The Python environment is packaged and its dependecies are resolved by a tool
-cold uv \parencite{uv} developed by a company called Astral, who specialises on
-creating modern automatic tooling for Python. The environment is described using
-a TOML file available and list a number of dependencies. Altough the project is
-quite recent compared to others like Poetry, uv is significanlty faster.
+Although the Python programming language is an interpreted and dynamically typed
+language, and therefore is comparatively slower than other lower-level languages
+traditionally used in image processing, such as C++, its nature allows it to
+rapidly prototype new applications. Moreover, many packages call code written in
+other languages, such as C++, Fortran or C, to alleviate the performance
+problem. Lastly, Python has become a widely adopted language in the area of
+neural networks, and many researchers publish their code in Python; thus, Python
+was chosen to handle the implementation part.
 
-For convenience I am also including a \texttt{requirements.txt} which was automatically generated
-from a virtual Python environemnt, but the officially supported version is using
-the uv package manager. The environment can then be created in two ways: if the
-user runs a computer with a GPU, the working environmnet is creating using the
-command \texttt{uv sync --extra torch-gpu} which assumes that CUDA version 12.4
-is installed.
-
-I decided to use Python to develop the training and evaluation scripts, while
-handling the pipelines around it with Bash. Altough Python is an interpreted and
-dynamically typed language and therefore is comparably slower than other lower
-level languages traditionally used in image processing like C++, its nature
-allows it to rapidly prototype new application. Moreover, many packages call
-code written in other languages such as C++, Fortran or C, to somewhat alleviate
-the performance problem. Lastly, Python has become a widely adopted language in
-the area of neural networks, and many researchers publish their code in Python.
-
-As was already mentioned even though the majority of code is written in Python
-it is quite cumbersome to create a single Python script which handles both
-training and evaluation, especially if something changes in one of them. This
-fundamentally breaks the famous principle in software architecture called the
-separation of concers. As such a bash script is provided in the code archive
-under \texttt{scripts} called \texttt{run.sh} which is the main entrypoint for
-running the code.
-
-As a lot of the evaluation is concerned with doing proper cross-validation and
-then averaging the results it was easier to create a script which is easily
-configured using a text editor or by providing and parsing CLI arguments and the
-averaging and choosing different datasets should not be a responsibility of the
-Python script. As such, creating directories, running code, aggregating results
-and parsing arguments is a natural job for a scripting language such as Bash.
-The obvious disadvantage is that it is limited to the Unix and Unix like
-operating systems.
+As much of the evaluation involves proper cross-validation and averaging the
+results, it was easier to create a script that can be easily configured using a
+text editor or by providing and parsing CLI arguments. The averaging and
+selecting different datasets should not be the responsibility of the Python
+script. As such, creating directories, running code, aggregating results and
+parsing arguments is a natural job for a scripting language such as Bash. While
+this obviously limits the project's use to Unix-like operating systems, this is
+acceptable, as many computational servers are now running on Linux, and the
+trained models are OS-agnostic. [CHECK]
 
 As for the other tooling, here I list the most important tools:
 \begin{itemize}
-    \item{MLflow is tool for handling machine learning pipelines, it allows to
-        track experiments, compare results, save and load models, deploy models
-        etc. In this work it was used to create a nice interface to keep track
-        of various experiments.}  % cite https://mlflow.org/docs/latest/ml/
-    \item{ruff linter TODO cite is an extremely fast Python linter which was
+    \item{MLflow is a tool for handling machine learning pipelines. It allows
+        for tracking experiments, comparing results, saving and loading models,
+        deploying models, and more. In this work it is nice to use UI was used
+        to keep track of the experiments}[CITE]}  % cite
+        https://mlflow.org/docs/latest/ml/
+    \item{ruff linter cite is an extremely fast Python linter which was
         developed by the company Astra. It automatically formats code and can
-        even fix some of the basic lint errors.}
-    \item{numpy TODO CITE has become one of the fundamental packages in
-        scientific computing in Python ecosystem. It provides a very efficient
-        implementation of} 
+        even correct some basic lint errors. [CITE]} 
+    \item{NumPy has become one of the fundamental packages in scientific
+        computing in the Python ecosystem. It provides a very efficient
+        implementation of many common operations on N-dimensional arrays.
+        [CITE]}
     \item{scikit-learn provides a great framework for building machine learning
-        models not just deep learning models. This was used mainly for splitting
-        datasets and using their framework for handling batching.}  % TODO: https://scikit-learn.org/stable/index.html
+        models, not just deep learning models. The library was primarily used
+        for splitting datasets and utilising its framework for handling
+        batching. [CITE]}  % TODO: https://scikit-learn.org/stable/index.html
     \item{scikit-image is a package providing various algorithms for processing
-        images e.g. segmentation algorithms, point transform, mathematical
-        mopohlogy. I used it to handle the post-processing of masks and to find
+        images, e.g. segmentation algorithms, point transform, and mathematical
+        morphology. I used it to handle the postprocessing of masks and to find
         connected components.} % TODO: https://scikit-image.org/
-    \item{Pytorch is a popular deep learning framework with focus on flexibility
-        and speed, this allows the user to create a well performing neural
-        network very fast. It automatically creates computational graphs
-        allowing it to compute gradient upgrades efficiently. It handles
-        connecting to various hardware like CPU and GPUs automatically. This has
-        allowed PyTorch to become one of the most used packages in the Python
-        ecostsem and is why I chose it to develop the program. TODO CITE} % https://pytorch.org/projects/pytorch/ 
-    \item{MONAI is another opensource framework for building neural networks on
-        top of PyTorch. It focuses on building models used in Medical area. In
-        the project I was using this package to handle augmentations of the
-        dataset as it provides first class support for 3D data.} % cite https://github.com/Project-MONAI/MONAI
-    \item{matplotlib}
+    \item{Pytorch is a popular deep learning framework with a focus on
+        flexibility and speed. This enables the user to create a highly
+        performing neural network quickly. It automatically creates
+        computational graphs, allowing it to compute gradient updates
+        efficiently. It automatically handles connecting to various hardware,
+        such as CPUs and GPUs. This has allowed PyTorch to become one of the
+        most used packages in the Python ecosystem and is why I chose it to
+        develop the program [CITE]} %https://pytorch.org/projects/pytorch/ 
+    \item{MONAI is another open-source framework for building neural networks on
+        top of PyTorch. It focuses on building models used in the medical area.
+        In the project, I used this package to handle augmentations of the
+        dataset, as it provides first-class support for 3D data. [CITE]} % cite https://github.com/Project-MONAI/MONAI 
+    \item{Matplotlib is a library for visualising data in an interactive
+        fashion. The vast majority of graphs in this text were created using
+        it.}  % cite
 \end{itemize}
 
-\section{Use case modelling and expected usage}
-Here describe how to call the run.sh
-We identified two particular use cases for the application, it should provide a
-reasonably easy interface for training and then an interface for evaluating the
-models given some training data. For this purpose a single Bash script called
-wasc created which serves the 
+\section{Environment}
+Handling dependencies in Python can become tricky, especially for reproducing
+the environments. For this purpose, the environment's dependencies and building
+a virtual environment are resolved by a tool called uv [CITE], developed by
+Astral. The developer uses a TOML file to specify project dependencies. This
+file is then used by uv to recreate the environment.
+
+For convenience, I am also including a \texttt{requirements.txt} file, which was
+automatically generated from a virtual Python environment; however, the
+officially supported version uses the \texttt {uv} package manager. The
+environment can then be created in two ways: if the user runs a computer with a
+GPU, the working environment is created using the command \texttt{uv sync
+--extra torch-gpu}, which assumes that CUDA version 12.4 is installed. For more
+details, see the attached \texttt{README.md} file.
+
+\section*{Various implementation details}
+While looking into the code the reader might come across the following
+observations which I think are worth mentioning and explaining little further.
+
+While the implementation of CSAM required just small changes in correctly
+permutating the dimensions of the input, SE blocks were programmed from scratch.
+I took the PyTorch implementation of 2D SE and replaced the operations with
+their 3D equivalents. Mainly, the squeeze operation is a 3D average pooling
+layer, and the linear layers are replaced with convolution layers followed by
+ReLU.
+
+While looking at the training loop, you might see a mention of determinism and
+seed setting. The effect of seeds and deterministic algorithms in PyTorch was
+briefly investigated while fixing various bugs in the training loop. Right now,
+the user has to manually seed the random number generator, but the training
+still behaves in a random manner.
+
+While running the training and evaluations, many more metrics than just the Dice
+score presented in later chapters are calculated. They are still present, but
+were not used in the final evaluations.
 
 \chapter{Evaluation}
 In this chapter we describe how and evaluate the different networks on the whole
