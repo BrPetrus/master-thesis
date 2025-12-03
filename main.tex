@@ -52,12 +52,12 @@
     university  = mu,
     faculty     = fi,
     type        = mgr,
-    department  = Department of Machine Learning and Data Processing,
+    department  = Department of Visual Computing,
     author      = Bruno Petrus,
     gender      = m,
-    advisor     = {Prof. RNDr. John Smith, CSc.},
-    title       = {Segmentation of tunneling nanotubes},
-    TeXtitle    = {The Proof of $\mathsf{P}=\mathsf{NP}$},
+    advisor     = {Assoc. Prof. RNDr. Martin Maska, Ph.D.},
+    title       = {Segmentation of Tunneling Nanotubes Using U-Net-Like Neural Networks},
+    TeXtitle    = {Segmentation of Tunneling Nanotubes Using U-Net-Like Neural Networks},
     keywords    = {keyword1, keyword2, ...},
     TeXkeywords = {keyword1, keyword2, \ldots},
     abstract    = {%
@@ -117,136 +117,67 @@ I decided to write one of my own. If all goes well, I will soon
 have a diploma under my belt. Wish me luck!
 [TODO: explain semantic segmentation]
 
+
 \chapter{Data}
 \label{sec:data}
 % todo: probably add some more examples
-During the cell's morphogenesis a growth of protrusion have been observed using
-fluorescent microscopy. Their effect in the growth is still not fully understood,
-but have sparked multiple theories. Some researchers speculate these tunnels are
-used for long range signaling, they may be part of an pathological conditions,
-where they are used by viruses [TODO CITE] [Add more Examples].
+During cell morphogenesis, growth of protrusions has been observed using fluorescent microscopy. Their effect on the growth is still not fully understood, but has sparked multiple theories. Some researchers speculate these tunnels are used for long-range signalling; they may be part of pathological conditions, where viruses use them [TODO CITE] [Add more Examples][TODO move to the Introduction chapter].
 
-Our partner professor Osamu Shimmi from the Institute of Molecular and Cell
-biology at the University of Tartu in Estonia were inserted in studying one of
-such places where these protrusions are visible - the Drosophila wings. They
-have used in vivo imaging to study the cellular structures.
+Our partner, Dr Osamu Shimmi from the Institute of Molecular and Cell Biology at the University of Tartu in Estonia, was involved in studying one of such places where these protrusions are present - the Drosophila wings - and the findings are available in Paper \ref{Tran2024Programmed}. They have used in vivo imaging to study the cellular structures.
 
 \begin{figure}
     \begin{center}
-        \includegraphics[width=0.6\linewidth]{resources/data/wings.png}
+        \includegraphics[width=0.4\textwidth]{resources/data/wings.png}
     \end{center}
-    \caption{A schematic of the structure of the Drosophila wings. Two nearly
-    identical layers of epithelium cells are supported by a microtubule
-    protrusions. Vertical microtubule protrusion connected them are also
-    present.}
+    \caption{A schematic of the structure of the Drosophila wings. Two nearly identical layers of epithelium cells are supported by microtubule protrusions, which are vertical and referred to as pillows in this work. There are also horizontal protrusions connecting the pillows in nearly horizontal direction - the so-called tunnelling nanotubes or TNTs.}
     \label{fig:wingsdiagram}
 \end{figure}
 
-During the development of the larva, specifically in the pre-pupal stage, the
-pupal wing is formed. Afterwards the single layer wing separates into two
-individual layers of epithelium cells shown in Figure \ref{fig:wingsdiagram}.
-The vertical protrusion connecting the layers will be referred to as the pillars,
-while the vertical microtubular protrusion will be called tunneling nanotubes
-(TNTs).
+During the development of the larva, specifically in the pre-pupal stage, the pupal wing is formed. Afterwards, the single-layer wing separates into two individual layers of epithelial cells, as shown in Figure \ref{fig:wingsdiagram}. The vertical protrusions connecting the layers will be referred to as pillars, whereas the vertical microtubular protrusions will be called tunnelling nanotubes (TNTs).
 
-The overall structure, referred by them as Interplanar Amida Network (IPAN) is
-dynamic and as they note in their research, can change quite a lot in just half
-an hour, during which the TNTs might connect with different vertical pillars or
-completely disappear, while some TNTs exhibit stability. While the authors go
-into greater depth as what exactly happen during the creation and disappearance
-of these structures, they are limited to a qualitative investigation. The goal of
-this thesis was to explore U-Net like models to find the segment the tunneling
-nanotubes in these 3D images, to help the researchers analyze the properties
-like how long do these tunnels stay on average.
+In Paper \ref{Tran2024Programmed}, the authors refer to the overall structure as Interplanar Amida Network (IPAN). They note that IPAN is dynamic and can change significantly in just half an hour, during which the TNTs may connect with different vertical pillars or completely disappear, while some TNTs exhibit stability. While the authors delve into greater depth regarding what exactly happens during the creation and disappearance of these structures, they are limited to a qualitative investigation. The goal of this thesis was to explore U-Net-like models for segmenting tunnelling nanotubes in these 3D images, thereby helping researchers analyse properties such as the average duration of these tunnels. 
 
-The data was captured using fluorescence microscopy and four distinct datasets
-were acquired. Three of these datasets were captured with two different
-channels, larger volume and at smaller spatial resolution. Our Estonian
-collegues promised to annotate these three datasets larger datasets, but
-unfortunately they did not deliver the labels even after several months of
-waiting, which complicated our work. Fortunately our collegues at the Faculty of
-Science helped us and annotated two time slots from the last dataset. Hence for
-the rest of this thesis we will talk only about this dataset.
-
-The dataset is comprised of 20 time slots [todo check] and was captured by using a
-single dye in fluorescent microscopy technique. Each time snapshot consists of
-seven 512x512 grayscale, 16-bit images. Due to the work detailed in
-\parencite{Tran2024Programmed} the particular dye and strain of the Drosophila
-fly allows us to see the membranes of both horizontal tunnelling nanotubes and
-vertical pillars in Figure \ref{fig:dataexamples}. Each of the slice represents
-a region of 56.32x56.32 $\mu m$ and the slices are 1 $\mu m$ apart, meaning that
-each voxel is about 1x0.11x0.11 $\mu m$ in size. Since the dye
-reacts with the membranes, in this dataset the pillars appear hollow. 
+Dr Shimmi provided us with multiple datasets, but we obtained sparse annotations for only one of them; hence, we will focus on this one. In Figure \ref{fig:dataexamples}, a single slice on the left and a volume visualisation of the data on the right are shown. The whole dataset comprises twenty time slots and was captured by using a single fluorescent dye. Each time snapshot consists of seven 512x512 grayscale, 16-bit images. Due to the work detailed in \parencite{Tran2024Programmed} the particular dye and strain of the Drosophila fly allows us to see the membranes of both horizontal tunnelling nanotubes and vertical pillars in Figure \ref{fig:dataexamples}. Each of the slices represents a region of $56.32 \times 56.32 \mu m$ and the slices are $1\mu m$ apart, meaning that each voxel is about $1 \times 0.11 \times 0.11 \mu m$ in size. Since the dye is activated in cell membranes, the pillars in our data appear hollow. 
 
 \begin{figure}
     \centering
-    \begin{subfigure}{0.4\textwidth}
+    \begin{subfigure}{0.42\textwidth}
         \includegraphics[width=\textwidth]{resources/t017z0_saturated1percent.png}
-        \caption{Single linearly stretched slice.}
         \label{fig:dataexamplesslice}
     \end{subfigure}\hfill
-    \begin{subfigure}{0.6\textwidth}
+    \begin{subfigure}{0.55\textwidth}
         \includegraphics[width=\textwidth]{resources/data/volume_viewer_modified.png}
-        \caption{Volume visualisation.}
         \label{fig:dataexamlesvolume}
     \end{subfigure}
-    \caption{In \ref{fig:dataexamplesslice} a single slice of the data at time
-    17 is shown with the 1\%-percentile stretch. In \ref{fig:dataexamlesvolume}
-    a 3D visualisation of the IPAN structure is shown.}
+    \caption{Left: a single depth slice of the data at time 17 is shown. Right: a volume visualisation of the IPAN strudata from different time slots. Both images were contrast-enhanced for visualisation purposes.}
     \label{fig:dataexamples}
 \end{figure}
 
 \section{Labelling and preprocessing}
 
-The biologist created a protocol which they followed by annotating the samples.
-They decided to preprocess the data by converting the images from 16bit
-grayscale image into 8bit grayscale images, then a 1\%-percentile stretch was
-applied to further enhance the images. 
+The biologist created a protocol which they followed by annotating the samples. They decided to preprocess the data by converting the 16-bit grayscale images into 8-bit grayscale images using a 1\% percentile stretch operation.
 
 \begin{figure}
     \centering
     \begin{subfigure}[b]{0.45\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{resources/mask000-slice3-saturated.png}
-        \label{fig:gt-slice-3-saturated}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.45\textwidth}
-        \centering
         \includegraphics[width=\linewidth]{resources/mask000-slice3-composite-circles.png}
         \label{fig:gt-slice-3-composition}
     \end{subfigure}
-    \caption{Labeled tunnels by a biologist at 0th time slot on the left. On the
-    right the binarized version can be seen overlaid on top of the original
-    data. A potential irregularities in the labels are visualised in red circles.}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{resources/mask000-slice3-saturated.png}
+        \label{fig:gt-slice-3-saturated}
+    \end{subfigure}\hfill
+    \caption{Single slice of the data on the left (contrast-enhanced) with overlaid tunnel labels in magenta. Two yellow circles emphasise two places with potentially missing labels. On the right, the instance labels for that particular slice.}
     \label{fig:gt-slice-3}
 \end{figure}
 
-After the preprocessing is done, the protocol states that picking random time
-slots at least 100 instances of tunnels must be annotated, and each frame has to
-be fully annotated. Also segments outgoing from the surrounding tissue should be
-ignored.According to this protocol the biologists picked two time steps --- the
-0th and 17th step ---  to label. The ground truth created by a biologist for the
-0th time slot is visible in the left part of Figure \ref{fig:gt-slice-3}. In the
-right part of the mentioned figure a composition was created with gray data and
-the binarised ground truth in magenta colour. As can be seen in the image,
-sometimes it is rather difficult to decide if the protrusion is a TNT or not, in
-the figure, two areas are highlighted by a red circle, where it is not clear why
-the biologist did not also label the TNTs. This illustrates a possible
-difficulty when assessing the segmentation accuracy later on.  % todo: make this
-more natural
+After preprocessing is done, the protocol states that, by picking random time slots, at least 100 instances of tunnels must be annotated, and each frame must be fully annotated. Also, segments originating from the surrounding tissue should be ignored. According to this protocol, the biologists picked two time steps — the 0th and 17th steps — to label. The reference annotations for a single slice of the 0th time slot are visible in the right part of Figure \ref{fig:gt-slice-3}. Overall, in the two time steps, 127 tunnels are fully annotated.
 
-Afterwards the labels were checked manually and two cases of label duplicity were
-found and fixed, by assigning a unique number to the new connected component.
-The flawed labels were 33 located in top right quadrant and label 32 located
-bottom right quadrant as can be seen in Figure \ref{fig:duplicatedlabel}.
+Sometimes it is rather challenging to decide if the protrusion is a TNT or not. In Figure {fig:gt-slice-3-composition}, two protrusion-like structures are highlighted using yellow circles. Although their structure appears essentially the same as that of a TNT, it is unclear why the biologist did not also label them. This illustrates a possible difficulty in assessing the accuracy of the segmentation.
 
-\begin{figure}
-    \begin{center}
-        \includegraphics[width=0.6\linewidth]{resources/duplicatedlabel-crop.png}
-    \end{center}
-    \caption{Maximum projection of the data highlighting problematic tunnel with id 32 located in bottom right quadrant}.
-    \label{fig:duplicatedlabel}
-\end{figure}
+Afterwards, the labels were manually checked, and two cases of label duplication were identified and corrected by assigning a unique number to the new connected component. The corrected reference annotations will be published in the archive.
 
 \chapter{Architectures}
 This chapter deals with research into the topic and what architectures were
