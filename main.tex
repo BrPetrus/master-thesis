@@ -180,7 +180,6 @@ Sometimes it is rather challenging to decide if the protrusion is a TNT or not. 
 Afterwards, the labels were manually checked, and two cases of label duplication were identified and corrected by assigning a unique number to the new connected component. The corrected reference annotations will be published in the archive.
 
 \chapter{Related Work}
-
 \label{sec:research}
 We began by researching similar papers dealing with TNTs \parencite{Ceran2022TNTdetect} \parencite{Hodneland2006Automated}, paper about curvilinear structure segmentation \parencite{Mou2021}, and improvements to U-Net networks \parencite{Rundo2019}. The following papers introduce the use of U-Net-like networks for segmenting structures like our TNTs, and also possible way of improving their accuracy with attention mechanisms.
 
@@ -201,179 +200,76 @@ This chapter deals with research into the topic and what architectures were trie
 \section{U-Net and BasicUNet}
 \label{sec:unet}
 
-In 2015 a seminal paper by Rossenberger et al. \parencite{Ronneberger2015} was
-published dealing with semantic segmentation of biomedicine data. The paper
-achieved impressive results with very limited dataset. The neural network
-architecture is called U-Net.
+In 2015 a seminal paper by Rossenberger et al. \parencite{Ronneberger2015} was published dealing with semantic segmentation of biomedicine data. The paper achieved impressive results with very limited dataset. The neural network architecture is called U-Net.
 
 \begin{figure}
     \begin{center}
         \includegraphics[width=0.9\linewidth]{resources/architecture_diagrams/unet.png}
     \end{center}
-    \caption{U-Net architecture as described in \parencite{Ronneberger2015}.
-    Several upsampling layers follow the encoder with concatonation steps
-    between corresponding layers.}
+    \caption{U-Net architecture as described in \parencite{Ronneberger2015}. Several upsampling layers follow the encoder with concatonation steps between corresponding layers.}
     \label{fig:unetdiagram}
 \end{figure}
 
-Tasks like image classification which fueled a lot of research in deep learning
-is concerned with assigning a single label to the whole image; however, in our
-domain we are concerned with finding the binary masks of TNTs. The seminal paper
-which introduced the U-Net architecture \parencite{Ronneberger2015} instead
-introduces several upsampling layers after the encoder. 
+Tasks like image classification which fueled a lot of research in deep learning is concerned with assigning a single label to the whole image; however, in our domain we are concerned with finding the binary masks of TNTs. The seminal paper which introduced the U-Net architecture \parencite{Ronneberger2015} instead introduces several upsampling layers after the encoder. 
 
-The overall diagram is shown in Figure \ref{fig:unetdiagram}. In the encoder
-part, two convolution layers of size 3x3 are applied, folled by a downsampling
-layer, which halves the dimensions. This is repeated for four times, after which
-an extra convolutional layer is applied.
+The overall diagram is shown in Figure \ref{fig:unetdiagram}. In the encoder part, two convolution layers of size 3x3 are applied, folled by a downsampling layer, which halves the dimensions. This is repeated for four times, after which an extra convolutional layer is applied.
 
-After running the encoder, the upsampling is introduced to revert the image to
-roughly the same size as in the beginning. This is achieved by applying
-transposed convolution layer, which doubles the spatial dimensions at the cost
-of halving the number of channels. Each upsampling is followed by concatenating
-the upsampled data with the output of the corresponding convolutional block in
-the encoder, followed by another convolutional layer. This is better seen on the
-diagram, where the concatenations are shown by the horizontal lines.
+After running the encoder, the upsampling is introduced to revert the image to roughly the same size as in the beginning. This is achieved by applying transposed convolution layer, which doubles the spatial dimensions at the cost of halving the number of channels. Each upsampling is followed by concatenating the upsampled data with the output of the corresponding convolutional block in the encoder, followed by another convolutional layer. This is better seen on the diagram, where the concatenations are shown by the horizontal lines.
 
-Finally we do a final convolution operation to ouput the right
-amiunt of classes, which in our case is equal to a signle one, where 0 indicates
-a background or pillar and 1 means a TNT.
+Finally we do a final convolution operation to ouput the right amiunt of classes, which in our case is equal to a signle one, where 0 indicates a background or pillar and 1 means a TNT.
 
-Crucially, it has a usefull property that it does not need a vast
-dataset to train properly. This is demonstrated in \parencite{Ronneberger2015},
-where they trained the network with just 30 annotated images.
+Crucially, it has a usefull property that it does not need a vast dataset to train properly. This is demonstrated in \parencite{Ronneberger2015}, where they trained the network with just 30 annotated images.
 
-The Figure \ref{fig:unetdiagram} is visualising how the U-Net architecture can be
-used to train a 2D model, but there is not reason why we could not use 3D
-versions of convolution, maxpool and transposed convolution and in fact this
-version is used in this work. We refer to this model as the BasicUNet. Such
-network uses 2x2x2 kernels in the downsampling and upscaling layers, while 3x3x3
-kernels are used in the convolutional layers.
+The Figure \ref{fig:unetdiagram} is visualising how the U-Net architecture can be used to train a 2D model, but there is not reason why we could not use 3D versions of convolution, maxpool and transposed convolution and in fact this version is used in this work. We refer to this model as the BasicUNet. Such network uses 2x2x2 kernels in the downsampling and upscaling layers, while 3x3x3 kernels are used in the convolutional layers.
 
 \section{Anisotropic U-Net (AnisoUNet)}
 
-Papers such as the influential VGGNet \parencite{simonyan2015vgg} demonstrated
-that model depth is one of the critical hyperparameters of a network that can be
-optimized to improve their accuracy. This inspired us to create the following
-architecture.
+Papers such as the influential VGGNet \parencite{simonyan2015vgg} demonstrated that model depth is one of the critical hyperparameters of a network that can be optimized to improve their accuracy. This inspired us to create the following architecture.
 
-Since our data is heavily anisotropic we are limited in how much we can
-downsample in the z axis, as we have only 7 voxel inside the z dimension,
-meaning we can downsample just two times. This presents two issues - one is that
-the depth cannot be changed, and that the information about the whole data is
-very quickly compressed into a single dimension, potentially inhibiting the
-expressive performance of the network.
+Since our data is heavily anisotropic we are limited in how much we can downsample in the z axis, as we have only 7 voxel inside the z dimension, meaning we can downsample just two times. This presents two issues - one is that the depth cannot be changed, and that the information about the whole data is very quickly compressed into a single dimension, potentially inhibiting the expressive performance of the network.
 
-Our solution was to introduce anisotropic kernels into the design. Instead of
-using the isotropic 2x2x2 kernel shapes for both downsampling and upsampling,
-instead 1x2x2 kernel shapes are used to keep the z dimension constant. As such,
-this allows us to train deeper networks and does not force the network to
-compress all depth information like before.
+Our solution was to introduce anisotropic kernels into the design. Instead of using the isotropic 2x2x2 kernel shapes for both downsampling and upsampling, instead 1x2x2 kernel shapes are used to keep the z dimension constant. As such, this allows us to train deeper networks and does not force the network to compress all depth information like before.
 
-There is still the question of what kernel size to use for the horizontal
-layers. In the Section \ref{sec:diff-architectures} we will study this choice in
-more details. We are going to define 3D and 2D version of the network, by which
-we mean that 3D networks are using 3x3x3 while 2D networks are using 1x3x3
-kernel shapes in their convolutional layers.
+There is still the question of what kernel size to use for the horizontal layers. In the Section \ref{sec:diff-architectures} we will study this choice in more details. We are going to define 3D and 2D version of the network, by which we mean that 3D networks are using 3x3x3 while 2D networks are using 1x3x3 kernel shapes in their convolutional layers.
 
-The idea to test the difference in their performance came from the following two
-concepts: when I as a human am looking at the images, I can roughly estimate
-what are tunnels and what is a pillar based on the overall shape, but it is
-significantly easier if I am allowed to see multiple slices; hence, the 3D
-version with their greater receptive fields reaching other z slices, would
-benefit in terms of their accuracy. On the other hand, network with 3D kernels
-have more trainable parameters; thus, might be harder to train and as we have
-sparsely annotated dataset this could become a hurdle causing the 2D version to
-perform better.
+The idea to test the difference in their performance came from the following two concepts: when I as a human am looking at the images, I can roughly estimate what are tunnels and what is a pillar based on the overall shape, but it is significantly easier if I am allowed to see multiple slices; hence, the 3D version with their greater receptive fields reaching other z slices, would benefit in terms of their accuracy. On the other hand, network with 3D kernels have more trainable parameters; thus, might be harder to train and as we have sparsely annotated dataset this could become a hurdle causing the 2D version to perform better.
 
-Overall such network with anisotropic pooling operations will be referred to as
-AnisoUNet(3D) in the rest of the thesis.
+Overall such network with anisotropic pooling operations will be referred to as AnisoUNet(3D) in the rest of the thesis.
 
 \section{The CSAM module}
 \label{sec-csammodule}
 
-This section talks about the channel and spatial attention module (further
-refered to as the CSAM) mentioned in the CS-Net paper \parencite{Mou2021}. 
+This section talks about the channel and spatial attention module (further refered to as the CSAM) mentioned in the CS-Net paper \parencite{Mou2021}. 
 
 \begin{figure}
     \begin{center}
         \includegraphics[width=0.9\linewidth]{resources/architecture_diagrams/csam.png}
     \end{center}
-    \caption{The CSAM from Paper \parencite{Mou2021}. This module is inserted in
-    the neck part of an U-Net neural network.}
+    \caption{The CSAM from Paper \parencite{Mou2021}. This module is inserted in the neck part of an U-Net neural network.}
     %todo: check if my implementation is correctly doing this
     \label{fig:csammodule}
 \end{figure}
 
-The Figure \ref{fig:csammodule} shows the overall architecture of the CSAM. It
-is formed of two paths, the spatial attention block SB and the channel attention
-block CAB. One is designed to help the network find tubular structures inside
-the spatial direction while the other is used for helping the network learn
-inter-channel dependency. In the following section I will talk about the main
-principles behind their design, but for full explanation refer to the original
-paper. Note that the authors devised both 2D and 3D version of this module, but
-we will focus on just the 3D version.
+The Figure \ref{fig:csammodule} shows the overall architecture of the CSAM. It is formed of two paths, the spatial attention block SB and the channel attention block CAB. One is designed to help the network find tubular structures inside the spatial direction while the other is used for helping the network learn inter-channel dependency. In the following section I will talk about the main principles behind their design, but for full explanation refer to the original paper. Note that the authors devised both 2D and 3D version of this module, but we will focus on just the 3D version.
 
 \subsection*{SAB}
-The design of the spatial attention block is motivated by the detection of
-tubular structures such as blood vessels in retina images. The detection of such
-features might require contextual information rather than purely local
-information.
+The design of the spatial attention block is motivated by the detection of tubular structures such as blood vessels in retina images. The detection of such features might require contextual information rather than purely local information.
 
-Overall, the design is very similar to the attention mechanism in Transformers
-described by Vaswani et al. \parencite{Vaswani2017attention} where a
-key-query-value structure was introduced. In the case of CSAM, the query, key,
-and newly introduces judge matrices are creating by convolving the data with
-1x3x1, 3x1x1, and 1x1x3 kernel shapes. This step somehow compresses the
-information about the tree like structures in the three directions. These
-matrices are then multiplied together to obtain a spatial attention between the
-x,y and z direction. This attention map is then used to weight the dimension
-reduced original data in $V$ and expanded back to the original size.
+Overall, the design is very similar to the attention mechanism in Transformers described by Vaswani et al. \parencite{Vaswani2017attention} where a key-query-value structure was introduced. In the case of CSAM, the query, key, and newly introduces judge matrices are creating by convolving the data with 1x3x1, 3x1x1, and 1x1x3 kernel shapes. This step somehow compresses the information about the tree like structures in the three directions. These matrices are then multiplied together to obtain a spatial attention between the x,y and z direction. This attention map is then used to weight the dimension reduced original data in $V$ and expanded back to the original size.
 
 \subsection*{CAB}
-The design of the second block is very similar to the first one, but in this
-case the point is to model the interchannel dependencies, therefore instead of
-using the differenrly sized kernels, the authors use 1x1x1 kernels, which
-results are then combined to an affinity matrix of size CxCxC, where a value at
-position $(x,y,z)$ tell how these three channels are connected.
+The design of the second block is very similar to the first one, but in this case the point is to model the interchannel dependencies, therefore instead of using the differenrly sized kernels, the authors use 1x1x1 kernels, which results are then combined to an affinity matrix of size CxCxC, where a value at position $(x,y,z)$ tell how these three channels are connected.
 
 Afterwards the output is the sum of the SAB, CAB and the original data.
 
 \section{Squeeze and excitation block}
 \label{sec-seblock}
 
-In Paper \parencite{Hu2018} researchers demonstrated how a simple small block,
-called the squeeze-and-excitation (SE) block, can improve the performance across
-various datasets and tasks. Hence, we chose it as the second attention-like
-mechanism to explore in this thesis.
+In Paper \parencite{Hu2018} researchers demonstrated how a simple small block, called the squeeze-and-excitation (SE) block, can improve the performance across various datasets and tasks. Hence, we chose it as the second attention-like mechanism to explore in this thesis.
 
-The general principle of a squeeze-and-excitation block is illustrated in Figure
-\ref{fig:seblock}. The main idea is that we let the network learn significance
-of each channel automatically during the training. As its name suggest there is
-a squeeze operation where the channels are compressed and then an excitation
-step, which produce channel weights between 0.0 and 1.0, which multiply the
-values in the original data. The researchers postulate that this improves the
-network's quality of representation by modeling the interdependencies between
-channels of the output of the convolution layers \parencite{Hu2018}.
+The general principle of a squeeze-and-excitation block is illustrated in Figure \ref{fig:seblock}. The main idea is that we let the network learn significance of each channel automatically during the training. As its name suggest there is a squeeze operation where the channels are compressed and then an excitation step, which produce channel weights between 0.0 and 1.0, which multiply the values in the original data. The researchers postulate that this improves the network's quality of representation by modeling the interdependencies between channels of the output of the convolution layers \parencite{Hu2018}.
 
-Let's look at it in more detail, the SE block, shown in Figure
-\ref{fig:seblock}, consists of four operations: truncate, squeeze, excitation,
-and scaling. The truncate operation shown as $F_{TR}$ is a general convolutional
-operator, which reduces the dimension. This step is not crucial in the scheme,
-but it is mainly to illustrate the point, that SE block is usually built upon
-some operation. More importantly, the transformed data is taken and run through
-a squeeze operation, which performs some global operation - our case global
-average pooling - in the whole channel. After that, the excitation operation
-comes. This operation was designed to have the following properties: they wanted
-to create a flexible operation --- meaning an operation capable of learning
-non-linear dependencies --- and they wanted it to be non-mutually exclusive
-between channels. These properties are fulfilled by applying two convolutions
-followed by ReLU and sigmoid respectively. Note that the first convolution
-produces output with less than the original number of channels and the ratio is
-called the reduction factor. Finally the last convolution expands the number of
-channels to the original size. The combination of squeeze and excitation allows
-the network to learn how to weight each channel (the scale operation mentioned
-above) by considering multiple channels.
+Let's look at it in more detail, the SE block, shown in Figure \ref{fig:seblock}, consists of four operations: truncate, squeeze, excitation, and scaling. The truncate operation shown as $F_{TR}$ is a general convolutional operator, which reduces the dimension. This step is not crucial in the scheme, but it is mainly to illustrate the point, that SE block is usually built upon some operation. More importantly, the transformed data is taken and run through a squeeze operation, which performs some global operation - our case global average pooling - in the whole channel. After that, the excitation operation comes. This operation was designed to have the following properties: they wanted to create a flexible operation --- meaning an operation capable of learning non-linear dependencies --- and they wanted it to be non-mutually exclusive between channels. These properties are fulfilled by applying two convolutions followed by ReLU and sigmoid respectively. Note that the first convolution produces output with less than the original number of channels and the ratio is called the reduction factor. Finally the last convolution expands the number of channels to the original size. The combination of squeeze and excitation allows the network to learn how to weight each channel (the scale operation mentioned above) by considering multiple channels.
 % todo: check if it is global average pooling
 
 \begin{figure}
@@ -393,15 +289,7 @@ above) by considering multiple channels.
     \label{fig:usenet}
 \end{figure}
 
-While the authors talk about placing this object after the truncate operation,
-and give concrete examples of where to place it in Inception and ResNet blocks,
-not mention of U-Net is found. We briefly experimented with placing a single SE
-block in the neck part of the U-Net, similarly to how the CSAM was used, but
-this was later replaced instead by using the architecture described in
-\parencite{Rundo2019}. In their work thet suggested a different placement of the
-SE blocks inside a U-Net like architecture. It is called USE-Net and the
-placement is visible in Figure \ref{fig:usenet}. The authors are placing a SE
-block before the concationation and also at every step of the upsampling. 
+While the authors talk about placing this object after the truncate operation, and give concrete examples of where to place it in Inception and ResNet blocks, not mention of U-Net is found. We briefly experimented with placing a single SE block in the neck part of the U-Net, similarly to how the CSAM was used, but this was later replaced instead by using the architecture described in \parencite{Rundo2019}. In their work thet suggested a different placement of the SE blocks inside a U-Net like architecture. It is called USE-Net and the placement is visible in Figure \ref{fig:usenet}. The authors are placing a SE block before the concationation and also at every step of the upsampling. 
 
 This is the last architecture we will explore in this work.
 
