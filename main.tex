@@ -179,67 +179,24 @@ Sometimes it is rather challenging to decide if the protrusion is a TNT or not. 
 
 Afterwards, the labels were manually checked, and two cases of label duplication were identified and corrected by assigning a unique number to the new connected component. The corrected reference annotations will be published in the archive.
 
-\chapter{Architectures}
-This chapter deals with research into the topic and what architectures were
-tried and tested.
+\chapter{Related Work}
 
-\section{Research}
 \label{sec:research}
-We began by researching similar papers dealing with TNTs
-\parencite{Ceran2022TNTdetect} \parencite{Hodneland2006Automated}, paper about
-curvilinear structure segmentation \parencite{Mou2021}, and improvements to
-U-Net networks \parencite{Rundo2019}. The following papers introduce the use of
-U-Net-like networks for segmenting structures like our TNTs, and also possible
-way of improving their accuracy with attention mechanisms.
+We began by researching similar papers dealing with TNTs \parencite{Ceran2022TNTdetect} \parencite{Hodneland2006Automated}, paper about curvilinear structure segmentation \parencite{Mou2021}, and improvements to U-Net networks \parencite{Rundo2019}. The following papers introduce the use of U-Net-like networks for segmenting structures like our TNTs, and also possible way of improving their accuracy with attention mechanisms.
 
-We began by looking at papers which explicitly mention the segmentation of TNTs
-and were able to find two working methods. In \parencite{Hodneland2006Automated}
-the researchers have similarly looking TNTs connecting cells, but in their case
-the tunnels form long straight lines. In the paper they describe a multistep
-algorithm which takes employ two channels, one is for segmenting cell borders
-and tunnels, while in the other channel the cells inside are much more visible,
-hence, this can be used to better separate cells and tunnel. As our data has
-different modality, this approach could not be used. They also assume that the
-tunnels are straight which is not true in our case.
+We began by looking at papers which explicitly mention the segmentation of TNTs and were able to find two working methods. In \parencite{Hodneland2006Automated} the researchers have similarly looking TNTs connecting cells, but in their case the tunnels form long straight lines. In the paper they describe a multistep algorithm which takes employ two channels, one is for segmenting cell borders and tunnels, while in the other channel the cells inside are much more visible, hence, this can be used to better separate cells and tunnel. As our data has different modality, this approach could not be used. They also assume that the tunnels are straight which is not true in our case.
 
-The other paper which specifically mentions tunneling nanotubes is
-\parencite{Ceran2022TNTdetect}. In this paper the authors develop a tool for
-segmenting TNTs called TNT.AI. They discuss about how to deal with the
-difficulty of hand marking the tunnels. Four human experts were involved to
-correctly identify TNTs (as individual experts' label varied), and what was done
-to make the labels as clear as possible. Then they devised a two step procedure,
-in the first a classification network works on tiles to identifies where a TNT
-possible is, and then a second network is used to finely segment the TNTs pixel
-wise. Unfortunately they do not go into details of their networks. I tried to
-contact one of the authors to get the code and data, but they did not respond.
-In the paper they talk about using a U-Net like architecture for the
-segmentation part, formed of ResNet blocks. They also used a pretrained encoder.
-The architecture is called AuraNet [TODO cite].
+The other paper which specifically mentions tunneling nanotubes is \parencite{Ceran2022TNTdetect}. In this paper the authors develop a tool for segmenting TNTs called TNT.AI. They discuss about how to deal with the difficulty of hand marking the tunnels. Four human experts were involved to correctly identify TNTs (as individual experts' label varied), and what was done to make the labels as clear as possible. Then they devised a two step procedure, in the first a classification network works on tiles to identifies where a TNT possible is, and then a second network is used to finely segment the TNTs pixel wise. Unfortunately they do not go into details of their networks. I tried to contact one of the authors to get the code and data, but they did not respond. In the paper they talk about using a U-Net like architecture for the segmentation part, formed of ResNet blocks. They also used a pretrained encoder. The architecture is called AuraNet [TODO cite].
 % todo: mention we do not need the classification part?
 
-As neither of these papers provide working code examples or are not applicable
-for our data, we decided to look at the tunnels as what is called a curvilinear
-structures. Bibiloni et al. provides a full definition based on their geometric
-and photometric characteristics, but they also provide a simpler rough
-definition which is enough for our purposes. They can be defined as thin, long,
-line-like regions with different intensities than their neighbouring pixels
-\parencite{bibiloni2016curvilinear}. Some examples of curvilinear structures
-include river finding, blood vessel segmentation, or lung airways segmentation
-\parencite{kong2018roadsensing} \parencite{Mou2021}. Our TNTs mostly
-fit this description as their shape is thinner compared to the vertical
-protrusion, and are clearly different intesity than the background.
+As neither of these papers provide working code examples or are not applicable for our data, we decided to look at the tunnels as what is called a curvilinear structures. Bibiloni et al. provides a full definition based on their geometric and photometric characteristics, but they also provide a simpler rough definition which is enough for our purposes. They can be defined as thin, long, line-like regions with different intensities than their neighbouring pixels \parencite{bibiloni2016curvilinear}. Some examples of curvilinear structures include river finding, blood vessel segmentation, or lung airways segmentation \parencite{kong2018roadsensing} \parencite{Mou2021}. Our TNTs mostly fit this description as their shape is thinner compared to the vertical protrusion, and are clearly different intesity than the background.
 
-Mou et al. \parencite{Mou2021} use a modified U-Net to segment curvilinear
-structures such as blood vessels in retina. They investigate the use of typical
-U-Net and introduce so called spatial and channel attention module (CSAM), which
-supposedly helps with keeping the faint curvilinear structures connected. Unlike
-the previous paper TNT.AI
+Mou et al. \parencite{Mou2021} use a modified U-Net to segment curvilinear structures such as blood vessels in retina. They investigate the use of typical U-Net and introduce so called spatial and channel attention module (CSAM), which supposedly helps with keeping the faint curvilinear structures connected. Unlike the previous paper TNT.AI
 
-Given all this information, we decided take the standard U-Net architecture,
-modify it for our 3D images. We will talk about how we tackled the problem of
-anisotropy in our data and how we were inspired by \parencite{Mou2021}
-\parencite{Ceran2022TNTdetect} to try attention mechanism to improve the
-accuracy.
+Given all this information, we decided take the standard U-Net architecture, modify it for our 3D images. We will talk about how we tackled the problem of anisotropy in our data and how we were inspired by \parencite{Mou2021} \parencite{Ceran2022TNTdetect} to try attention mechanism to improve the accuracy.
+
+\chapter{Architectures}
+This chapter deals with research into the topic and what architectures were tried and tested.
 
 \section{U-Net and BasicUNet}
 \label{sec:unet}
