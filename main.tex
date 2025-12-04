@@ -101,7 +101,7 @@
 \usepackage{floatrow} %% Putting captions above tables
 \floatsetup[table]{capposition=top}
 \usepackage[babel]{csquotes} %% Context-sensitive quotation marks
-\usepackage{algorithm2e}
+\usepackage[ruled]{algorithm2e}
 
 \begin{document}
 %% The \chapter* command can be used to produce unnumbered chapters:
@@ -298,49 +298,21 @@ While the authors in \parencite{Hu2018} talk about placing this object after the
 
 This is the last architecture we will explore in this work and will be referred to as the AnisoUNet-UseNet variant. 
 
-
 \chapter{Training}
-\label{}
-This chapter explains how the aforementioned neural networks were trained. How
-the data was split to allow cross fold learning and finally how the network can
-be run to segment any size of the network.
+\label{sec:training}
+This chapter explains how the aforementioned neural networks were trained. How the data was split to allow cross-fold learning, and finally, how the network can be run to segment images of different sizes.
 
 \section{Splitting the data}
 \label{sec:processing_data}
 % [TODO mention alternatives to supervised learning somewhere]
 
-As mentioned in Chapter \ref{sec:data}, we have only two fully annotated time
-frames, each containing dimensions of 7x512x512 voxels. Splitting such a small
-dataset into training and testing sets presents a challenge, which is further
-complicated by the need to experiment with fully 3D networks. If we were to
-treat each depth slice independently, it would allow mixing of testing and
-training data; however, this could introduce bias. This bias arises because the
-pillars are nearly horizontal, and the tunnels can extend across multiple
-slices. Moreover, if we consistently use all seven depth slices, we would
-essentially be training on one time frame while testing on another. In our
-opinion, this approach is unfeasible.
+As mentioned in Chapter \ref{sec:data}, we have only two fully annotated time frames, each of 7x512x512 voxels. Splitting such a small dataset into training and testing sets presents a challenge, which is further complicated by the need to experiment with fully 3D networks. If we were to treat each depth slice independently, it would allow mixing of testing and training data; however, this could introduce bias. This bias arises because the pillars are nearly vertical, meaning their position is roughly the same in all z-slices, and the tunnels are not limited to a single z-slice. Moreover, if we consistently use all seven depth slices, we would essentially be training on one time frame while testing on a different one. In our opinion, this approach is unfeasible.
 
-However, this is not a lost cause, as U-Nets have demonstrated that, compared to
-some other architectures, U-Nets do not require a vast labelled dataset to
-train. In the original paper, a few dozen images were used to train the networks
-to segment medical images \parencite{Ronneberger2015}. Similarly, we were able
-to reproduce the results of the CS-Net paper \parencite{Mou2021} and train a
-retina vessel segmentation network with just a few dozen images.
+However, as U-Nets have demonstrated, they do not require a vast labelled dataset to be trained. In the original paper, a few dozen images were used to train the networks to segment medical images \parencite{Ronneberger2015}. Similarly, we were able to reproduce the results of the CS-Net paper \parencite{Mou2021} and train a retina vessel segmentation network with just a few dozen images.
 
-To find the few dozen images, we decided to take a different approach. While
-splitting the dataset into quadrants would still yield only about eight images,
-we decided to look at the level of the annotated instances of tunnels. Since
-there are more than 100 of these TNTs, we can train a network on just the crops
-of the TNTs. Then we can tile the entire image and stitch the predictions of the
-neural networks similarly to what was done in \parencite{Ronneberger2015}.
+While splitting the dataset into quadrants would still yield only about eight images, we decided to look at the level of the annotated instances of tunnels. Since there are more than 100 of these TNTs, we can train a network on just the crops of the TNTs. Then we can tile the entire image and stitch the predictions of the neural networks similarly to what was done in the original U-Net paper \parencite{Ronneberger2015}.
 
-The actual splitting logic iterates through every single TNT and crops it out.
-As the tunnels have different sizes, we decided to cut out the bounding boxes of
-the tunnels with a set of minimum sizes. For the minimum size, we decided to opt
-for a 7x90x90 shape, as it comfortably fits the majority of tunnels and provides
-a decent context around it. A decent number of tunnels are smaller than this. To
-expand the size to fit the minimum volume size, we decided to expand them with
-relevant data.
+The actual splitting logic iterates through every single TNT and crops it out. As the tunnels have different sizes, we decided to cut out the bounding boxes of the tunnels with a set of minimum sizes. For the minimum size, we opted for a $7 \times 90 \times 90$ shape, as it comfortably fits the majority of tunnels and provides a decent context around it. A decent number of tunnels are smaller than this. To expand the size to fit the minimum volume size, we decided to expand them with relevant data instead of padding by 0.
 
 \begin{figure}
     \begin{center}
@@ -349,160 +321,81 @@ relevant data.
     \caption{Subpart of the original data showing noise and artifacts.}
     \label{fig:upperright}
 \end{figure}
-It is still important to be able to somehow split the dataset into the training
-and testing sets. As the dataset is rather sparse, choosing a random subset to
-evaluate performance is not ideal, and there is a random chance that some tunnel
-from the testing set may be visible in a cutout of a tunnel in the training set.
-Another problem is how the various parts of the dataset do not have the same
-number of tunnels, tunnels of the same morphology and the same amount of noise
-and irrelevant structures. For example, in the upper right corner in Figure
-\ref{fig:upperright} we can find some irrelevant structures which are not
-present in the rest of the dataset. Given these problems, it is pretty tricky to
-split the dataset in such a way that all possible types of artefacts and tunnel
-structures are visible in both the testing and training subsets.
 
-We tackled this problem by doing a quadrant-based spatial 4-fold
-cross-validation. In each training run, one of the four quadrants is selected as
-the testing quadrant, and all cropped TNTs belonging to this quadrant form the
-testing subset. This helps mitigate the small dataset and enables us to study
-how the different folds affect the performance of the neural network.
+It is still important to be able to somehow split the dataset into the training and testing sets. As the dataset is rather sparse, choosing a random subset to evaluate performance is not ideal, and there is a random chance that some tunnels from the testing set may be visible in a cutout of a tunnel in the training set. Another problem is how the various parts of the dataset do not have the same number of tunnels, tunnels of the same morphology and the same amount of noise and irrelevant structures. For example, in the upper right corner in Figure \ref{fig:upperright} we can find some irrelevant structures which are not present in the rest of the dataset. Given these problems, it is pretty tricky to split the dataset in such a way that all possible types of artefacts and tunnel structures are visible in both the testing and training subsets.
+
+We tackled this problem by doing a quadrant-based spatial 4-fold cross-validation. In each training run, one of the four quadrants is selected as the testing quadrant, and all cropped TNTs belonging to this quadrant form the testing subset. This helps mitigate the small dataset and enables us to study how the different folds affect the performance of the neural network.
 
 \begin{figure}
     \begin{center}
         \includegraphics[width=0.6\linewidth]{resources/dataset/vis_split_t0.png}
     \end{center}
-    \caption{A visualisation of the division into a training and testing subset
-    for one of the folds.}
+    \caption{Maximum projection of the binarised reference annotations for the first fold. Red crops belong to crops which were placed into the testing set, while blue crops form the training set. Tunnels whose crops were significantly present in both training and testing quadrants were discarded; thus, the tunnels do not have any colour.}
     \label{fig:folding-visualisation}
 \end{figure}
 
-This is still quite challenging to do correctly, as not every tunnel lies neatly
-inside one of the quadrants. A split used in training is visualised in Figure
-\ref{fig:folding-visualisation}, where a possible split is shown in two colours:
-red represents cutouts belonging to the testing subset. The decision of whether
-a cutout belongs to the testing subset or not is dictated by looking at the
-overlap with the training quadrant. If the crop lies with more than 20\% or has
-more than 50 pixels in the testing quadrant, it will not be included in the
-training subset. If at least 80\% of the cutout is inside the testing quadrant,
-it is considered to be part of the testing subset.
+This is still quite challenging to do correctly, as not every tunnel lies neatly inside one of the quadrants. A split used in training is visualised in Figure \ref{fig: folding-visualisation}, where a possible split is shown in two colours: red represents crops belonging to the testing subset. The decision of whether a crop belongs to the testing subset or not is determined by examining the overlap with the training quadrant. If the crop lies with more than 20\% or has more than 50 voxels in the testing quadrant, it will not be included in the training subset. If at least 80\% of the crop is inside the testing quadrant, it is considered to be part of the testing subset.
 
-Finally, during the training we need the be able to know when to stop. For this
-purpose during each run, roughly 30\% of the crops used for training are used as
-a validation set.
+Finally, during the training, we need to know when to stop. For this purpose, during each run, approximately 30% of the crops for training are randomly picked and form the validation set.
 
 \section{Loss functions}
-Since we can look at finding tunneling nanotubes as a binary classification
-problem applied at every pixel, it naturally comes to use a binary cross-entropy
-loss to teach the network to learn to segment the images. However, our dataset
-is very heavily imbalanced as the data contains a lot more negative examples. To
-somewhat help the training to pay more attention to the tunnels, the
-cross-entropy was weighted by a factor or 50, which was estimated by taking the
-calculating the ration of pixels classified as background and pixels assigned to
-some tunnel by the biologist. The weighted BCE loss is defined as
-\parencite{Jadon2020loss} \parencite{PyTorchBCE}:
+Since we can view finding tunnelling nanotubes as a binary classification problem applied at every pixel, it naturally comes to using a binary cross-entropy loss to train the network to segment the images. However, our dataset is heavily imbalanced, as it contains a significantly higher number of negative examples. To somewhat help the training pay more attention to the tunnels, the cross-entropy was weighted by a factor of 50, which was estimated as the ratio of pixels classified as background and pixels assigned to some tunnel by the biologist. The weighted BCE loss is defined as in \parencite{Jadon2020loss}{PyTorchBCE}, where $y$ stands for prediction, $\hat{y}$ is the true label, and $beta$ is the weight:
 
-\[ L_{BCE}(y, \hat{y}) = -(\beta*ylog(\hat{y}) + (1-y)log(1-\hat{y}) \]
+\[ L_{BCE}(y, \hat{y}) = -(\beta y \log(\hat{y}) + (1-y)\log(1-\hat{y}) \]
 
-where $y$ stands for prediction, $\hat{y}$ is the true label, and $\beta$ is the
-weight.
-
-To further improve the performance of the training, we got inspired CS-Net paper
-which uses Dice loss, and some papers claim that the combination of Dice loss
-and cross-entropy loss lead to better performance in many segmentation tasks
-\parencite{ma2020segmentationlossodyssey}. This is defined as taking $L_{Dice}
-= 1 - \text{Dice}$, meaning that as we get segmentation results closer to the
-ideal mask, we get closer to 0. The loss function was defined using as in the
-paper \parencite{ma2020segmentationlossodyssey} as:
-
+To further improve the performance of the training, we drew inspiration from the CS-Net paper, which uses Dice loss. Some papers claim that the combination of Dice loss and cross-entropy loss leads to better performance in many segmentation tasks \parencite{ma2020segmentationlossodyssey}. This is defined as taking $L_{Dice} = 1 - \text{Dice}$, meaning that as we obtain segmentation results closer to the ideal mask, we approach 0. The loss function was defined using as in the paper \parencite{ma2020segmentationlossodyssey} as:
 \[ L_{Dice}=1-\frac{2\sum_{i=1}^{N}{g_i*s_i}}{\sum_{i=1}^{N}{g_i^2}+\sum_{i=1}^{N}{s_i^2}} \]
-
-where $g_i$ is the binary indicator for the foreground and $s_i$ is the
-probability of assigning the pixel to the foreground class.
+where $g_i$ is the binary indicator for the foreground and $s_i$ is the probability of assigning the pixel to the foreground class.
 
 The final loss is the combination of $L_{BCE}$ and $L_{Dice}$:
 
 \[ L_{final} = 0.5 L_{Dice} + 0.5 L_{BCE} \]
 
-We used a linear combination of the losses as was mentioned in
-\parencite{ma2020segmentationlossodyssey}.
-
-During the development of the training loop, we observed that setting the
-learning rate to 0.0001 and weight decay to 0.0001 provided a stable learning.
-As such, we maintained a constant learning rate during training and did not
-experiment with these values due to time constraints. We chose to use an
-adaptive gradient algorithm for training the neural networks called AdamW, which
-is a variant of the commonly used Adam optimiser.
+We used a linear combination of the losses, as mentioned in \parencite{ma2020segmentationlossodyssey}.
 
 \section{Optimisers, learning rates, regularisation}
 
-Regularisation is a common technique in machine learning that reduces
-overfitting by discouraging values with large magnitudes
-\parencite{Bishop2024DeepLearning}. One of the standard regularisation
-techniques in deep learning is weight decay, also known as L2 normalisation,
-which penalises large weights [TODO check]. However, while L2 normalisation and
-weight decay are the same, this is not true for the Adam optimiser. The authors
-argue that using their version, called AdamW, achieves better generalisation
-performance as it properly decouples the weight decay
-\parencite{loshchilov2019}. Since we have a sparse dataset, we wanted to include
-the weight decay regularisation technique. However, no significant difference in
-the training performance was observed.
+During the development of the training loop, we observed that setting the learning rate to 0.0001 and weight decay to 0.0001 provided a stable learning. As such, we maintained a constant learning rate during training and did not experiment with these values due to time constraints. We chose to use an adaptive gradient algorithm for training the neural networks called AdamW, which is a variant of the commonly used Adam optimiser.
+
+Regularisation is a common technique in machine learning that reduces overfitting by discouraging values with large magnitudes \parencite{Bishop2024DeepLearning}. One of the standard regularisation techniques in deep learning is weight decay, also known as L2 normalisation, which penalises large weights [TODO check]. However, while L2 normalisation and weight decay are the same, this is not true for the Adam optimiser. The authors argue that using their version, called AdamW, achieves better generalisation performance as it properly decouples the weight decay \parencite{loshchilov2019}. Since we have a sparse dataset, we wanted to include the weight decay regularisation technique. However, no significant difference in the training performance was observed.
 
 \section{Augmentations}
 
-A common problem with training neural networks is their capacity to overfit on
-the training part of the dataset. This often leads to poor generalisation
-performance. This is especially true for tiny datasets such as ours. One of the
-common ways to address this problem, as mentioned in the original U-Net paper,
-is the use of augmentations \parencite{Ronneberger2015} to artificially enlarge
-the training set. In our case, we decided to use only augmentations that do not
-require interpolation. The reason is that, unlike many other tasks, we are
-potentially dealing with relatively thin structures, which could be easily
-suppressed or blurred and no longer visible with improper interpolation.
+A common problem with training neural networks is their capacity to overfit on the training part of the dataset. This often leads to poor generalisation performance. This is especially true for tiny datasets such as ours. One of the common ways to address this problem, as mentioned in the original U-Net paper, is the use of augmentations \parencite{Ronneberger2015} to enlarge the training set artificially. In our case, we decided to use only augmentations that do not require interpolation. The reason is that, unlike many other tasks, we are potentially dealing with relatively thin structures, which could be easily suppressed or blurred and become invisible with improper interpolation.
 
-In each batch, a different set of transforms is used. This works by setting a
-random probability for this particular transform to be applied. For the training
-we are:
+In each batch, a different set of transforms is used. This works by setting a random probability for this particular transform to be applied. For the training we are:
+
 \begin{itemize}
-    \item{Adding random noise with a Gaussian distribution of mean 0 and 0.01
-        standard deviation with probability 0.5, which adds very faint noise.
-        This is a relatively low amount of noise and was chosen during the
-        development of the network as we did not want to change the images to
-        look completely different to the original ones.}
-    \item{Random flipping in every axes.}
-    \item{Random spatial crop which always crops to the preset size 7x64x64 from
-        any other size.}
+    \item{Adding random noise with a Gaussian distribution of mean 0 and 0.01 standard deviation with probability 0.5, which adds very faint noise. This is a relatively low amount of noise and was chosen during the development of the network as we did not want to change the images to look completely different to the original ones.}
+    \item{Random flipping in every axis.}
+    \item{Random spatial crop which always crops to the preset size of $7 \times 64 \times 64$ from any other size.}
 \end{itemize}
-A possible problem of using small tiles centered at tunnels is that we might
-introduce unwanted bias into the network, as it might learn to always try to
-find the tunnel in the middle. The design designation behind using random
-spatial crop was to try to suppress this, as the program now randomly finds a
-crop of the wanted size, which reduces this problem.
+
+A potential issue with using small tiles centred at tunnels is that we may introduce unwanted bias into the network, as it might learn to always try to find the tunnel in the middle. The design designation behind using random spatial crop was to try to suppress this, as the program now randomly finds a crop of the wanted size, which reduces this problem.
 
 \section{Training loop}
-Overall the network training loop is shown in Algorithm \ref{alg:training}. Just
-a note the evaluation here is just calculating the Dice score on top of the
-crops belonging to the training quad.
+Overall, the network training loop is shown in Algorithm \ref{alg:training}.
 
-\begin{algorithm}[H]
-    \setlength{\lineskip}{-3pt}        % Reduce line spacing
-    \setlength{\baselineskip}{8pt}      % Reduce baseline spacing
-    \setlength{\parskip}{0pt}           % Remove paragraph spacing
+\begin{algorithm}
     \small  
     \caption{Quadrant-based Model Training}
+    \setlength{\lineskip}{-2pt}        % Reduce line spacing
+    \setlength{\baselineskip}{8pt}      % Reduce baseline spacing
+    \setlength{\parskip}{0pt}           % Remove paragraph spacing
     \label{alg:training}
-    \KwData{Four quadrants, model configuration}
-    \KwResult{Four trained models}
+    \KwInput{Data, Model description}
+    \KwOutput{Four trained models and evaluations.}
 
 \For{$quad \in quadrants$}{
     $Reseed()$\;
     
     \tcp{Data preparation}
-    $full\_train\_data, full\_test\_data \gets LoadQuadrantData(quad)$\;
+    $full\_train\_data, full\_test\_data \gets LoadQuadrantData(data, quad)$\;
     $mean, std \gets ComputeStats(full\_train\_data)$\;
     $train_{set}, val_{set} \gets SplitData(full\_train\_data, ratio=1/3)$\;
     
     \tcp{Model training with early stopping}
-    $model \gets CreateNeuralNetwork(config)$\;
+    $model \gets CreateNeuralNetwork(model\_description)$\;
     $best_{loss} \gets \infty$\;
     
     \For{$epoch \gets 1$ \KwTo $1000$ \textbf{or until} $val\_loss$ hasn't improved for 50 epochs}{
@@ -521,94 +414,72 @@ crops belonging to the training quad.
 }
 \end{algorithm}
 
+
 \section{Inference on large images}
 \label{sec:runningthenetwork}
 
-Our network has been trained on square crops of size 7x64x64 voxels, but the
-original images are larger at 7x512x512 voxels. This is solved by using an
-overlap-tiling strategy similar to the one by Ronneberger et al.
-\parencite{Ronneberger2015}. The original images a re split into tiles first
-with configurable amount of overlap in pixels, this is visualised in Figure
-\ref{fig:stitchingoverlap}. The tiles are sequentially processed by the network and then
-stitched together to create the final prediction. The predictions are then
-thresholded with value of 0.5.
+All our networks are trained on square crops of size $7 \times 64 \times 64$ voxels, but the original images are larger at $7 \times 512 \times 512$ voxels. This is solved by using an overlap-tiling strategy similar to the one by Ronneberger et al. \parencite{Ronneberger2015}. The original images are split into tiles first, with a configurable amount of overlap in pixels. The network sequentially processes the tiles and then stitches them together to create the final prediction. The predictions are then thresholded with a value of 0.5.
 
 \begin{figure}
     \centering
     \begin{subfigure}[t]{0.45\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{resources/overlaps_and_processing/quad3_0px_threshold_0.png}
-        \caption{0px overlap}
-        \label{fig:stitchingoverlap0}
-    \end{subfigure}\hfill
-    \begin{subfigure}[t]{0.45\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{resources/overlaps_and_processing/quad3_10px_threshold_0.png}
-        \caption{10px overlap}
-        \label{fig:stitchingoverlap10}
-    \end{subfigure}
-    \begin{subfigure}[t]{0.45\textwidth}
-        \centering
         \includegraphics[width=\textwidth]{resources/overlaps_and_processing/quad3.png}
-        \caption{Original image (stretched).}
+        \caption{}
         \label{fig:stitchingoverlaporig}
     \end{subfigure}\hfill
     \begin{subfigure}[t]{0.45\textwidth}
         \centering
         \includegraphics[width=\textwidth]{resources/overlaps_and_processing/quad3_10px_postprocessed.png}
-        \caption{10px overlap with postprocessing applied.} 
+        \caption{} 
         \label{fig:stitchingoverlappost}
     \end{subfigure}
-    \caption{\ref{fig:stitchingoverlap0} and \ref{fig:stitchingoverlap10} show
-    how different amount of overlap has effect on the prediction of TNTs for
-    image \ref{fig:stitchingoverlaporig}. The effect of postprocessing is seen
-    in \ref{fig:stitchingoverlappost}.}
+
+    \begin{subfigure}[t]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{resources/overlaps_and_processing/quad3_0px_threshold_0_circles.png}
+        \caption{}
+        \label{fig:stitchingoverlap0}
+    \end{subfigure}\hfill
+    \begin{subfigure}[t]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{resources/overlaps_and_processing/quad3_10px_threshold_0.png}
+        \caption{}
+        \label{fig:stitchingoverlap10}
+    \end{subfigure}
+
+    \caption{\ref{fig:stitchingoverlaporig} shows a crop of the dataset which has been contrast-adjusted, and the \ref{fig:stitchingoverlappost} shows neural network prediction with 10px overlap between tiles and postprocessing. The second row illustrates the impact of tile overlaps on the network's thresholded prediction. In \ref{fig:stitchingoverlap0}, no overlap was used, and possible edge artefacts are emphasised with blue circles, while overlap with 10 px is used in \ref{fig:stitchingoverlap10}.}
+
     \label{fig:stitchingoverlap}
 \end{figure}
 
-The idea to use a configurable overlap size came from the following observation.
-In Figure \ref{fig:stitchingoverlap0}, several sharp artefacts can be seen at
-tile borders, possibly because only part of the structure is visible, leading
-the network to classify it as a tunnel. This led us to the idea that if we use
-larger overlaps and aggregate them, these effects on tile borders will get
-suppressed. As can be seen in Figure \ref{fig:stitchingoverlap10}, using a
-larger overlap suppresses some of these artefacts. For aggregating the overlaps,
-a simple averaging was chosen due to its simplicity.
+The idea of using a configurable overlap size originated from the following observation. In Figure \ref{fig:stitchingoverlap0}, several sharp artefacts can be seen at tile borders, possibly because only part of the structure is visible, leading the network to classify it as a tunnel. This led us to the idea that if we use larger overlaps and aggregate them, these effects on tile borders will get suppressed. As can be seen in Figure \ref{fig:stitchingoverlap10}, using a larger overlap suppresses some of these artefacts. For aggregating the overlaps, a simple averaging was chosen due to its simplicity.
 
 % todo in discussion mention that maybe this was not the best idea, maybe we
 % should have chosen larger context. The context x precision tradeoff.
 % TODO: consider drawing there
 
-Even after this step, there still might be some leftover artefacts, some of
-which are linked to noisy input, but others are showcase that is is not a
-perfect solution to the artefacts caused by partial context. Some of these false
-TNTs at the border of tiles are quite small compared to real tunnels, which
-lead us to the final piece of the inference - the postprocessing.
+Even after this step, some leftover artefacts may remain, some of which are linked to noisy input, while others serve as evidence that it is not a perfect solution to the artefacts caused by partial context. Some of these false TNTs at the border of tiles are relatively small compared to real tunnels, which leads us to the final piece of the inference - the postprocessing.
 
 \section{Postprocessing}
 \label{sec:postprocessing}
 
-As mentioned in the previous section, even after applying the overlap strategy,
-some artefacts remain. Moreover, some artefacts actually closely resemble thin
-structures but are not true tunnels. Many of these false tunnels seem to be
-small and not connected to any cell, nor are significantly present at multiple
-depth slices. Therefore, we decided that an easy filtering would be using their
-volume.
+As mentioned in the previous section, even after applying the overlap strategy, some artefacts remain. Moreover, some artefacts actually closely resemble thin structures but are not true tunnels. Many of these false tunnels are small and not connected to any cell, nor are they significantly present at multiple depth slices. Therefore, an easy way to filter would be by using their volume.
 
 \begin{figure}
     \begin{center}
         \includegraphics[width=\textwidth]{resources/histogramofsizes.png}
     \end{center}
-    \caption{Histogram of the volume (in pixels) of all labeled tunneling
+    \caption{Histogram of the volume (in voxels) of all labelled tunnelling
     nanotubes with median and mean highlighted.}.
     \label{fig:histogramoflabelsizes}
 \end{figure}
 
-I chose the value of 100 pixels, realising that some of the tiny tunnels might
-get removed, but as will later be shown, the network tends to find more tunnels
-than the biologist. Hence, I believe this to be a reasonable assumption to make.
-The Figure  % todo: finish 
+The value of 100 pixels, realising that some of the tiny tunnels might get removed, but as will be shown later, the network tends to find more tunnels than the biologist. Hence, I believe this to be a reasonable assumption to make. The Figure \ref{fig:histogramoflabelsizes} shows a histogram of the distribution of labels' volumes. Removing components with a volume smaller than 100 voxels removed just a small number of all tunnels.
+
+% todo: finish 
 % todo: mention in discussion that this prob. could have been more studied
+
 
 \chapter{Implementation}
 
