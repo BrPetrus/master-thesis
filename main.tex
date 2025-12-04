@@ -101,6 +101,7 @@
 \usepackage{floatrow} %% Putting captions above tables
 \floatsetup[table]{capposition=top}
 \usepackage[babel]{csquotes} %% Context-sensitive quotation marks
+
 \usepackage[ruled]{algorithm2e}
 
 \begin{document}
@@ -383,8 +384,8 @@ Overall, the network training loop is shown in Algorithm \ref{alg:training}.
     \setlength{\baselineskip}{8pt}      % Reduce baseline spacing
     \setlength{\parskip}{0pt}           % Remove paragraph spacing
     \label{alg:training}
-    \KwInput{Data, Model description}
-    \KwOutput{Four trained models and evaluations.}
+    \KwData{Data, Model description}
+    \KwResult{Four trained models and evaluations.}
 
 \For{$quad \in quadrants$}{
     $Reseed()$\;
