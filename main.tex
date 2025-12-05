@@ -375,6 +375,7 @@ In each batch, a different set of transforms is used. This works by setting a ra
 A potential issue with using small tiles centred at tunnels is that we may introduce unwanted bias into the network, as it might learn to always try to find the tunnel in the middle. The design designation behind using random spatial crop was to try to suppress this, as the program now randomly finds a crop of the wanted size, which reduces this problem.
 
 \section{Training loop}
+\label{sec:trainingloop}
 Overall, the network training loop is shown in Algorithm \ref{alg:training}.
 
 \begin{algorithm}
@@ -478,47 +479,42 @@ As mentioned in the previous section, even after applying the overlap strategy, 
 
 The value of 100 pixels, realising that some of the tiny tunnels might get removed, but as will be shown later, the network tends to find more tunnels than the biologist. Hence, I believe this to be a reasonable assumption to make. The Figure \ref{fig:histogramoflabelsizes} shows a histogram of the distribution of labels' volumes. Removing components with a volume smaller than 100 voxels removed just a small number of all tunnels.
 
-% todo: finish 
-% todo: mention in discussion that this prob. could have been more studied
-
-
 \chapter{Implementation}
 
-In the training Chapter [REF], the training procedure and the previously described training and preprocessing in previous chapters were implemented as a collection of Bash scripts, Python scripts and a Python module. All of the code is available as part of the master's thesis, alongside several trained networks for the user's reference.
-
-I decided to use a combination of Python \parencite{Python2025} and Bash to implement the thesis. The overall structure of the project code is as follows: a single TNTSegment package is available, which handles data loading, data splitting, and defining the neural networks and their modules. Outside of the package, the training script, evaluation script, and postprocessing script are available. Finally, to connect it all, running the automated training pipeline that respects the cross-folds and aggregates the results involves a mix of Bash and Python scripts. In-depth instructions as to how to run these scripts are available alongside the code in the thesis archive.
+The high-level logic of the training loop is discussed in Section \ref{sec:trainingloop}, and the inference is discussed in \ref{sec:runningthenetwork}. This chapter addresses some of the technical details of the implementation. The complete code, written in Python and Bash, is available in the thesis's archive along with several trained networks and a full user's reference.
 
 Although the Python programming language is an interpreted and dynamically typed language, and therefore is comparatively slower than other lower-level languages traditionally used in image processing, such as C++, its nature allows it to rapidly prototype new applications. Moreover, many packages call code written in other languages, such as C++, Fortran or C, to alleviate the performance problem. Lastly, Python has become a widely adopted language in the area of neural networks, and many researchers publish their code in Python; thus, Python was chosen to handle the implementation part.
 
-As much of the evaluation involves proper cross-validation and averaging the results, it was easier to create a script that can be easily configured using a text editor or by providing and parsing CLI arguments. The averaging and selecting different datasets should not be the responsibility of the Python script. As such, creating directories, running code, aggregating results and parsing arguments is a natural job for a scripting language such as Bash. While this obviously limits the project's use to Unix-like operating systems, this is acceptable, as many computational servers are now running on Linux, and the trained models are OS-agnostic. [CHECK]
+As much of the evaluation involves proper cross-validation and averaging the results, it was easier to create a script that can be easily configured using a text editor or by providing and parsing CLI arguments. The averaging and selecting different datasets should not be the responsibility of the Python script. As such, creating directories, running code, aggregating results and parsing arguments is a natural job for a scripting language such as Bash. While this obviously limits the project's use to Unix-like operating systems, this is acceptable, as many computational servers are now running on Linux, and the trained models are OS-agnostic.
 
-As for the other tooling, here I list the most important tools:
+The overall structure of the project code is as follows: a single TNTSegment package is available, which handles data loading, data splitting, and defining the neural networks and their modules. Outside of the package, the training script, evaluation script, and postprocessing script are available. Finally, to connect it all, running the automated training pipeline that respects the cross-folds and aggregates the results involves a mix of Bash and Python scripts. In-depth instructions as to how to run these scripts are available alongside the code in the thesis archive.
+
+As for the other tooling, here is the list of the most important tools:
 \begin{itemize}
-    \item{MLflow is a tool for handling machine learning pipelines. It allows for tracking experiments, comparing results, saving and loading models, deploying models, and more. In this work it is nice to use UI was used to keep track of the experiments \parencite{Zaharia2018MLflow}}
-    \item{ruff linter cite is an extremely fast Python linter which was developed by the company Astra. It automatically formats code and can even correct some basic lint errors. \parencite{Ruff2025}} 
+    \item{MLflow is a tool for handling machine learning pipelines. It allows for tracking experiments, comparing results, saving and loading models, deploying models, and more. In this work, it's nice to use UI was used to keep track of the experiments \parencite{Zaharia2018MLflow}}
     \item{NumPy has become one of the fundamental packages in scientific computing in the Python ecosystem. It provides a very efficient implementation of many common operations on N-dimensional arrays. \parencite{Harris2020Numpy}}
     \item{scikit-learn provides a great framework for building machine learning models, not just deep learning models. The library was primarily used for splitting datasets and utilising its framework for handling batching. \parencite{Pedregosa2011scikit}}
     \item{scikit-image is a package providing various algorithms for processing images, e.g. segmentation algorithms, point transform, and mathematical morphology. I used it to handle the postprocessing of masks and to find connected components.\parencite{vanderWalt2014skimage}}
-    \item{PyTorch is a popular deep learning framework with a focus on flexibility and speed. This enables the user to create a highly performing neural network quickly. It automatically creates computational graphs, allowing it to compute gradient updates efficiently. It automatically handles connecting to various hardware, such as CPUs and GPUs. This has allowed PyTorch to become one of the most used packages in the Python ecosystem and is why I chose it to develop the program \parencite{Ansel2024PyTorch}}
-    \item{MONAI is another open-source framework for building neural networks on top of PyTorch. It focuses on building models used in the medical area. In the project, I used this package to handle augmentations of the dataset, as it provides first-class support for 3D data. \parencite{Cardoso2022Monai}}
+    \item{PyTorch is a popular deep learning framework with a focus on flexibility and speed. This enables users to create highly performing neural networks quickly. It automatically creates computational graphs, allowing it to compute gradient updates efficiently. It automatically handles connecting to various hardware, such as CPUs and GPUs. These advantages made PyTorch one of the most used packages in the Python machine learning ecosystem \parencite{Ansel2024PyTorch}.}
+    \item{MONAI is another open-source framework for building neural networks on top of PyTorch. It focuses on building models used in the medical area. In the project, this package handles augmentations of the dataset, providing first-class support for 3D data, unlike PyTorch. \parencite{Cardoso2022Monai}}
     \item{Matplotlib is a library for visualising data in an interactive fashion. The vast majority of graphs in this text were created using it. \parencite{Hunter2007Matplotlib}}
-
-        % TODO add pandas
+    \item{Pandas is a popular library for handling data. It provides a DataFrame object for efficient data manipulation, reshaping, and indexing, among many other things. In this work, the final evaluations were created using the Pandas library. \parencite{Pandas}}
 \end{itemize}
+Along with these tools, a formatter called Ruff, a tifffile package for reading and writing images, and torchinfo package for benchmarking the number of parameters of any model were also used.
 
 \section{Environment}
-Handling dependencies in Python can become tricky, especially for reproducing the environments. For this purpose, the environment's dependencies and building a virtual environment are resolved by a tool called uv \parencite{uv2025}, developed by Astral. The developer uses a TOML file to specify project dependencies. This file is then used by uv to recreate the environment.
+Handling dependencies in Python can become tricky, especially for reproducing the environments. For this purpose, the environment's dependencies and building a virtual environment are resolved by a tool called \texttt{uv} \parencite{uv2025}, developed by Astral. The developer uses a TOML file to specify project dependencies. This file is then used by \texttt{uv} to recreate the environment.
 
-For convenience, I am also including a \texttt{requirements.txt} file, which was automatically generated from a virtual Python environment; however, the officially supported version uses the \texttt {uv} package manager. The environment can then be created in two ways: if the user runs a computer with a GPU, the working environment is created using the command \texttt{uv sync --extra torch-gpu}, which assumes that CUDA version 12.4 is installed. For more details, see the attached \texttt{README.md} file.
+For convenience, I am also including a \texttt{requirements.txt} file, which was automatically generated from a virtual Python environment; however, the officially supported version uses the \texttt {uv} package manager. The details of recreating the environment are described in the attached file \texttt{README.md}.
 
 \section*{Various implementation details}
-While looking into the code the reader might come across the following observations which I think are worth mentioning and explaining little further.
+While reviewing the code, the reader may encounter the following observations, which I believe are worth mentioning and explaining in more detail.
 
-While the implementation of CSAM required just small changes in correctly permutating the dimensions of the input, SE blocks were programmed from scratch. I took the PyTorch implementation of 2D SE and replaced the operations with their 3D equivalents. Mainly, the squeeze operation is a 3D average pooling layer, and the linear layers are replaced with convolution layers followed by ReLU.
+While the implementation of CSAM required only minor changes to correctly permutate the dimensions of the input, SE blocks were programmed from scratch. I took the PyTorch implementation of 2D SE and replaced the operations with their 3D equivalents. Mainly, the squeeze operation is a 3D average pooling layer, and the linear layers are replaced with convolution layers followed by \texttt{ReLU}. The final difference compared to the description available in Section \ref{sec-seblock} is that the first convolutional operator in the excitation operation reduces the number of channels from $C$ to $C/r$, where $r$ is called a reduction factor. Then the \texttt{ReLU} is run, and the final convolution operator expands the number of channels back to $C$. The purpose of this reduction factor was explored in \parencite{Hu2018}, where they studied the tradeoff between performance and computational cost. We used the number $16$ for the value, as is suggested by the authors.
 
-While looking at the training loop, you might see a mention of determinism and seed setting. The effect of seeds and deterministic algorithms in PyTorch was briefly investigated while fixing various bugs in the training loop. Right now, the user has to manually seed the random number generator, but the training still behaves in a random manner.
+While reviewing the training loop, you may notice mentions of determinism and seed setting. The effect of seeds and deterministic algorithms in PyTorch was briefly investigated while fixing various bugs in the training loop. Currently, the user must manually seed the random number generator; however, the training still exhibits random behaviour.
 
-While running the training and evaluations, many more metrics than just the Dice score presented in later chapters are calculated. They are still present, but were not used in the final evaluations.
+While running the training and evaluations, many more metrics are calculated beyond the Dice score presented in later chapters. They are still present, but were not used in the final evaluations.
 
 \chapter{Evaluation}
 In this chapter we describe how and evaluate the different networks on the whole
