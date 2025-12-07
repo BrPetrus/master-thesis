@@ -699,9 +699,9 @@ downsampling layers and 10px overlap; thus, all following models will be using
 this combination of hyperparameters.
 % TODO: tripple check, i had very different numbers before
 
-\begin{figure}
+\begin{figure}[h]
     \begin{center}
-        \includegraphics[width=0.8\linewidth]{resources/evaluations/eval_dice_mean_heatmap.png}
+        \includegraphics{resources/evaluations/eval_dice_mean_heatmap.png}
     \end{center}
     \caption{Evaluation Dice score for various depths of the network. Best
     values is highlighted.}
@@ -763,51 +763,46 @@ tough the performance difference is not that different, this network is
 consitently beating the smaller network and at the same time has much less
 parameters than the larger networks.
 
-\begin{figure}
+\begin{figure}[H]
     \centering
-    \begin{subfigure}[b]{0.8\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{resources/evaluations/eval_dice_mean_architecture_comparison.png}
-        \caption{Evaluation performance.}
-        \label{}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.8\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{resources/evaluations/postprocess_overall_dice_architecture_comparison.png}
-        \caption{Performance with post-processing.}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.8\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{resources/evaluations/tunnel_dice_architecture_comparison.png}
-        \caption{Performance on tunnels.}
-        \label{fig:eval-depth-tunnels}
-    \end{subfigure}
-    \caption{Performance evaluations of the neural networks for various depths
-    and fixed 10 pixel overlap.}
-    \label{fig:eval:depth}
+    \includegraphics[width=0.9\textwidth]{resources/evaluations/eval_dice_mean_architecture_comparison.png}
+    \caption{Evaluation performance.}
+    \label{fig:eval_dice_mean_architecture_comparison}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[H]
     \centering
-    \begin{subfigure}[b]{0.8\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{resources/evaluations/eval_dice_mean_by_quad_arch.png}
-        \caption{Evaluation performance.}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.8\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{resources/evaluations/postprocess_overall_dice_by_quad_arch.png}
-        \caption{Performance with post-processing.}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.8\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{resources/evaluations/tunnel_dice_by_quad_arch.png}
-        \caption{Performance on tunnels.}
-        \label{subfig:eval_tunnels}
-    \end{subfigure}
-    \caption{Performance evaluations of the neural networks for various depths
-    and fixed 10 pixel overlap.}
-    \label{fig:eval_quads}
+    \includegraphics[width=0.9\textwidth]{resources/evaluations/postprocess_overall_dice_architecture_comparison.png}
+    \caption{Performance with post-processing.}
+    \label{fig:postprocess_overall_dice_architecture_comparison}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{resources/evaluations/tunnel_dice_architecture_comparison.png}
+    \caption{Performance on tunnels.}
+    \label{fig:eval-depth-tunnels}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{resources/evaluations/eval_dice_mean_by_quad_arch.png}
+    \caption{Evaluation performance.}
+    \label{fig:eval_dice_mean_by_quad_arch}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{resources/evaluations/postprocess_overall_dice_by_quad_arch.png}
+    \caption{Performance with post-processing.}
+    \label{fig:postprocess_overall_dice_by_quad_arch}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{resources/evaluations/tunnel_dice_by_quad_arch.png}
+    \caption{Performance on tunnels.}
+    \label{fig:eval_tunnels}
 \end{figure}
 
 \subsection*{Different architectures}
