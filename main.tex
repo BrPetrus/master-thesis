@@ -52,27 +52,28 @@
     university  = mu,
     faculty     = fi,
     type        = mgr,
-    department  = Department of Machine Learning and Data Processing,
+    department  = Department of Visual Computing,
     author      = Bruno Petrus,
     gender      = m,
-    advisor     = {Prof. RNDr. John Smith, CSc.},
-    title       = {Segmentation of tunneling nanotubes},
-    TeXtitle    = {The Proof of $\mathsf{P}=\mathsf{NP}$},
-    keywords    = {keyword1, keyword2, ...},
-    TeXkeywords = {keyword1, keyword2, \ldots},
+    advisor     = {Assoc. Prof. RNDr. Martin Maška, Ph.D.},
+    title       = {Segmentation of Tunneling Nanotubes Using U-Net-Like Neural Networks},
+    TeXtitle    = {Segmentation of Tunneling Nanotubes Using U-Net-Like Neural Networks},
+    keywords    = {neural networks, segmentation, tunnelling nanotubes},
+    TeXkeywords = {neural networks, segmentation, tunnelling nanotubes},
     abstract    = {%
       This is the abstract of my thesis, which can
 
       span multiple paragraphs.
     },
     thanks      = {%
-      These are the acknowledgements for my thesis, which can
+        I am very grateful to my advisor, Assoc. Prof. RNDr. Martin Maška, Ph.D., for his sustained mentorship, constructive critiques, and ready availability throughout the whole time.
 
-      span multiple paragraphs.
+        I want to thank my friends for providing me with a great deal of encouragement. My deepest gratitude goes to my partner, Tereza Zuskinová, who has offered me unconditional support that carried me through the most challenging part of this research.
     },
     bib         = biblio.bib,
     %% Remove the following line to use the JVS 2018 faculty logo.
     facultyLogo = fithesis-fi,
+    %declaration = {test}
 }
 \usepackage{makeidx}      %% The `makeidx` package contains
 \makeindex                %% helper commands for index typesetting.
@@ -87,6 +88,7 @@
 \usepackage{subcaption}
 \usepackage[style=numeric]{biblatex}  %% use square brackets for citations
 \subcaptionsetup{font=small}      % For subcaptions
+\usepackage{overpic}  %% Place text over the images
 
 \lstset{
   basicstyle      = \ttfamily,
@@ -101,7 +103,8 @@
 \usepackage{floatrow} %% Putting captions above tables
 \floatsetup[table]{capposition=top}
 \usepackage[babel]{csquotes} %% Context-sensitive quotation marks
-\usepackage{algorithm2e}
+
+\usepackage[ruled]{algorithm2e}  %% Algorithms
 
 \begin{document}
 %% The \chapter* command can be used to produce unnumbered chapters:
@@ -112,615 +115,295 @@
 \markright{\textsc{Introduction}}
 \addcontentsline{toc}{chapter}{Introduction}
 
-Theses are rumoured to be \enquote{the capstones of education}, so
-I decided to write one of my own. If all goes well, I will soon
-have a diploma under my belt. Wish me luck!
-[TODO: explain semantic segmentation]
+Semantic segmentation is a critical task in computer vision that involves assigning a specific class label to every pixel in an image. This thesis applies this methodology to the segmentation of tunnelling nanotubes (TNTs), which are protrusions observed during cell morphogenesis in Drosophila wings. While the exact function of these structures remains under investigation, their analysis is currently limited by the difficulty of manually annotating them in three-dimensional space.
+
+The dataset for this research, provided by Dr Osamu Shimmi from the University of Tartu, captures a cellular structure known as the Interplanar Amida Network (IPAN). This network consists of vertical "pillars" connected by horizontal TNTs, captured via 3D fluorescent microscopy. The data presents significant challenges for automated analysis: it is heavily anisotropic, and while the dataset spans twenty time slots, ground truth annotations were provided for only two time steps. As such, the dataset is sparsely annotated.
+
+To address these challenges, we adapted the U-Net architecture, a standard for biomedical segmentation, to better handle the specific constraints of our data. An anisotropic version of a U-Net-like architecture called AnisoUNet, which utilises anisotropic kernels, is introduced. Additionally, we investigate an attention mechanism to improve the performance of the network. A 4-fold cross-validation is employed along with training on crops of TNTs to train the model.
+
+Chapter 1 provides an overview of the biological context and data preprocessing. Chapter 2 reviews related work on TNT and curvilinear structure segmentation. Chapter 3 describes the implemented neural network architectures, including the AnisoUNet and attention variants. Chapter 4 outlines the training methodology, including data splitting and loss functions. Chapter 5 covers the technical implementation and software environment. Chapter 6 evaluates the models, presenting an ablation study on hyperparameters and comparative benchmarks. Finally, Chapter 7 concludes the thesis with a discussion.
+
 
 \chapter{Data}
 \label{sec:data}
 % todo: probably add some more examples
-During the cell's morphogenesis a growth of protrusion have been observed using
-fluorescent microscopy. Their effect in the growth is still not fully understood,
-but have sparked multiple theories. Some researchers speculate these tunnels are
-used for long range signaling, they may be part of an pathological conditions,
-where they are used by viruses [TODO CITE] [Add more Examples].
+During cell morphogenesis, growth of protrusions has been observed using fluorescent microscopy. Their effect on the growth is still not fully understood, but has sparked multiple theories. Some researchers speculate these tunnels are used for long-range signalling; they may be part of pathological conditions, where viruses use them [TODO CITE] [Add more Examples][TODO move to the Introduction chapter].
 
-Our partner professor Osamu Shimmi from the Institute of Molecular and Cell
-biology at the University of Tartu in Estonia were inserted in studying one of
-such places where these protrusions are visible - the Drosophila wings. They
-have used in vivo imaging to study the cellular structures.
-
-\begin{figure}
+Our partner, Dr Osamu Shimmi from the Institute of Molecular and Cell Biology at the University of Tartu in Estonia, was involved in studying one of such places where these protrusions are present - the Drosophila wings - and the findings are available in Paper \parencite{Tran2024Programmed}. They have used in vivo imaging to study the cellular structures.
+\begin{figure}[htbp]
     \begin{center}
-        \includegraphics[width=0.6\linewidth]{resources/data/wings.png}
+        \includegraphics[width=0.4\textwidth]{resources/data/wings.png}
     \end{center}
-    \caption{A schematic of the structure of the Drosophila wings. Two nearly
-    identical layers of epithelium cells are supported by a microtubule
-    protrusions. Vertical microtubule protrusion connected them are also
-    present.}
+    \caption{A schematic of the structure of the Drosophila wings. Two nearly identical layers of epithelium cells are supported by microtubule protrusions, which are vertical and referred to as pillows in this work. There are also horizontal protrusions connecting the pillows in nearly horizontal direction - the so-called tunnelling nanotubes or TNTs.}
     \label{fig:wingsdiagram}
 \end{figure}
 
-During the development of the larva, specifically in the pre-pupal stage, the
-pupal wing is formed. Afterwards the single layer wing separates into two
-individual layers of epithelium cells shown in Figure \ref{fig:wingsdiagram}.
-The vertical protrusion connecting the layers will be referred to as the pillars,
-while the vertical microtubular protrusion will be called tunneling nanotubes
-(TNTs).
+During the development of the larva, specifically in the pre-pupal stage, the pupal wing is formed. Afterwards, the single-layer wing separates into two individual layers of epithelial cells, as shown in Figure \ref{fig:wingsdiagram}. The vertical protrusions connecting the layers will be referred to as pillars, whereas the vertical microtubular protrusions will be called tunnelling nanotubes (TNTs).
 
-The overall structure, referred by them as Interplanar Amida Network (IPAN) is
-dynamic and as they note in their research, can change quite a lot in just half
-an hour, during which the TNTs might connect with different vertical pillars or
-completely disappear, while some TNTs exhibit stability. While the authors go
-into greater depth as what exactly happen during the creation and disappearance
-of these structures, they are limited to a qualitative investigation. The goal of
-this thesis was to explore U-Net like models to find the segment the tunneling
-nanotubes in these 3D images, to help the researchers analyze the properties
-like how long do these tunnels stay on average.
+In Paper \parencite{Tran2024Programmed}, the authors refer to the overall structure as Interplanar Amida Network (IPAN). They note that IPAN is dynamic and can change significantly in just half an hour, during which the TNTs may connect with different vertical pillars or completely disappear, while some TNTs exhibit stability. While the authors delve into greater depth regarding what exactly happens during the creation and disappearance of these structures, they are limited to a qualitative investigation. The goal of this thesis was to explore U-Net-like models for segmenting tunnelling nanotubes in these 3D images, thereby helping researchers analyse properties such as the average duration of these tunnels. 
 
-The data was captured using fluorescence microscopy and four distinct datasets
-were acquired. Three of these datasets were captured with two different
-channels, larger volume and at smaller spatial resolution. Our Estonian
-collegues promised to annotate these three datasets larger datasets, but
-unfortunately they did not deliver the labels even after several months of
-waiting, which complicated our work. Fortunately our collegues at the Faculty of
-Science helped us and annotated two time slots from the last dataset. Hence for
-the rest of this thesis we will talk only about this dataset.
+Dr Shimmi provided us with multiple datasets, but we obtained sparse annotations for only one of them; hence, we will focus on this one. In Figure \ref{fig:dataexamples}, a single slice on the left and a volume visualisation of the data on the right are shown. The whole dataset comprises twenty time slots and was captured by using a single fluorescent dye. Each time snapshot consists of seven 512x512 grayscale, 16-bit images. Due to the work detailed in \parencite{Tran2024Programmed} the particular dye and strain of the Drosophila fly allows us to see the membranes of both horizontal tunnelling nanotubes and vertical pillars in Figure \ref{fig:dataexamples}. Each of the slices represents a region of $56.32 \times 56.32 \mu m$ and the slices are $1\mu m$ apart, meaning that each voxel is about $1 \times 0.11 \times 0.11 \mu m$ in size. Since the dye is activated in cell membranes, the pillars in our data appear hollow. 
 
-The dataset is comprised of 20 time slots [todo check] and was captured by using a
-single dye in fluorescent microscopy technique. Each time snapshot consists of
-seven 512x512 grayscale, 16-bit images. Due to the work detailed in
-\parencite{Tran2024Programmed} the particular dye and strain of the Drosophila
-fly allows us to see the membranes of both horizontal tunnelling nanotubes and
-vertical pillars in Figure \ref{fig:dataexamples}. Each of the slice represents
-a region of 56.32x56.32 $\mu m$ and the slices are 1 $\mu m$ apart, meaning that
-each voxel is about 1x0.11x0.11 $\mu m$ in size. Since the dye
-reacts with the membranes, in this dataset the pillars appear hollow. 
-
-\begin{figure}
+\begin{figure}[htbp]
     \centering
-    \begin{subfigure}{0.4\textwidth}
+    \begin{subfigure}{0.42\textwidth}
         \includegraphics[width=\textwidth]{resources/t017z0_saturated1percent.png}
-        \caption{Single linearly stretched slice.}
         \label{fig:dataexamplesslice}
     \end{subfigure}\hfill
-    \begin{subfigure}{0.6\textwidth}
+    \begin{subfigure}{0.55\textwidth}
         \includegraphics[width=\textwidth]{resources/data/volume_viewer_modified.png}
-        \caption{Volume visualisation.}
         \label{fig:dataexamlesvolume}
     \end{subfigure}
-    \caption{In \ref{fig:dataexamplesslice} a single slice of the data at time
-    17 is shown with the 1\%-percentile stretch. In \ref{fig:dataexamlesvolume}
-    a 3D visualisation of the IPAN structure is shown.}
+    \caption{Left: a single depth slice of the data at time 17 is shown. Right: a volume visualisation of the IPAN strudata from different time slots. Both images were contrast-enhanced for visualisation purposes.}
     \label{fig:dataexamples}
 \end{figure}
 
-\section{Labelling and preprocessing}
+\section*{Labelling and preprocessing}
 
-The biologist created a protocol which they followed by annotating the samples.
-They decided to preprocess the data by converting the images from 16bit
-grayscale image into 8bit grayscale images, then a 1\%-percentile stretch was
-applied to further enhance the images. 
+The biologist created a protocol which they followed by annotating the samples. They decided to preprocess the data by converting the 16-bit grayscale images into 8-bit grayscale images using a 1\% percentile stretch operation.
 
-\begin{figure}
+\begin{figure}[htbp]
     \centering
-    \begin{subfigure}[b]{0.45\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{resources/mask000-slice3-saturated.png}
-        \label{fig:gt-slice-3-saturated}
-    \end{subfigure}\hfill
     \begin{subfigure}[b]{0.45\textwidth}
         \centering
         \includegraphics[width=\linewidth]{resources/mask000-slice3-composite-circles.png}
         \label{fig:gt-slice-3-composition}
     \end{subfigure}
-    \caption{Labeled tunnels by a biologist at 0th time slot on the left. On the
-    right the binarized version can be seen overlaid on top of the original
-    data. A potential irregularities in the labels are visualised in red circles.}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{resources/mask000-slice3-saturated.png}
+        \label{fig:gt-slice-3-saturated}
+    \end{subfigure}\hfill
+    \caption{Single slice of the data on the left (contrast-enhanced) with overlaid tunnel labels in magenta. Two yellow circles emphasise two places with potentially missing labels. On the right, the instance labels for that particular slice.}
     \label{fig:gt-slice-3}
 \end{figure}
 
-After the preprocessing is done, the protocol states that picking random time
-slots at least 100 instances of tunnels must be annotated, and each frame has to
-be fully annotated. Also segments outgoing from the surrounding tissue should be
-ignored.According to this protocol the biologists picked two time steps --- the
-0th and 17th step ---  to label. The ground truth created by a biologist for the
-0th time slot is visible in the left part of Figure \ref{fig:gt-slice-3}. In the
-right part of the mentioned figure a composition was created with gray data and
-the binarised ground truth in magenta colour. As can be seen in the image,
-sometimes it is rather difficult to decide if the protrusion is a TNT or not, in
-the figure, two areas are highlighted by a red circle, where it is not clear why
-the biologist did not also label the TNTs. This illustrates a possible
-difficulty when assessing the segmentation accuracy later on.  % todo: make this
-more natural
+After preprocessing is done, the protocol states that, by picking random time slots, at least 100 instances of tunnels must be annotated, and each frame must be fully annotated. Also, segments originating from the surrounding tissue should be ignored. According to this protocol, the biologists picked two time steps — the 0th and 17th steps — to label. The reference annotations for a single slice of the 0th time slot are visible in the right part of Figure \ref{fig:gt-slice-3}. Overall, in the two time steps, 127 tunnels are fully annotated.
 
-Afterwards the labels were checked manually and two cases of label duplicity were
-found and fixed, by assigning a unique number to the new connected component.
-The flawed labels were 33 located in top right quadrant and label 32 located
-bottom right quadrant as can be seen in Figure \ref{fig:duplicatedlabel}.
+Sometimes it is rather challenging to decide if the protrusion is a TNT or not. In Figure {fig:gt-slice-3-composition}, two protrusion-like structures are highlighted using yellow circles. Although their structure appears essentially the same as that of a TNT, it is unclear why the biologist did not also label them. This illustrates a possible difficulty in assessing the accuracy of the segmentation.
 
-\begin{figure}
-    \begin{center}
-        \includegraphics[width=0.6\linewidth]{resources/duplicatedlabel-crop.png}
-    \end{center}
-    \caption{Maximum projection of the data highlighting problematic tunnel with id 32 located in bottom right quadrant}.
-    \label{fig:duplicatedlabel}
-\end{figure}
+Afterwards, the labels were manually checked, and two cases of label duplication were identified and corrected by assigning a unique number to the new connected component. The corrected reference annotations will be published in the archive.
+
+\chapter{Related Work}
+
+\label{sec:research}
+%TODO: add def. of segmentation task to the intro
+
+We began by researching papers explicitly dealing with TNTs. I found one that used a non-machine learning approach \parencite{Hodneland2006Automated} and another that employed a machine-learning approach with a U-Net architecture \parencite{Ceran2022TNTdetect}. Later, we examine solutions related to the topic of curvilinear structure segmentation \parencite{Mou2021}, and finally explore generic improvements utilising an attention mechanism in \parencite{Rundo2019}.
+
+The afore-mentioned U-Net architecture was first described in a seminal paper by Ronneberger et al. in 2015 \parencite{Ronneberger2015}. The authors describe the architecture and use it for the semantic segmentation of biomedical images. The authors achieved impressive results with a minimal dataset of about 30 images. Since then, the architecture has become a standard method for solving segmentation tasks in various image modalities; thus, we have also adopted this approach. A more detailed explanation of the architecture can be found in Section \ref{sec:unet}.
+
+% todo: check if they are really looking at the same thing as us
+
+The first paper that explicitly mentions the segmentation of TNTs is by Hodneland et al. \parencite{Hodneland2006Automated}, who are also examining protrusions connecting cells. However, in their case, the tunnels form long, straight lines, unlike our TNTs, which are not always straight. The authors describe a multistep algorithm that employs two channels — one for staining cell membranes and TNTs, and the other for staining cytoplasmic compartments — to segment the TNTs. Since our data have different modalities, this approach cannot be used.
+
+The other paper, which mentions explicitly tunnelling nanotubes, is \parencite{Ceran2022TNTdetect}. In this paper, the authors develop a tool for segmenting TNTs called TNT.AI. They discuss how to address the challenge of manually marking the tunnels. Four human experts were involved to correctly identify TNTs (as individual experts' labels varied), and measures were taken to ensure the labels were as clear as possible. Then they devised a two-step procedure. In the first step, a classification network works on tiles to identify where TNT is possible, and then a second network is used to finely segment the TNTs pixel-wise. Unfortunately, they do not go into details about their networks. I tried to contact one of the authors to get the code and data, but they did not respond. In the paper, they discuss using a U-Net-like architecture for the segmentation part, which is composed of ResNet blocks. 
+
+As neither of these papers provides working code examples or is applicable to our data, we decided to look at the tunnels as an example of curvilinear structure. Bibiloni et al. \parencite{bibiloni2016curvilinear} provide a complete definition of curvilinear structures based on their geometric and photometric characteristics. However, they also provide a simpler, rough definition, which is enough for our purposes. They can be defined as thin, long, line-like regions with different intensities than their neighbouring pixels \parencite{bibiloni2016curvilinear}. Some examples of curvilinear structures include river finding, blood vessel segmentation, or lung airways segmentation \parencite{kong2018roadsensing} \parencite{Mou2021}. Our TNTs mostly fit this description as their shape is thinner compared to the vertical protrusion, and they are clearly different in intensity from the background.
+
+Mou et al. \parencite{Mou2021} use a modified U-Net to segment curvilinear structures such as blood vessels in the retina. They investigate the use of a typical U-Net and introduce the so-called spatial and channel attention module (SCAM), which is purported to help maintain the connection of faint curvilinear structures.
+
+Given all this information, we decided to adapt the standard U-Net architecture for our 3D images. We will discuss how we addressed the issue of anisotropy in our data and how we drew inspiration from \parencite{Mou2021} and \parencite{Ceran2022TNTdetect} to implement an attention mechanism to enhance accuracy.
 
 \chapter{Architectures}
-This chapter deals with research into the topic and what architectures were
-tried and tested.
-
-\section{Research}
-\label{sec:research}
-We began by researching similar papers dealing with TNTs
-\parencite{Ceran2022TNTdetect} \parencite{Hodneland2006Automated}, paper about
-curvilinear structure segmentation \parencite{Mou2021}, and improvements to
-U-Net networks \parencite{Rundo2019}. The following papers introduce the use of
-U-Net-like networks for segmenting structures like our TNTs, and also possible
-way of improving their accuracy with attention mechanisms.
-
-We began by looking at papers which explicitly mention the segmentation of TNTs
-and were able to find two working methods. In \parencite{Hodneland2006Automated}
-the researchers have similarly looking TNTs connecting cells, but in their case
-the tunnels form long straight lines. In the paper they describe a multistep
-algorithm which takes employ two channels, one is for segmenting cell borders
-and tunnels, while in the other channel the cells inside are much more visible,
-hence, this can be used to better separate cells and tunnel. As our data has
-different modality, this approach could not be used. They also assume that the
-tunnels are straight which is not true in our case.
-
-The other paper which specifically mentions tunneling nanotubes is
-\parencite{Ceran2022TNTdetect}. In this paper the authors develop a tool for
-segmenting TNTs called TNT.AI. They discuss about how to deal with the
-difficulty of hand marking the tunnels. Four human experts were involved to
-correctly identify TNTs (as individual experts' label varied), and what was done
-to make the labels as clear as possible. Then they devised a two step procedure,
-in the first a classification network works on tiles to identifies where a TNT
-possible is, and then a second network is used to finely segment the TNTs pixel
-wise. Unfortunately they do not go into details of their networks. I tried to
-contact one of the authors to get the code and data, but they did not respond.
-In the paper they talk about using a U-Net like architecture for the
-segmentation part, formed of ResNet blocks. They also used a pretrained encoder.
-The architecture is called AuraNet [TODO cite].
-% todo: mention we do not need the classification part?
-
-As neither of these papers provide working code examples or are not applicable
-for our data, we decided to look at the tunnels as what is called a curvilinear
-structures. Bibiloni et al. provides a full definition based on their geometric
-and photometric characteristics, but they also provide a simpler rough
-definition which is enough for our purposes. They can be defined as thin, long,
-line-like regions with different intensities than their neighbouring pixels
-\parencite{bibiloni2016curvilinear}. Some examples of curvilinear structures
-include river finding, blood vessel segmentation, or lung airways segmentation
-\parencite{kong2018roadsensing} \parencite{Mou2021}. Our TNTs mostly
-fit this description as their shape is thinner compared to the vertical
-protrusion, and are clearly different intesity than the background.
-
-Mou et al. \parencite{Mou2021} use a modified U-Net to segment curvilinear
-structures such as blood vessels in retina. They investigate the use of typical
-U-Net and introduce so called spatial and channel attention module (CSAM), which
-supposedly helps with keeping the faint curvilinear structures connected. Unlike
-the previous paper TNT.AI
-
-Given all this information, we decided take the standard U-Net architecture,
-modify it for our 3D images. We will talk about how we tackled the problem of
-anisotropy in our data and how we were inspired by \parencite{Mou2021}
-\parencite{Ceran2022TNTdetect} to try attention mechanism to improve the
-accuracy.
+In this chapter, the various architectures that were used are described.
 
 \section{U-Net and BasicUNet}
 \label{sec:unet}
 
-In 2015 a seminal paper by Rossenberger et al. \parencite{Ronneberger2015} was
-published dealing with semantic segmentation of biomedicine data. The paper
-achieved impressive results with very limited dataset. The neural network
-architecture is called U-Net.
+Chapter \ref{sec:research} introduces the U-Net architecture in conjunction with its uses in related works. The main idea was as follows: in other tasks, such as image classification, we typically have an encoder followed by a neck, which culminates in a classification head. The authors speculated on how to extend this mechanism to achieve pixel-wise classification, or in other words, semantic segmentation. They propose placing several upsampling layers after the encoder part to upsample the extracted features.
 
-\begin{figure}
+The overall diagram is shown in Figure \ref{fig:unetdiagram}. All convolutional layers use a $3 \times 3$ kernel followed by a ReLU operation, while the downsample and upsample operations use $2 \times 2$ kernels.
+
+The architecture consists of four main parts: the encoder, the bottleneck, the decoder, and a final convolution to reduce the number of channels. In the encoder part, two convolutional layers are followed by a downsample operation, and the whole workflow is repeated four times. Notice that the convolutions double the number of channels. After the fourth downsampling operation comes two convolution operations, called the bottleneck. The decoder follows; the features are upsampled, halving the number of channels and doubling the spatial dimensions, and concatenated with features from the corresponding layer in the encoder part. This is repeated four times. Finally, the rightmost convolution operation is responsible for reducing the number of channels into the corresponding number of classes for the final output segmentation map. Notice that the output segmentation mask has a different size from the original image.
+
+The presented model works with 2D data, but our data is 3D. Fortunately, the modification is not difficult; all convolutions can be replaced with their 3D equivalent. Moreover, we wanted to obtain an output size equal to the input data; therefore, padding was used in the convolutions. Downsample operations were implemented using a 3D max-pool operation with a $2 \times 2 \times 2$ kernel, and upsampling is technically implemented with transposed convolutions using a $2 \times 2 \times 2$ kernel shape. Finally, as our task is a binary segmentation class, our output has a single channel encoding both classes, as 1.0 corresponds to a tunnel and 0.0 corresponds to anything else. Due to the nature of halving all spatial dimensions isotropically in the downsampling layers, after just two downsamples, the z dimensions are reduced from 7 to 1 slices; thus, our model has two downsampling layers. This implementation is referred to as BasicUNet, which is our first model.
+
+\begin{figure}[htbp]
     \begin{center}
         \includegraphics[width=0.9\linewidth]{resources/architecture_diagrams/unet.png}
     \end{center}
-    \caption{U-Net architecture as described in \parencite{Ronneberger2015}.
-    Several upsampling layers follow the encoder with concatonation steps
-    between corresponding layers.}
+    \caption{U-Net architecture as described in \parencite{Ronneberger2015}. In the left part of the network is the encoder formed of four downsampling operations followed by a convolution block. At the bottom is a convolution block called a bottleneck, and finally, four upsampling layers are used, along with convolution blocks, to upsample the features. The rightmost convolution creates the final segmentation map with the correct number of classes. The horizontal lines indicate how the data is concatenated across relevant layers. Taken from \parencite{Ronneberger2015}.}
     \label{fig:unetdiagram}
 \end{figure}
 
-Tasks like image classification which fueled a lot of research in deep learning
-is concerned with assigning a single label to the whole image; however, in our
-domain we are concerned with finding the binary masks of TNTs. The seminal paper
-which introduced the U-Net architecture \parencite{Ronneberger2015} instead
-introduces several upsampling layers after the encoder. 
-
-The overall diagram is shown in Figure \ref{fig:unetdiagram}. In the encoder
-part, two convolution layers of size 3x3 are applied, folled by a downsampling
-layer, which halves the dimensions. This is repeated for four times, after which
-an extra convolutional layer is applied.
-
-After running the encoder, the upsampling is introduced to revert the image to
-roughly the same size as in the beginning. This is achieved by applying
-transposed convolution layer, which doubles the spatial dimensions at the cost
-of halving the number of channels. Each upsampling is followed by concatenating
-the upsampled data with the output of the corresponding convolutional block in
-the encoder, followed by another convolutional layer. This is better seen on the
-diagram, where the concatenations are shown by the horizontal lines.
-
-Finally we do a final convolution operation to ouput the right
-amiunt of classes, which in our case is equal to a signle one, where 0 indicates
-a background or pillar and 1 means a TNT.
-
-Crucially, it has a usefull property that it does not need a vast
-dataset to train properly. This is demonstrated in \parencite{Ronneberger2015},
-where they trained the network with just 30 annotated images.
-
-The Figure \ref{fig:unetdiagram} is visualising how the U-Net architecture can be
-used to train a 2D model, but there is not reason why we could not use 3D
-versions of convolution, maxpool and transposed convolution and in fact this
-version is used in this work. We refer to this model as the BasicUNet. Such
-network uses 2x2x2 kernels in the downsampling and upscaling layers, while 3x3x3
-kernels are used in the convolutional layers.
-
 \section{Anisotropic U-Net (AnisoUNet)}
+\label{sec:anisounet}
 
-Papers such as the influential VGGNet \parencite{simonyan2015vgg} demonstrated
-that model depth is one of the critical hyperparameters of a network that can be
-optimized to improve their accuracy. This inspired us to create the following
-architecture.
+Papers such as the influential VGGNet \parencite{simonyan2015vgg} demonstrated that model depth is one of the critical hyperparameters of a network that can be optimised to improve its accuracy. This inspired us to create the following architecture.
 
-Since our data is heavily anisotropic we are limited in how much we can
-downsample in the z axis, as we have only 7 voxel inside the z dimension,
-meaning we can downsample just two times. This presents two issues - one is that
-the depth cannot be changed, and that the information about the whole data is
-very quickly compressed into a single dimension, potentially inhibiting the
-expressive performance of the network.
+Since our data is heavily anisotropic, we are limited in how much we can downsample in the z axis, as we have only seven voxels inside the z dimension, meaning we can downsample just two times. This presents an issue, as we cannot experiment with a deeper network. Moreover, after just two downsampling steps, the features' z dimensions are reduced to one layer, which we believe means that the network has to quickly compress all relevant information, potentially inhibiting the expressive performance of the network.
 
-Our solution was to introduce anisotropic kernels into the design. Instead of
-using the isotropic 2x2x2 kernel shapes for both downsampling and upsampling,
-instead 1x2x2 kernel shapes are used to keep the z dimension constant. As such,
-this allows us to train deeper networks and does not force the network to
-compress all depth information like before.
+Our solution was to introduce anisotropic kernels into the design. Instead of using the isotropic $2 \times 2 \times 2$ kernel shapes for both downsampling and upsampling, $1 \times 2 \times 2$ kernel shapes are used to keep the z dimension constant. As such, this allows us to train deeper networks and does not force the network to compress all depth information like before.
 
-There is still the question of what kernel size to use for the horizontal
-layers. In the Section \ref{sec:diff-architectures} we will study this choice in
-more details. We are going to define 3D and 2D version of the network, by which
-we mean that 3D networks are using 3x3x3 while 2D networks are using 1x3x3
-kernel shapes in their convolutional layers.
+There is still the question of what kernel size to use for the horizontal layers. In the Section \ref{sec:diff-architectures} we will study this choice in more detail. We will define the 3D and 2D versions of the network, by which we mean that 3D networks use $3 \times 3 \times 3$ kernel shapes in their convolutional layers, while 2D networks use $1 \times 3 \times 3$ kernel shapes.
 
-The idea to test the difference in their performance came from the following two
-concepts: when I as a human am looking at the images, I can roughly estimate
-what are tunnels and what is a pillar based on the overall shape, but it is
-significantly easier if I am allowed to see multiple slices; hence, the 3D
-version with their greater receptive fields reaching other z slices, would
-benefit in terms of their accuracy. On the other hand, network with 3D kernels
-have more trainable parameters; thus, might be harder to train and as we have
-sparsely annotated dataset this could become a hurdle causing the 2D version to
-perform better.
+The idea to test the difference in their performance came from the following two concepts: when a human is looking at the images, they can roughly estimate what are tunnels and what is a pillar based on the overall shape, but it is significantly easier if they are allowed to see multiple slices; hence, the 3D version with their greater receptive fields reaching other z slices, would benefit in terms of their accuracy. On the other hand, networks with 3D kernels have more trainable parameters; thus, they might be harder to train, and as we have a sparsely annotated dataset, this could become a hurdle, causing the 2D version to perform better.
 
-Overall such network with anisotropic pooling operations will be referred to as
-AnisoUNet(3D) in the rest of the thesis.
+Overall, such a network with anisotropic pooling operations will be referred to as AnisoUNet(3D) throughout the remainder of this thesis.
 
 \section{The CSAM module}
 \label{sec-csammodule}
 
-This section talks about the channel and spatial attention module (further
-refered to as the CSAM) mentioned in the CS-Net paper \parencite{Mou2021}. 
+This section discusses the channel and spatial attention module (hereafter referred to as CSAM), as mentioned in the CS-Net paper \parencite{Mou2021}. 
 
-\begin{figure}
-    \begin{center}
-        \includegraphics[width=0.9\linewidth]{resources/architecture_diagrams/csam.png}
-    \end{center}
-    \caption{The CSAM from Paper \parencite{Mou2021}. This module is inserted in
-    the neck part of an U-Net neural network.}
+\begin{figure}[htbp]
+   \centering
+    \begin{subfigure}{\textwidth}
+        \includegraphics[width=\textwidth]{resources/architecture_diagrams/csam.png}
+    \end{subfigure}
+    \begin{subfigure}{\textwidth}
+        \includegraphics[width=\textwidth]{resources/architecture_diagrams/csam_descp_croped.png}
+    \end{subfigure}
+    \caption{ The CSAM. This module is inserted in the bottleneck part of an U-Net neural network. N is equal to $D \times W \times H$, and C stands for the number of channels. F is the input features of size $N \times C$. In the top part is SAM, and CAB is at the bottom. Q, K, J, and V are features created by applying the specific convolutions. Adapted from \parencite{Mou2021}}
     %todo: check if my implementation is correctly doing this
     \label{fig:csammodule}
 \end{figure}
 
-The Figure \ref{fig:csammodule} shows the overall architecture of the CSAM. It
-is formed of two paths, the spatial attention block SB and the channel attention
-block CAB. One is designed to help the network find tubular structures inside
-the spatial direction while the other is used for helping the network learn
-inter-channel dependency. In the following section I will talk about the main
-principles behind their design, but for full explanation refer to the original
-paper. Note that the authors devised both 2D and 3D version of this module, but
-we will focus on just the 3D version.
+Figure \ref{fig:csammodule} shows the overall architecture of the CSAM. It is formed of two paths, the spatial attention block SAB and the channel attention block CAB. The former is designed to help the network identify tubular structures along the spatial direction, whereas the latter is used to help the network learn inter-channel dependencies. The following sections will discuss the main principles behind the blocks, but for a full explanation, please refer to the original paper. Note that the authors devised both 2D and 3D versions of this module, but we will focus on just the 3D version.
 
 \subsection*{SAB}
-The design of the spatial attention block is motivated by the detection of
-tubular structures such as blood vessels in retina images. The detection of such
-features might require contextual information rather than purely local
-information.
+The design of the spatial attention block is motivated by the detection of tubular structures, such as blood vessels, in retinal images. The detection of such features might require contextual information rather than purely local information.
 
-Overall, the design is very similar to the attention mechanism in Transformers
-described by Vaswani et al. \parencite{Vaswani2017attention} where a
-key-query-value structure was introduced. In the case of CSAM, the query, key,
-and newly introduces judge matrices are creating by convolving the data with
-1x3x1, 3x1x1, and 1x1x3 kernel shapes. This step somehow compresses the
-information about the tree like structures in the three directions. These
-matrices are then multiplied together to obtain a spatial attention between the
-x,y and z direction. This attention map is then used to weight the dimension
-reduced original data in $V$ and expanded back to the original size.
+Overall, the design is very similar to the attention mechanism in Transformers described by Vaswani et al. \parencite{Vaswani2017attention} where a key-query-value structure was introduced. In the case of CSAM, the query Q, key K, and newly introduced judge J matrices are created by convolving the data with $1 \times 3 \times 1$, $3 \times 1 \times 1$, and $1 \times 1 \times 3$ kernel shapes. This step compresses the information about the tree-like structures in the three directions. These matrices are then multiplied together to obtain a spatial attention matrix between the x, y, and z directions, called the Spatial Affinity Matrix. This attention map is then used to weight the dimension-reduced original data in matrix $V$ and expand it back to its original size.
 
 \subsection*{CAB}
-The design of the second block is very similar to the first one, but in this
-case the point is to model the interchannel dependencies, therefore instead of
-using the differenrly sized kernels, the authors use 1x1x1 kernels, which
-results are then combined to an affinity matrix of size CxCxC, where a value at
-position $(x,y,z)$ tell how these three channels are connected.
+The design of the second block is very similar to the first one, but in this case the point is to model the interchannel dependencies, therefore instead of using the differently sized kernels, the authors use $1 \times 1 \times 1$ kernels, which results are then combined to an affinity matrix of size $C \times C \times C$, where a value at position $(x,y,z)$ tell how these three channels are connected.
 
-Afterwards the output is the sum of the SAB, CAB and the original data.
+Afterwards, the output is the sum of the SAB, CAB and the original data. This architecture is referred to as AnisoUNEt-CSAM in the thesis.
 
 \section{Squeeze and excitation block}
 \label{sec-seblock}
 
-In Paper \parencite{Hu2018} researchers demonstrated how a simple small block,
-called the squeeze-and-excitation (SE) block, can improve the performance across
-various datasets and tasks. Hence, we chose it as the second attention-like
-mechanism to explore in this thesis.
+In \parencite{Hu2018}, researchers demonstrated how a simple small block, called the squeeze-and-excitation (SE) block, can improve the performance across various datasets and tasks. Hence, we chose it as the second attention-like mechanism to explore in this thesis.
 
-The general principle of a squeeze-and-excitation block is illustrated in Figure
-\ref{fig:seblock}. The main idea is that we let the network learn significance
-of each channel automatically during the training. As its name suggest there is
-a squeeze operation where the channels are compressed and then an excitation
-step, which produce channel weights between 0.0 and 1.0, which multiply the
-values in the original data. The researchers postulate that this improves the
-network's quality of representation by modeling the interdependencies between
-channels of the output of the convolution layers \parencite{Hu2018}.
+The general principle of a squeeze-and-excitation block is illustrated in Figure \ref{fig:seblock}. The main idea is that we allow the network to learn the significance of each channel automatically during training. As its name suggests, there is a squeeze operation where the channels are compressed, followed by an excitation step that produces channel weights between 0.0 and 1.0, which multiply the values in the original data. The researchers postulate that this improves the network's quality of representation by modelling the interdependencies between channels of the output of the convolution layers \parencite{Hu2018}.
 
-Let's look at it in more detail, the SE block, shown in Figure
-\ref{fig:seblock}, consists of four operations: truncate, squeeze, excitation,
-and scaling. The truncate operation shown as $F_{TR}$ is a general convolutional
-operator, which reduces the dimension. This step is not crucial in the scheme,
-but it is mainly to illustrate the point, that SE block is usually built upon
-some operation. More importantly, the transformed data is taken and run through
-a squeeze operation, which performs some global operation - our case global
-average pooling - in the whole channel. After that, the excitation operation
-comes. This operation was designed to have the following properties: they wanted
-to create a flexible operation --- meaning an operation capable of learning
-non-linear dependencies --- and they wanted it to be non-mutually exclusive
-between channels. These properties are fulfilled by applying two convolutions
-followed by ReLU and sigmoid respectively. Note that the first convolution
-produces output with less than the original number of channels and the ratio is
-called the reduction factor. Finally the last convolution expands the number of
-channels to the original size. The combination of squeeze and excitation allows
-the network to learn how to weight each channel (the scale operation mentioned
-above) by considering multiple channels.
+Let us look at it in more detail. The SE block, shown in Figure \ref{fig:seblock}, consists of four operations: truncate, squeeze, excitation, and scaling. The truncate operation, denoted as $F_{TR}$, is a general convolutional operator that reduces the dimension. This step is not crucial in the scheme, but it is mainly to illustrate the point that the SE block is usually built upon some operation. More importantly, the transformed data is then run through a squeeze operation, which performs a global operation - in our case, global average pooling - across the entire channel. After that, the excitation operation comes. This operation was designed to possess the following properties: they aimed to create a flexible operation, meaning one capable of learning non-linear dependencies, and they wanted it to be non-mutually exclusive across channels. These properties are fulfilled by applying two convolutions, followed by ReLU and sigmoid, respectively. Finally, the $F_{scale}$ uses the attention weights to scale the data in $U$. The combination of squeeze and excitation allows the network to learn how to weight each channel (the scale operation mentioned above) by considering multiple channels.
+
 % todo: check if it is global average pooling
+% todo: move to implementation
+% Note that the first convolution produces output with less than the original number of channels and the ratio is called the reduction factor. 
 
-\begin{figure}
+\begin{figure}[htbp]
     \begin{center}
         \includegraphics[width=\linewidth]{resources/architecture_diagrams/seblock.png}
     \end{center}
-    \caption{A squeeze-and-excitation block \parencite{Hu2018}}
+    \caption{A squeeze-and-excitation block. The input data $X$ is processed to create $\hat X$. First, the data is truncated by a $F_{tr}$ operation to form features $U$. The rescale operation $F_scale$ rescales the channels according to their importance learnt in the excitation ($F_{ex}$, typically a convolutional layer) and squeeze operations ($F _ {sq} $, typically a global average pooling). Taken from \parencite{Hu2018}}
     \label{fig:seblock}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[htbp]
     \begin{center}
         \includegraphics[width=\linewidth]{resources/architecture_diagrams/usenet.png}
     \end{center}
-    \caption{Placement of the SE blocks inside U-Net in the USE-Net architecture
-    \parencite{Rundo2019}.}
+    \caption{Placement of the SE blocks inside U-Net in the USE-Net architecture. Taken from \parencite{Rundo2019}.}
     \label{fig:usenet}
 \end{figure}
 
-While the authors talk about placing this object after the truncate operation,
-and give concrete examples of where to place it in Inception and ResNet blocks,
-not mention of U-Net is found. We briefly experimented with placing a single SE
-block in the neck part of the U-Net, similarly to how the CSAM was used, but
-this was later replaced instead by using the architecture described in
-\parencite{Rundo2019}. In their work thet suggested a different placement of the
-SE blocks inside a U-Net like architecture. It is called USE-Net and the
-placement is visible in Figure \ref{fig:usenet}. The authors are placing a SE
-block before the concationation and also at every step of the upsampling. 
+While the authors in \parencite{Hu2018} talk about placing this object after the truncate operation, and give concrete examples of where to place it in Inception and ResNet blocks, the U-Net is not mentioned. We briefly experimented with placing a single SE block in the bottleneck part of the U-Net, similarly to how the CSAM was used; however, this was later replaced by using the architecture described in \parencite{Rundo2019}. In their work, they suggested a different placement of the SE blocks inside a U-Net-like architecture. It is called USE-Net, and the placement is visible in Figure \ref{fig:usenet}. The authors place an SE block before the concatenation and at every step of the upsampling. 
 
-This is the last architecture we will explore in this work.
+This is the last architecture we will explore in this work and will be referred to as the AnisoUNet-UseNet variant. 
 
 \chapter{Training}
-\label{}
-This chapter explains how the aforementioned neural networks were trained. How
-the data was split to allow cross fold learning and finally how the network can
-be run to segment any size of the network.
+\label{sec:training}
+This chapter explains how the aforementioned neural networks were trained. How the data was split to allow cross-fold learning, and finally, how the network can be run to segment images of different sizes.
 
 \section{Splitting the data}
 \label{sec:processing_data}
 % [TODO mention alternatives to supervised learning somewhere]
 
-As mentioned in Chapter \ref{sec:data}, we have only two fully annotated time
-frames, each containing dimensions of 7x512x512 voxels. Splitting such a small
-dataset into training and testing sets presents a challenge, which is further
-complicated by the need to experiment with fully 3D networks. If we were to
-treat each depth slice independently, it would allow mixing of testing and
-training data; however, this could introduce bias. This bias arises because the
-pillars are nearly horizontal, and the tunnels can extend across multiple
-slices. Moreover, if we consistently use all seven depth slices, we would
-essentially be training on one time frame while testing on another. In our
-opinion, this approach is unfeasible.
+As mentioned in Chapter \ref{sec:data}, we have only two fully annotated time frames, each of 7x512x512 voxels. Splitting such a small dataset into training and testing sets presents a challenge, which is further complicated by the need to experiment with fully 3D networks. If we were to treat each depth slice independently, it would allow mixing of testing and training data; however, this could introduce bias. This bias arises because the pillars are nearly vertical, meaning their position is roughly the same in all z-slices, and the tunnels are not limited to a single z-slice. Moreover, if we consistently use all seven depth slices, we would essentially be training on one time frame while testing on a different one. In our opinion, this approach is unfeasible.
 
-However, this is not a lost cause, as U-Nets have demonstrated that, compared to
-some other architectures, U-Nets do not require a vast labelled dataset to
-train. In the original paper, a few dozen images were used to train the networks
-to segment medical images \parencite{Ronneberger2015}. Similarly, we were able
-to reproduce the results of the CS-Net paper \parencite{Mou2021} and train a
-retina vessel segmentation network with just a few dozen images.
+However, as U-Nets have demonstrated, they do not require a vast labelled dataset to be trained. In the original paper, a few dozen images were used to train the networks to segment medical images \parencite{Ronneberger2015}. Similarly, we were able to reproduce the results of the CS-Net paper \parencite{Mou2021} and train a retina vessel segmentation network with just a few dozen images.
 
-To find the few dozen images, we decided to take a different approach. While
-splitting the dataset into quadrants would still yield only about eight images,
-we decided to look at the level of the annotated instances of tunnels. Since
-there are more than 100 of these TNTs, we can train a network on just the crops
-of the TNTs. Then we can tile the entire image and stitch the predictions of the
-neural networks similarly to what was done in \parencite{Ronneberger2015}.
+While splitting the dataset into quadrants would still yield only about eight images, we decided to look at the level of the annotated instances of tunnels. Since there are more than 100 of these TNTs, we can train a network on just the crops of the TNTs. Then we can tile the entire image and stitch the predictions of the neural networks similarly to what was done in the original U-Net paper \parencite{Ronneberger2015}.
 
-The actual splitting logic iterates through every single TNT and crops it out.
-As the tunnels have different sizes, we decided to cut out the bounding boxes of
-the tunnels with a set of minimum sizes. For the minimum size, we decided to opt
-for a 7x90x90 shape, as it comfortably fits the majority of tunnels and provides
-a decent context around it. A decent number of tunnels are smaller than this. To
-expand the size to fit the minimum volume size, we decided to expand them with
-relevant data.
+The actual splitting logic iterates through every single TNT and crops it out. As the tunnels have different sizes, we decided to cut out the bounding boxes of the tunnels with a set of minimum sizes. For the minimum size, we opted for a $7 \times 90 \times 90$ shape, as it comfortably fits the majority of tunnels and provides a decent context around it. A decent number of tunnels are smaller than this. To expand the size to fit the minimum volume size, we decided to expand them with relevant data instead of padding by 0.
 
-\begin{figure}
+\begin{figure}[htbp]
     \begin{center}
-        \includegraphics[width=0.6\linewidth]{resources/tmp/t017_upperright.png}
+        \includegraphics[width=0.5\textwidth]{resources/training/t017_upperright_modified.png}
     \end{center}
-    \caption{Subpart of the original data showing noise and artifacts.}
+    \caption{Part of a single slice of the data (contrast enhanced). Two yellow arrows point out noisy sections.}
     \label{fig:upperright}
 \end{figure}
-It is still important to be able to somehow split the dataset into the training
-and testing sets. As the dataset is rather sparse, choosing a random subset to
-evaluate performance is not ideal, and there is a random chance that some tunnel
-from the testing set may be visible in a cutout of a tunnel in the training set.
-Another problem is how the various parts of the dataset do not have the same
-number of tunnels, tunnels of the same morphology and the same amount of noise
-and irrelevant structures. For example, in the upper right corner in Figure
-\ref{fig:upperright} we can find some irrelevant structures which are not
-present in the rest of the dataset. Given these problems, it is pretty tricky to
-split the dataset in such a way that all possible types of artefacts and tunnel
-structures are visible in both the testing and training subsets.
 
-We tackled this problem by doing a quadrant-based spatial 4-fold
-cross-validation. In each training run, one of the four quadrants is selected as
-the testing quadrant, and all cropped TNTs belonging to this quadrant form the
-testing subset. This helps mitigate the small dataset and enables us to study
-how the different folds affect the performance of the neural network.
+It is still important to be able to somehow split the dataset into the training and testing sets. As the dataset is rather sparse, choosing a random subset to evaluate performance is not ideal, and there is a random chance that some tunnels from the testing set may be visible in a cutout of a tunnel in the training set. Another problem is how the various parts of the dataset do not have the same number of tunnels, tunnels of the same morphology and the same amount of noise and irrelevant structures. For example, in the upper right corner in Figure \ref{fig:upperright} we can find some irrelevant structures which are not present in the rest of the dataset. Given these problems, it is pretty tricky to split the dataset in such a way that all possible types of artefacts and tunnel structures are visible in both the testing and training subsets.
 
-\begin{figure}
+We tackled this problem by doing a quadrant-based spatial 4-fold cross-validation. In each training run, one of the four quadrants is selected as the testing quadrant, and all cropped TNTs belonging to this quadrant form the testing subset. This helps mitigate the small dataset and enables us to study how the different folds affect the performance of the neural network.
+
+\begin{figure}[htbp]
     \begin{center}
         \includegraphics[width=0.6\linewidth]{resources/dataset/vis_split_t0.png}
     \end{center}
-    \caption{A visualisation of the division into a training and testing subset
-    for one of the folds.}
+    \caption{Maximum projection of the binarised reference annotations for the first fold. Red crops belong to crops which were placed into the testing set, while blue crops form the training set. Tunnels whose crops were significantly present in both training and testing quadrants were discarded; thus, the tunnels do not have any colour.}
     \label{fig:folding-visualisation}
 \end{figure}
 
-This is still quite challenging to do correctly, as not every tunnel lies neatly
-inside one of the quadrants. A split used in training is visualised in Figure
-\ref{fig:folding-visualisation}, where a possible split is shown in two colours:
-red represents cutouts belonging to the testing subset. The decision of whether
-a cutout belongs to the testing subset or not is dictated by looking at the
-overlap with the training quadrant. If the crop lies with more than 20\% or has
-more than 50 pixels in the testing quadrant, it will not be included in the
-training subset. If at least 80\% of the cutout is inside the testing quadrant,
-it is considered to be part of the testing subset.
+This is still quite challenging to do correctly, as not every tunnel lies neatly inside one of the quadrants. A split used in training is visualised in Figure \ref{fig: folding-visualisation}, where a possible split is shown in two colours: red represents crops belonging to the testing subset. The decision of whether a crop belongs to the testing subset or not is determined by examining the overlap with the training quadrant. If the crop lies with more than 20\% or has more than 50 voxels in the testing quadrant, it will not be included in the training subset. If at least 80\% of the crop is inside the testing quadrant, it is considered to be part of the testing subset.
 
-Finally, during the training we need the be able to know when to stop. For this
-purpose during each run, roughly 30\% of the crops used for training are used as
-a validation set.
+Finally, during the training, we need to know when to stop. For this purpose, during each run, approximately 30% of the crops for training are randomly picked and form the validation set.
 
 \section{Loss functions}
-Since we can look at finding tunneling nanotubes as a binary classification
-problem applied at every pixel, it naturally comes to use a binary cross-entropy
-loss to teach the network to learn to segment the images. However, our dataset
-is very heavily imbalanced as the data contains a lot more negative examples. To
-somewhat help the training to pay more attention to the tunnels, the
-cross-entropy was weighted by a factor or 50, which was estimated by taking the
-calculating the ration of pixels classified as background and pixels assigned to
-some tunnel by the biologist. The weighted BCE loss is defined as
-\parencite{Jadon2020loss} \parencite{PyTorchBCE}:
+Since we can view finding tunnelling nanotubes as a binary classification problem applied at every pixel, it naturally comes to using a binary cross-entropy loss to train the network to segment the images. However, our dataset is heavily imbalanced, as it contains a significantly higher number of negative examples. To somewhat help the training pay more attention to the tunnels, the cross-entropy was weighted by a factor of 50, which was estimated as the ratio of pixels classified as background and pixels assigned to some tunnel by the biologist. The weighted BCE loss is defined as in \parencite{Jadon2020loss,PyTorchBCE}, where $y$ stands for prediction, $\hat{y}$ is the true label, and $beta$ is the weight:
 
-\[ L_{BCE}(y, \hat{y}) = -(\beta*ylog(\hat{y}) + (1-y)log(1-\hat{y}) \]
+\[ L_{BCE}(y, \hat{y}) = -(\beta y \log(\hat{y}) + (1-y)\log(1-\hat{y}) \]
 
-where $y$ stands for prediction, $\hat{y}$ is the true label, and $\beta$ is the
-weight.
-
-To further improve the performance of the training, we got inspired CS-Net paper
-which uses Dice loss, and some papers claim that the combination of Dice loss
-and cross-entropy loss lead to better performance in many segmentation tasks
-\parencite{ma2020segmentationlossodyssey}. This is defined as taking $L_{Dice}
-= 1 - \text{Dice}$, meaning that as we get segmentation results closer to the
-ideal mask, we get closer to 0. The loss function was defined using as in the
-paper \parencite{ma2020segmentationlossodyssey} as:
-
+To further improve the performance of the training, we drew inspiration from the CS-Net paper, which uses Dice loss. Some papers claim that the combination of Dice loss and cross-entropy loss leads to better performance in many segmentation tasks \parencite{ma2020segmentationlossodyssey}. This is defined as taking $L_{Dice} = 1 - \text{Dice}$, meaning that as we obtain segmentation results closer to the ideal mask, we approach 0. The loss function was defined using as in the paper \parencite{ma2020segmentationlossodyssey} as:
 \[ L_{Dice}=1-\frac{2\sum_{i=1}^{N}{g_i*s_i}}{\sum_{i=1}^{N}{g_i^2}+\sum_{i=1}^{N}{s_i^2}} \]
-
-where $g_i$ is the binary indicator for the foreground and $s_i$ is the
-probability of assigning the pixel to the foreground class.
+where $g_i$ is the binary indicator for the foreground and $s_i$ is the probability of assigning the pixel to the foreground class.
 
 The final loss is the combination of $L_{BCE}$ and $L_{Dice}$:
 
 \[ L_{final} = 0.5 L_{Dice} + 0.5 L_{BCE} \]
 
-We used a linear combination of the losses as was mentioned in
-\parencite{ma2020segmentationlossodyssey}.
-
-During the development of the training loop, we observed that setting the
-learning rate to 0.0001 and weight decay to 0.0001 provided a stable learning.
-As such, we maintained a constant learning rate during training and did not
-experiment with these values due to time constraints. We chose to use an
-adaptive gradient algorithm for training the neural networks called AdamW, which
-is a variant of the commonly used Adam optimiser.
+We used a linear combination of the losses, as mentioned in \parencite{ma2020segmentationlossodyssey}.
 
 \section{Optimisers, learning rates, regularisation}
 
-Regularisation is a common technique in machine learning that reduces
-overfitting by discouraging values with large magnitudes
-\parencite{Bishop2024DeepLearning}. One of the standard regularisation
-techniques in deep learning is weight decay, also known as L2 normalisation,
-which penalises large weights [TODO check]. However, while L2 normalisation and
-weight decay are the same, this is not true for the Adam optimiser. The authors
-argue that using their version, called AdamW, achieves better generalisation
-performance as it properly decouples the weight decay
-\parencite{loshchilov2019}. Since we have a sparse dataset, we wanted to include
-the weight decay regularisation technique. However, no significant difference in
-the training performance was observed.
+During the development of the training loop, we observed that setting the learning rate to 0.0001 and weight decay to 0.0001 provided a stable learning. As such, we maintained a constant learning rate during training and did not experiment with these values due to time constraints. We chose to use an adaptive gradient algorithm for training the neural networks called AdamW, which is a variant of the commonly used Adam optimiser.
+
+Regularisation is a common technique in machine learning that reduces overfitting by discouraging values with large magnitudes \parencite{Bishop2024DeepLearning}. One of the standard regularisation techniques in deep learning is weight decay, also known as L2 normalisation, which penalises large weights [TODO check]. However, while L2 normalisation and weight decay are the same, this is not true for the Adam optimiser. The authors argue that using their version, called AdamW, achieves better generalisation performance as it properly decouples the weight decay \parencite{loshchilov2019}. Since we have a sparse dataset, we wanted to include the weight decay regularisation technique. However, no significant difference in the training performance was observed.
 
 \section{Augmentations}
 
-A common problem with training neural networks is their capacity to overfit on
-the training part of the dataset. This often leads to poor generalisation
-performance. This is especially true for tiny datasets such as ours. One of the
-common ways to address this problem, as mentioned in the original U-Net paper,
-is the use of augmentations \parencite{Ronneberger2015} to artificially enlarge
-the training set. In our case, we decided to use only augmentations that do not
-require interpolation. The reason is that, unlike many other tasks, we are
-potentially dealing with relatively thin structures, which could be easily
-suppressed or blurred and no longer visible with improper interpolation.
+A common problem with training neural networks is their capacity to overfit on the training part of the dataset. This often leads to poor generalisation performance. This is especially true for tiny datasets such as ours. One of the common ways to address this problem, as mentioned in the original U-Net paper, is the use of augmentations \parencite{Ronneberger2015} to enlarge the training set artificially. In our case, we decided to use only augmentations that do not require interpolation. The reason is that, unlike many other tasks, we are potentially dealing with relatively thin structures, which could be easily suppressed or blurred and become invisible with improper interpolation.
 
-In each batch, a different set of transforms is used. This works by setting a
-random probability for this particular transform to be applied. For the training
-we are:
+In each batch, a different set of transforms is used. This works by setting a random probability for this particular transform to be applied. For the training we are:
+
 \begin{itemize}
-    \item{Adding random noise with a Gaussian distribution of mean 0 and 0.01
-        standard deviation with probability 0.5, which adds very faint noise.
-        This is a relatively low amount of noise and was chosen during the
-        development of the network as we did not want to change the images to
-        look completely different to the original ones.}
-    \item{Random flipping in every axes.}
-    \item{Random spatial crop which always crops to the preset size 7x64x64 from
-        any other size.}
+    \item{Adding random noise with a Gaussian distribution of mean 0 and 0.01 standard deviation with probability 0.5, which adds very faint noise. This is a relatively low amount of noise and was chosen during the development of the network as we did not want to change the images to look completely different to the original ones.}
+    \item{Random flipping in every axis.}
+    \item{Random spatial crop which always crops to the preset size of $7 \times 64 \times 64$ from any other size.}
 \end{itemize}
-A possible problem of using small tiles centered at tunnels is that we might
-introduce unwanted bias into the network, as it might learn to always try to
-find the tunnel in the middle. The design designation behind using random
-spatial crop was to try to suppress this, as the program now randomly finds a
-crop of the wanted size, which reduces this problem.
+
+A potential issue with using small tiles centred at tunnels is that we may introduce unwanted bias into the network, as it might learn to always try to find the tunnel in the middle. The design designation behind using random spatial crop was to try to suppress this, as the program now randomly finds a crop of the wanted size, which reduces this problem.
 
 \section{Training loop}
-Overall the network training loop is shown in Algorithm \ref{alg:training}. Just
-a note the evaluation here is just calculating the Dice score on top of the
-crops belonging to the training quad.
+\label{sec:trainingloop}
+Overall, the network training loop is shown in Algorithm \ref{alg:training}.
 
-\begin{algorithm}[H]
-    \setlength{\lineskip}{-3pt}        % Reduce line spacing
-    \setlength{\baselineskip}{8pt}      % Reduce baseline spacing
-    \setlength{\parskip}{0pt}           % Remove paragraph spacing
+\begin{algorithm}
     \small  
     \caption{Quadrant-based Model Training}
+    \setlength{\lineskip}{-2pt}        % Reduce line spacing
+    \setlength{\baselineskip}{8pt}      % Reduce baseline spacing
+    \setlength{\parskip}{0pt}           % Remove paragraph spacing
     \label{alg:training}
-    \KwData{Four quadrants, model configuration}
-    \KwResult{Four trained models}
+    \KwData{Data, Model description}
+    \KwResult{Four trained models and evaluations.}
 
 \For{$quad \in quadrants$}{
     $Reseed()$\;
     
     \tcp{Data preparation}
-    $full\_train\_data, full\_test\_data \gets LoadQuadrantData(quad)$\;
+    $full\_train\_data, full\_test\_data \gets LoadQuadrantData(data, quad)$\;
     $mean, std \gets ComputeStats(full\_train\_data)$\;
     $train_{set}, val_{set} \gets SplitData(full\_train\_data, ratio=1/3)$\;
     
     \tcp{Model training with early stopping}
-    $model \gets CreateNeuralNetwork(config)$\;
+    $model \gets CreateNeuralNetwork(model\_description)$\;
     $best_{loss} \gets \infty$\;
     
     \For{$epoch \gets 1$ \KwTo $1000$ \textbf{or until} $val\_loss$ hasn't improved for 50 epochs}{
@@ -739,503 +422,257 @@ crops belonging to the training quad.
 }
 \end{algorithm}
 
+
 \section{Inference on large images}
 \label{sec:runningthenetwork}
 
-Our network has been trained on square crops of size 7x64x64 voxels, but the
-original images are larger at 7x512x512 voxels. This is solved by using an
-overlap-tiling strategy similar to the one by Ronneberger et al.
-\parencite{Ronneberger2015}. The original images a re split into tiles first
-with configurable amount of overlap in pixels, this is visualised in Figure
-\ref{fig:stitchingoverlap}. The tiles are sequentially processed by the network and then
-stitched together to create the final prediction. The predictions are then
-thresholded with value of 0.5.
+All our networks are trained on square crops of size $7 \times 64 \times 64$ voxels, but the original images are larger at $7 \times 512 \times 512$ voxels. This is solved by using an overlap-tiling strategy similar to the one by Ronneberger et al. \parencite{Ronneberger2015}. The original images are split into tiles first, with a configurable amount of overlap in pixels. The network sequentially processes the tiles and then stitches them together to create the final prediction. The predictions are then thresholded with a value of 0.5.
 
-\begin{figure}
+\begin{figure}[htbp]
     \centering
     \begin{subfigure}[t]{0.45\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{resources/overlaps_and_processing/quad3_0px_threshold_0.png}
-        \caption{0px overlap}
-        \label{fig:stitchingoverlap0}
-    \end{subfigure}\hfill
-    \begin{subfigure}[t]{0.45\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{resources/overlaps_and_processing/quad3_10px_threshold_0.png}
-        \caption{10px overlap}
-        \label{fig:stitchingoverlap10}
-    \end{subfigure}
-    \begin{subfigure}[t]{0.45\textwidth}
-        \centering
         \includegraphics[width=\textwidth]{resources/overlaps_and_processing/quad3.png}
-        \caption{Original image (stretched).}
+        \caption{}
         \label{fig:stitchingoverlaporig}
     \end{subfigure}\hfill
     \begin{subfigure}[t]{0.45\textwidth}
         \centering
         \includegraphics[width=\textwidth]{resources/overlaps_and_processing/quad3_10px_postprocessed.png}
-        \caption{10px overlap with postprocessing applied.} 
+        \caption{} 
         \label{fig:stitchingoverlappost}
     \end{subfigure}
-    \caption{\ref{fig:stitchingoverlap0} and \ref{fig:stitchingoverlap10} show
-    how different amount of overlap has effect on the prediction of TNTs for
-    image \ref{fig:stitchingoverlaporig}. The effect of postprocessing is seen
-    in \ref{fig:stitchingoverlappost}.}
+
+    \begin{subfigure}[t]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{resources/overlaps_and_processing/quad3_0px_threshold_0_circles.png}
+        \caption{}
+        \label{fig:stitchingoverlap0}
+    \end{subfigure}\hfill
+    \begin{subfigure}[t]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{resources/overlaps_and_processing/quad3_10px_threshold_0.png}
+        \caption{}
+        \label{fig:stitchingoverlap10}
+    \end{subfigure}
+
+    \caption{\ref{fig:stitchingoverlaporig} shows a crop of the dataset which has been contrast-adjusted, and the \ref{fig:stitchingoverlappost} shows neural network prediction with 10px overlap between tiles and postprocessing. The second row illustrates the impact of tile overlaps on the network's thresholded prediction. In \ref{fig:stitchingoverlap0}, no overlap was used, and possible edge artefacts are emphasised with blue circles, while overlap with 10 px is used in \ref{fig:stitchingoverlap10}.}
+
     \label{fig:stitchingoverlap}
 \end{figure}
 
-The idea to use a configurable overlap size came from the following observation.
-In Figure \ref{fig:stitchingoverlap0}, several sharp artefacts can be seen at
-tile borders, possibly because only part of the structure is visible, leading
-the network to classify it as a tunnel. This led us to the idea that if we use
-larger overlaps and aggregate them, these effects on tile borders will get
-suppressed. As can be seen in Figure \ref{fig:stitchingoverlap10}, using a
-larger overlap suppresses some of these artefacts. For aggregating the overlaps,
-a simple averaging was chosen due to its simplicity.
+The idea of using a configurable overlap size originated from the following observation. In Figure \ref{fig:stitchingoverlap0}, several sharp artefacts can be seen at tile borders, possibly because only part of the structure is visible, leading the network to classify it as a tunnel. This led us to the idea that if we use larger overlaps and aggregate them, these effects on tile borders will get suppressed. As can be seen in Figure \ref{fig:stitchingoverlap10}, using a larger overlap suppresses some of these artefacts. For aggregating the overlaps, a simple averaging was chosen due to its simplicity.
 
 % todo in discussion mention that maybe this was not the best idea, maybe we
 % should have chosen larger context. The context x precision tradeoff.
 % TODO: consider drawing there
 
-Even after this step, there still might be some leftover artefacts, some of
-which are linked to noisy input, but others are showcase that is is not a
-perfect solution to the artefacts caused by partial context. Some of these false
-TNTs at the border of tiles are quite small compared to real tunnels, which
-lead us to the final piece of the inference - the postprocessing.
+Even after this step, some leftover artefacts may remain, some of which are linked to noisy input, while others serve as evidence that it is not a perfect solution to the artefacts caused by partial context. Some of these false TNTs at the border of tiles are relatively small compared to real tunnels, which leads us to the final piece of the inference - the postprocessing.
 
 \section{Postprocessing}
 \label{sec:postprocessing}
 
-As mentioned in the previous section, even after applying the overlap strategy,
-some artefacts remain. Moreover, some artefacts actually closely resemble thin
-structures but are not true tunnels. Many of these false tunnels seem to be
-small and not connected to any cell, nor are significantly present at multiple
-depth slices. Therefore, we decided that an easy filtering would be using their
-volume.
+As mentioned in the previous section, even after applying the overlap strategy, some artefacts remain. Moreover, some artefacts actually closely resemble thin structures but are not true tunnels. Many of these false tunnels are small and not connected to any cell, nor are they significantly present at multiple depth slices. Therefore, an easy way to filter would be by using their volume.
 
-\begin{figure}
+\begin{figure}[htbp]
     \begin{center}
         \includegraphics[width=\textwidth]{resources/histogramofsizes.png}
     \end{center}
-    \caption{Histogram of the volume (in pixels) of all labeled tunneling
+    \caption{Histogram of the volume (in voxels) of all labelled tunnelling
     nanotubes with median and mean highlighted.}.
     \label{fig:histogramoflabelsizes}
 \end{figure}
 
-I chose the value of 100 pixels, realising that some of the tiny tunnels might
-get removed, but as will later be shown, the network tends to find more tunnels
-than the biologist. Hence, I believe this to be a reasonable assumption to make.
-The Figure  % todo: finish 
-% todo: mention in discussion that this prob. could have been more studied
+The value of 100 pixels, realising that some of the tiny tunnels might get removed, but as will be shown later, the network tends to find more tunnels than the biologist. Hence, I believe this to be a reasonable assumption to make. The Figure \ref{fig:histogramoflabelsizes} shows a histogram of the distribution of labels' volumes. Removing components with a volume smaller than 100 voxels removed just a small number of all tunnels.
 
 \chapter{Implementation}
 
+The high-level logic of the training loop is discussed in Section \ref{sec:trainingloop}, and the inference is discussed in \ref{sec:runningthenetwork}. This chapter addresses some of the technical details of the implementation. The complete code, written in Python and Bash, is available in the thesis's archive along with several trained networks and a full user's reference.
 
-In the training Chapter [REF], the training procedure and the previously
-described training and preprocessing in previous chapters were implemented as a
-collection of Bash scripts, Python scripts and a Python module. All of the code
-is available as part of the master's thesis, alongside several trained networks
-for the user's reference.
+Although the Python programming language is an interpreted and dynamically typed language, and therefore is comparatively slower than other lower-level languages traditionally used in image processing, such as C++, its nature allows it to rapidly prototype new applications. Moreover, many packages call code written in other languages, such as C++, Fortran or C, to alleviate the performance problem. Lastly, Python has become a widely adopted language in the area of neural networks, and many researchers publish their code in Python; thus, Python was chosen to handle the implementation part.
 
-I decided to use a combination of Python \parencite{Python2025} and Bash to implement the thesis. The
-overall structure of the project code is as follows: a single TNTSegment package
-is available, which handles data loading, data splitting, and defining the
-neural networks and their modules. Outside of the package, the training script,
-evaluation script, and postprocessing script are available. Finally, to connect
-it all, running the automated training pipeline that respects the cross-folds
-and aggregates the results involves a mix of Bash and Python scripts. In-depth
-instructions as to how to run these scripts are available alongside the code in
-the thesis archive.
+As much of the evaluation involves proper cross-validation and averaging the results, it was easier to create a script that can be easily configured using a text editor or by providing and parsing CLI arguments. The averaging and selecting different datasets should not be the responsibility of the Python script. As such, creating directories, running code, aggregating results and parsing arguments is a natural job for a scripting language such as Bash. While this obviously limits the project's use to Unix-like operating systems, this is acceptable, as many computational servers are now running on Linux, and the trained models are OS-agnostic.
 
-Although the Python programming language is an interpreted and dynamically typed
-language, and therefore is comparatively slower than other lower-level languages
-traditionally used in image processing, such as C++, its nature allows it to
-rapidly prototype new applications. Moreover, many packages call code written in
-other languages, such as C++, Fortran or C, to alleviate the performance
-problem. Lastly, Python has become a widely adopted language in the area of
-neural networks, and many researchers publish their code in Python; thus, Python
-was chosen to handle the implementation part.
+The overall structure of the project code is as follows: a single TNTSegment package is available, which handles data loading, data splitting, and defining the neural networks and their modules. Outside of the package, the training script, evaluation script, and postprocessing script are available. Finally, to connect it all, running the automated training pipeline that respects the cross-folds and aggregates the results involves a mix of Bash and Python scripts. In-depth instructions as to how to run these scripts are available alongside the code in the thesis archive.
 
-As much of the evaluation involves proper cross-validation and averaging the
-results, it was easier to create a script that can be easily configured using a
-text editor or by providing and parsing CLI arguments. The averaging and
-selecting different datasets should not be the responsibility of the Python
-script. As such, creating directories, running code, aggregating results and
-parsing arguments is a natural job for a scripting language such as Bash. While
-this obviously limits the project's use to Unix-like operating systems, this is
-acceptable, as many computational servers are now running on Linux, and the
-trained models are OS-agnostic. [CHECK]
-
-As for the other tooling, here I list the most important tools:
+As for the other tooling, here is the list of the most important tools:
 \begin{itemize}
-    \item{MLflow is a tool for handling machine learning pipelines. It allows
-        for tracking experiments, comparing results, saving and loading models,
-        deploying models, and more. In this work it is nice to use UI was used
-        to keep track of the experiments \parencite{Zaharia2018MLflow}}  % cite
-        https://mlflow.org/docs/latest/ml/
-    \item{ruff linter cite is an extremely fast Python linter which was
-        developed by the company Astra. It automatically formats code and can
-        even correct some basic lint errors. \parencite{Ruff2025}} 
-    \item{NumPy has become one of the fundamental packages in scientific
-        computing in the Python ecosystem. It provides a very efficient
-        implementation of many common operations on N-dimensional arrays.
-        \parencite{Harris2020Numpy}}
-    \item{scikit-learn provides a great framework for building machine learning
-        models, not just deep learning models. The library was primarily used
-        for splitting datasets and utilising its framework for handling
-        batching. \parencite{Pedregosa2011scikit}}
-    \item{scikit-image is a package providing various algorithms for processing
-        images, e.g. segmentation algorithms, point transform, and mathematical
-        morphology. I used it to handle the postprocessing of masks and to find
-        connected components.\parencite{vanderWalt2014skimage}}
-    \item{PyTorch is a popular deep learning framework with a focus on
-        flexibility and speed. This enables the user to create a highly
-        performing neural network quickly. It automatically creates
-        computational graphs, allowing it to compute gradient updates
-        efficiently. It automatically handles connecting to various hardware,
-        such as CPUs and GPUs. This has allowed PyTorch to become one of the
-        most used packages in the Python ecosystem and is why I chose it to
-        develop the program \parencite{Ansel2024PyTorch}}
-    \item{MONAI is another open-source framework for building neural networks on
-        top of PyTorch. It focuses on building models used in the medical area.
-        In the project, I used this package to handle augmentations of the
-        dataset, as it provides first-class support for 3D data.
-        \parencite{Cardoso2022Monai}}
-    \item{Matplotlib is a library for visualising data in an interactive
-        fashion. The vast majority of graphs in this text were created using
-        it. \parencite{Hunter2007Matplotlib}}
-
-        % TODO add pandas
+    \item{MLflow is a tool for handling machine learning pipelines. It allows for tracking experiments, comparing results, saving and loading models, deploying models, and more. In this work, it's nice to use UI was used to keep track of the experiments \parencite{Zaharia2018MLflow}}
+    \item{NumPy has become one of the fundamental packages in scientific computing in the Python ecosystem. It provides a very efficient implementation of many common operations on N-dimensional arrays. \parencite{Harris2020Numpy}}
+    \item{scikit-learn provides a great framework for building machine learning models, not just deep learning models. The library was primarily used for splitting datasets and utilising its framework for handling batching. \parencite{Pedregosa2011scikit}}
+    \item{scikit-image is a package providing various algorithms for processing images, e.g. segmentation algorithms, point transform, and mathematical morphology. I used it to handle the postprocessing of masks and to find connected components.\parencite{vanderWalt2014skimage}}
+    \item{PyTorch is a popular deep learning framework with a focus on flexibility and speed. This enables users to create highly performing neural networks quickly. It automatically creates computational graphs, allowing it to compute gradient updates efficiently. It automatically handles connecting to various hardware, such as CPUs and GPUs. These advantages made PyTorch one of the most used packages in the Python machine learning ecosystem \parencite{Ansel2024PyTorch}.}
+    \item{MONAI is another open-source framework for building neural networks on top of PyTorch. It focuses on building models used in the medical area. In the project, this package handles augmentations of the dataset, providing first-class support for 3D data, unlike PyTorch. \parencite{Cardoso2022Monai}}
+    \item{Matplotlib is a library for visualising data in an interactive fashion. The vast majority of graphs in this text were created using it. \parencite{Hunter2007Matplotlib}}
+    \item{Pandas is a popular library for handling data. It provides a DataFrame object for efficient data manipulation, reshaping, and indexing, among many other things. In this work, the final evaluations were created using the Pandas library. \parencite{Pandas}}
 \end{itemize}
+Along with these tools, a formatter called Ruff, a tifffile package for reading and writing images, and torchinfo package for benchmarking the number of parameters of any model were also used.
 
 \section{Environment}
-Handling dependencies in Python can become tricky, especially for reproducing
-the environments. For this purpose, the environment's dependencies and building
-a virtual environment are resolved by a tool called uv \parencite{uv2025}, developed by
-Astral. The developer uses a TOML file to specify project dependencies. This
-file is then used by uv to recreate the environment.
+Handling dependencies in Python can become tricky, especially for reproducing the environments. For this purpose, the environment's dependencies and building a virtual environment are resolved by a tool called \texttt{uv} \parencite{uv2025}, developed by Astral. The developer uses a TOML file to specify project dependencies. This file is then used by \texttt{uv} to recreate the environment.
 
-For convenience, I am also including a \texttt{requirements.txt} file, which was
-automatically generated from a virtual Python environment; however, the
-officially supported version uses the \texttt {uv} package manager. The
-environment can then be created in two ways: if the user runs a computer with a
-GPU, the working environment is created using the command \texttt{uv sync
---extra torch-gpu}, which assumes that CUDA version 12.4 is installed. For more
-details, see the attached \texttt{README.md} file.
+For convenience, I am also including a \texttt{requirements.txt} file, which was automatically generated from a virtual Python environment; however, the officially supported version uses the \texttt {uv} package manager. The details of recreating the environment are described in the attached file \texttt{README.md}.
 
 \section*{Various implementation details}
-While looking into the code the reader might come across the following
-observations which I think are worth mentioning and explaining little further.
+While reviewing the code, the reader may encounter the following observations, which I believe are worth mentioning and explaining in more detail.
 
-While the implementation of CSAM required just small changes in correctly
-permutating the dimensions of the input, SE blocks were programmed from scratch.
-I took the PyTorch implementation of 2D SE and replaced the operations with
-their 3D equivalents. Mainly, the squeeze operation is a 3D average pooling
-layer, and the linear layers are replaced with convolution layers followed by
-ReLU.
+While the implementation of CSAM required only minor changes to correctly permutate the dimensions of the input, SE blocks were programmed from scratch. I took the PyTorch implementation of 2D SE and replaced the operations with their 3D equivalents. Mainly, the squeeze operation is a 3D average pooling layer, and the linear layers are replaced with convolution layers followed by \texttt{ReLU}. The final difference compared to the description available in Section \ref{sec-seblock} is that the first convolutional operator in the excitation operation reduces the number of channels from $C$ to $C/r$, where $r$ is called a reduction factor. Then the \texttt{ReLU} is run, and the final convolution operator expands the number of channels back to $C$. The purpose of this reduction factor was explored in \parencite{Hu2018}, where they studied the tradeoff between performance and computational cost. We used the number $16$ for the value, as is suggested by the authors.
 
-While looking at the training loop, you might see a mention of determinism and
-seed setting. The effect of seeds and deterministic algorithms in PyTorch was
-briefly investigated while fixing various bugs in the training loop. Right now,
-the user has to manually seed the random number generator, but the training
-still behaves in a random manner.
+While reviewing the training loop, you may notice mentions of determinism and seed setting. The effect of seeds and deterministic algorithms in PyTorch was briefly investigated while fixing various bugs in the training loop. Currently, the user must manually seed the random number generator; however, the training still exhibits random behaviour.
 
-While running the training and evaluations, many more metrics than just the Dice
-score presented in later chapters are calculated. They are still present, but
-were not used in the final evaluations.
+While running the training and evaluations, many more metrics are calculated beyond the Dice score presented in later chapters. They are still present, but were not used in the final evaluations.
 
 \chapter{Evaluation}
-In this chapter we describe how and evaluate the different networks on the whole
-dataset and how a study on the depth and overlap was done.
+This chapter discusses how the different networks were evaluated on the entire dataset and presents the results of an ablation study designed to set the values of the depth and overlap hyperparameters. The chapter ends with performance benchmarks across the architectures.
 
 \section{Metrics}
-For evaluating the resulting predictions we decided to use Dice scores as they
-are commonly used in many biomedical papers [TODO citation needed] but the end
-user is not interested in the quality of the scores on cutouts around tunnels,
-instead we must somehow use our neural network for predicting over the whole
-images. For this purpose, we will present the Dice scores calculated using the
-stitched predictions as described in Section \ref{sec:runningthenetwork}. In
-these cases the labels are binarised, and with the binary prediction mask, the
-final score is calculated. Similarly, this is done with the postprocessed
-images. These numbers are by itself important, but we would also like to
-investigate how the network does on the level of tunnels and in terms of how
-well does it segment tunnels which are really present as compared to faint
-artefacts.
+% todo : consider citation
+For evaluating the resulting predictions, we decided to use Dice scores as they are commonly used in many biomedical papers, but the end user is not interested in the quality of the scores on cutouts around tunnels, or how every neural network was trained; it is crucial to know how the neural network performs on the whole image.
 
-\subsection{Mapping}
+As described in Section \ref{sec:runningthenetwork}, the images are tiled and then stitched together with a configurable amount of overlap. Later in Section \ref{sec:postprocessing}, the postprocessing of the predictions is discussed. The first two metrics we will discuss are calculated as the Dice scores of the binarised output (with and without preprocessing) and the binary reference annotations. Furthermore, we will conduct a detailed analysis of segmentation performance, particularly focusing on how well the network identifies and delineates individual tunnels within the images. 
+
+\subsection*{Mapping}
 \label{sec:mapping}
-It is obviously important to calculate Dice on the whole images for
-the final evaluations, but is it sometimes quite important to also see how well
-the network segments tunnels is correctly identifies. For this purpose we
-developed the following extra metrics.
 
+We define a mapping between the predictions and the tunnels in the reference annotation to investigate performance at the tunnel level and the performance on clearly identified tunnels, excluding false positives (FPs).
 
-\begin{figure}
+\begin{figure}[htbp]
     \centering
     \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\linewidth]{resources/inkscape/matching_simple.png}
-        \caption{}
+        \centering
+        \begin{overpic}[width=\textwidth]{resources/inkscape/matching_simple.png}
+            \put(8,85){\Large \textbf{(a)}}
+        \end{overpic}
         \label{fig:matchingsimple}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.45\linewidth}
-        \includegraphics[width=\linewidth]{resources/inkscape/matching_multiple.png}
-        \caption{}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \begin{overpic}[width=\textwidth]{resources/inkscape/matching_multiple.png}
+            \put(8,85){\Large \textbf{(b)}}
+        \end{overpic}
         \label{fig:matchingmultiple}
     \end{subfigure}
-    \caption{An example of three vertical pillars (black circles) and tunnels
-    (in black)
-    connecting them. In Subfigure \ref{fig:matchingsimple} we can see one good
-    prediction and one false one. In SubFigure \ref{fig:matchingmultiple} we can
-    see a single large prediction covering both tunnels.}
+    \caption{Three vertical pillars, shown as black circles, are connected by TNTs, also shown as black curves. In \ref{fig:matchingsimple} the network found two tunnels. Identifying a real tunnel correctly is considered a true positive (TP) and is shown in blue, while the second prediction, in red, is a false positive. In \ref{fig:matchingmultiple}, the network predicts a single tunnel, which covers both real tunnels. This is also considered to be a TP.}
     \label{fig:matchingdiagram}
 \end{figure}
 
-The way we have defined specially look at tunnels which were correctly
-identified and see how well the network worked in segmenting them out. In Figure
-\ref{fig:matchingsimple} we can see a simple hypothetical schematic of a
-situation in which a we have three vertical pillars, shown here as three black
-circles, and two tunnels connecting them, here the tunnels are in black. Now the
-neural network might predict multiple connected components, but only some of
-them are right matches and correspond to a tunnel. In this figure, it is okay to
-say that the blue tunnel is predicting one of the true tunnels, albeit it is
-little bit oversegmenting the tunnel. On the other hand, the red prediction is
-completely off and it is not connected to any underlying tunnel; therefore, this
-should be counted as a false predictions.
+In Figure \ref{fig:matchingdiagram} we can see a schematic of a situation with three pillars and several predictions. In Figure \ref{fig:matchingsimple} a network predicted a single TP, FP, and FN.
+Whereas in Figure \ref{fig:matchingmultiple}, a situation where a single prediction covers both tunnels is more complicated. This might be present near a cluster of pillars and tunnels, where a clear separation is difficult to see. The tunnels might theoretically even cross each other. While discarding these results is possible, we will consider such a situation a success and label it as finding two TPs. A situation where two predictions cover a label is not investigated.
 
-As we look into the data we might see that often time the tunnels, especially in
-places where there a cluster of tunnels might not be perfectly separated. They
-may be touching or even crossing each other. In some cases two tunnels visually
-look like they have joined together. In this cases if we picked the strategy in
-\ref{fig:matchingsimple} where predictions and labels are matched according to
-the closest match, we would severally penalise predictions which touch. This is
-a problem as it is weird to penalise the network if single predicted component
-covers multiple predictions. The problem is again schematically visualised in
-Figure \ref{fig:matchingmultiple}, where a tunnel prediction in blue, matches
-two different tunnels in black). I would argue that it is unfair to penalise the
-metrics in this case.
+Mathematically, the mapping is implemented by examining the tunnels in the following manner. After the postprocessing defined in Section \ref{sec:postprocessing} the predictions form a set $P$, whose elements are the binary masks of each connected component. Likewise, we can view the reference annotations as a set $L$, where each element is also a binary mask for each instance of a tunnel. Given these two sets, we define a mapping between the two sets as a set of tuples $(l,p)$, where $l$ and $p$ form a pair describing which predicted component matched a tunnel in the reference annotation. The set of all possible matches is defined as:
 
-This idea is technically implemented in the following manner inside the
-evaluations. We take the predictions of the neural networks and calculate the
-component components in 3D. As described previously, the components are filtered
-by size and thresholded. Now comes the matching. In the first pass the
-application will iterate over all labels in the ground truth and see if there
-are any predictions which contain at least 50\% of the mask. All of these
-matches are then accumulated. In the implementation and further diagrams we
-refer to this as all matches. The value 50\% was chosen so that a single ground
-truth label cannot be contained in multiple predicted connected components.
+\[ \text{mapping}(P,L)=\{(l,\hat{p})|\forall l \in L, \hat{p} = \text{argmax}_{p \in P} \text{recall}(p,l) \land \text{recall}(\hat{p}, l) > 0.5\} \]
 
-Now that we have assigned possible multiple labels to each predicted connected
-component we can divide the mapping into what is referred to as clean matches
-and all matches. In Figure \ref{fig:bipartitematching} we see a diagram of an
-example of a possible matching. In these case the network predicted three
-tunnels, and the data has three labeled tunnels. In this case a predicted tunnel
-denoted as $p_1$ is uniquely mapped to label $l_1$. Since $p_1$ is not connected
-to any other label, we call this a clean match. On the other hand predicted
-connected component $p_2$ has according to the aforementioned algorithm been
-mapped to two different labels $l_2$ and $l_3$. As previously argued it would be
-unwise to disregard this mapping as a bad one, therefore we will also accept
-this mapping and it will show up in following metrics when we refer to all
-matches.
+The deciding factor is how much of the label is covered by the prediction, which is equivalent to the recall score, and we set it to 0.5, as at least half of the label must be covered. This definition formalises the mapping shown in Figure \ref{fig:matchingdiagram}.
 
-Finally, this allows us to quantify how well different networks understand the
-image not on a pixel by pixel manner, but in terms of the whole tunnels. We can
-look at the prediction $p_3$ as a false positive, since it is not mapped to any
-tunnel, while the label is $l_4$ is viewed as a missed tunnel, and therefore
-called a false negative. All clean matches ($p_1$->$l_1$) are considered to be a
-true positives, while multiple matches are, according to the precious arguments,
-also considered as a true positive, in fact this is counted as a single true
-positive.
+Lastly, we would like to investigate so-called clean matches, where a prediction matches just a single label:
 
-To summarise, we are going to look at the Dice score for the following cases:
+\[ \text{clean\_mapping} = \{ (l, p) | p \text{ matches just single label} \} \]
+
+These definition allows us to talk about the result in Figure \ref{fig:matchingmultiple} in two ways. When considering all matches, the prediction $p_1$ covers both tunnels; however, when examining clean matches, no matches are found.
+
+The defined matching enables us to quantify how well the network performs at the pixel level, as well as in terms of identifying individual instances of tunnels.
+
+\subsection*{All metrics}
+
+Now we will define the full set of Dice scores, which will be evaluated for each architecture:
+
 \begin{itemize}
-    \item{Test: In this case we are looking at performance on cutouts of tunnels
-        in one particular quadrant}
-    \item{Evalution: In this case we are calculating the performance from the
-        overall stitched binary images.}
-    \item{Postprocesed overall: In this metric, the postprocessing described in
-        Section \ref{sec:postprocessing} is applied on top of the predictions,
-        and whole images are evaluated}
-    \item{Postprocessed Clean matches: In this metric, we overlay the binary
-        masks of cleanly matched tunnels and predictions and calculate the Dice
-        score.}
-    \item{Postprocessed all matches: Like above, but even predictions mapped to
-        multiple labels are used.}
-    \item{Tunnel metric: Here we care about just the mapping described in Figure
-        \ref{fig:bipartitematching}}
+    \item{Test(pixel level): Look at the performance on crops of tunnels.}
+    \item{Evaluation (pixel level): Look at the performance derived from the overall stitched binary images}
+   \item{Postprocessed overall (pixel level): Look at the performance derived from the overall stitched binary images after postprocessing}
 \end{itemize}
-% todo: definitely deserves more attention
-% todo: as an example, show the quad with all sort of tunnels connected together
-% todo : btw am i explainign the how we binarise the labels?
 
-\begin{figure}
-    \begin{center}
-        \includegraphics[width=0.4\linewidth]{resources/inkscape/matching_bipartite.png}
-    \end{center}
-    \caption{A diagram showing how multiple }.
-    \label{fig:bipartitematching}
-\end{figure}
+Next, we will use the matches defined above. In these cases, the matches are taken, and a binary image is created by aggregating the binary sets using a binary logical OR operator. This means that for each pixel, if any of the corresponding pixels in the matches are true, the pixel in the resulting binary image will also be true. This aggregation process enables us to create a single comprehensive binary image that captures all the features represented by the matches, effectively highlighting the areas of interest identified earlier, ignoring artefacts caused by false positives and false negatives.
 
-Lastly, to reiterate the idea presented in the training Section [TODO: not
-written yet], we are always training the network on three of the four possible
-quadrants. As such, four different models are always trained and the results
-will averaged.
+\begin{itemize}
+    \item{Postprocessed matches (pixel level): Look at the performance derived from all the matches.}
+    \item{Postprocessed clean matches (pixel level): Look at the performance of just the clean matches.}
+    \item{Tunnel metric (tunnel level): Here the performance is calculated from the tunnels instead of pixels.}
+\end{itemize}
+% todo: as an example, show the quad with all sorts of tunnels connected together.
 
-\section{Ablation studies}
-In this section we will present experimentally inferred sizes of hyperparameters
-for the neural network.
+\section{Ablation study}
+In this section we will present experimentally inferred sizes of hyperparameters for the neural network.
 
-\subsection{Choice of depth and overlap for the network}
+\subsection*{Choice of depth and overlap for the network}
 \label{sec:ablation-depth}
-While working on the network the choice of depth and overlap is not obvious, but
-it is a very important parameter as every advanced architecture is build on top
-of the anisotropic unet described in Chapter [TODO], which has customizable
-depth. Moreover, the reason why the anisotropic version was created is to allow
-us to change the depth.
+While working on the network the choice of depth and overlap is not obvious, but it is a very important parameter as every advanced architecture is build on top of the anisotropic unet described in Chapter [TODO], which has customizable depth. Moreover, the reason why the anisotropic version was created is to allow us to change the depth.
 
-In general it is accepted that the ability to teach deeper network helped improve
-neural networks performance and in some sense, the ability to teach deeper
-networks lead us to the neural network revolution. [TODO cit. needed] % TODO citation needed
-But, the size of the network should be somehow connected to the
-complexity of the problem, both in terms of size of the context and the image
-complexity. To find a reasonable value for this parameters we decided to do a 2D
-hyperparameter search study. 
+In general it is accepted that the ability to teach deeper network helped improve neural networks performance and in some sense, the ability to teach deeper networks lead us to the neural network revolution. [TODO cit. needed] % TODO citation needed But, the size of the network should be somehow connected to the complexity of the problem, both in terms of size of the context and the image complexity. To find a reasonable value for this parameters we decided to do a 2D hyperparameter search study. 
 % todo: talk about this in the discussion
+We took the 3D version of the Anisotropic architecture (AnisoUNet3D) and considered five different versions. The shallowest one has exactly two downsampling layers --- so it is referenced as a network with depth equal to 2 --- and the deepest one has 6 downsampling layers. Six downsampling layers was chosen as this is enough to reduce the original size 7x64x64 to 7x1x1 as such, there is no need to have a deeper network.
 
-We took the 3D version of the Anisotropic architecture (AnisoUNet3D) and
-considered five different versions. The shallowest one has exactly two
-downsampling layers --- so it is referenced as a network with depth equal to 2
---- and the deepest one has 6 downsampling layers. Six downsampling layers was
-chosen as this is enough to reduce the original size 7x64x64 to 7x1x1 as such,
-there is no need to have a deeper network.
+For the overlap hyperparameter we chose the values 0px, 10px, 20px, 30px, and 40px. The value 40px was chosen arbitrarily, as in this case, the neighbouring cells already share more than half of the volume.
 
-For the overlap hyperparameter we chose the values 0px, 10px, 20px, 30px, and
-40px. The value 40px was chosen arbitrarily, as in this case, the neighbouring
-cells already share more than half of the volume.
+As the overlap is a hyperparameter of the postprocessing, this means that only five different architectures must be trained to perform this analysis. Since we are doing cross fold analysis, we are training 20 models. Finally, since neural networks employ randomness, each combination of fold and architecture is repeated three times, leading to training 60 models for this evaluation.
 
-As the overlap is a hyperparameter of the postprocessing, this means that only
-five different architectures must be trained to perform this analysis. Since we
-are doing cross fold analysis, we are training 20 models. Finally, since neural
-networks employ randomness, each combination of fold and architecture is
-repeated three times, leading to training 60 models for this evaluation.
+The Figure \ref{fig:parametersearchstudy} showcases the dice score of the various networks. Every number is the mean performance across the 4-cross fold validation and 3 independent runs i.e. an average of 12 networks. Overall the highest number is highlighted and it corresponds to the version with three downsampling layers and 10px overlap; thus, all following models will be using this combination of hyperparameters.
 
-The Figure \ref{fig:parametersearchstudy} showcases the dice score of the
-various networks. Every number is the mean performance across the 4-cross fold
-validation and 3 independent runs i.e. an average of 12 networks. Overall the
-highest number is highlighted and it corresponds to the version with three
-downsampling layers and 10px overlap; thus, all following models will be using
-this combination of hyperparameters.
 % TODO: tripple check, i had very different numbers before
 
-\begin{figure}
+\begin{figure}[htbp]
     \begin{center}
-        \includegraphics[width=0.8\linewidth]{resources/evaluations/eval_dice_mean_heatmap.png}
+        \includegraphics{resources/evaluations/eval_dice_mean_heatmap.png}
     \end{center}
-    \caption{Evaluation Dice score for various depths of the network. Best
-    values is highlighted.}
+    \caption{Evaluation Dice score for various depths of the network. Best values is highlighted.}
     \label{fig:parametersearchstudy}
 \end{figure}
 
 
-What we can also see from this hyperparameter search is that the effect of
-number of downsampling layers is rather marginal and there is not a clear trend
-of more downsampling layers leading to better performance or vice-versa. Another
-effect that is visible is that while changing between 10 pixels to 20 or 30
-pixels does minimal change in the performance, the difference between 0 pixels
-and all others is visible in every case. Also it is interesting to see, that
-although the changes are not greatly different, the network with three
-downsampling layers seems to always beat the others.
+What we can also see from this hyperparameter search is that the effect of number of downsampling layers is rather marginal and there is not a clear trend of more downsampling layers leading to better performance or vice-versa. Another effect that is visible is that while changing between 10 pixels to 20 or 30 pixels does minimal change in the performance, the difference between 0 pixels and all others is visible in every case. Also it is interesting to see, that although the changes are not greatly different, the network with three downsampling layers seems to always beat the others.
 
-For further studies, we took a look at just 10 pixel overlap and looked at other
-metrics, which were introduced in the previous chapters. In Figure
-\ref{fig:eval:depth} the effect of the depth is studied more. I chose three
-different metrics to investigate the effect of postprocessing and the
-performance on the level of tunnels. Just to make clear, in these graphs, each
-average is calculated as the mean of the performance across four cross folds
-and three runs. The error bars are +- a single sample standard deviation of
-these values.
+For further studies, we took a look at just 10 pixel overlap and looked at other metrics, which were introduced in the previous chapters. In Figure \ref{fig:eval:depth} the effect of the depth is studied more. I chose three different metrics to investigate the effect of postprocessing and the performance on the level of tunnels. Just to make clear, in these graphs, each average is calculated as the mean of the performance across four cross folds and three runs. The error bars are +- a single sample standard deviation of these values.
 
-First of all, it is visible, that the performance differences across various
-depths is not that significant, but overall the network with three downsampling
-steps and the network with five downsampling steps are achieving consistently
-the highest averages, while the networks with two and six downsampling steps are
-performing the worst. I believe this can be explained by the fact, that the
-deepest network is unreasonable large for our given problem, while the smallest
-network might suffer from not enough layers.
+First of all, it is visible, that the performance differences across various depths is not that significant, but overall the network with three downsampling steps and the network with five downsampling steps are achieving consistently the highest averages, while the networks with two and six downsampling steps are performing the worst. I believe this can be explained by the fact, that the deepest network is unreasonable large for our given problem, while the smallest network might suffer from not enough layers.
 
-However, it must be noted, that the error bars are very large and complicate any
-conclusion, as it shows that the performance varies quite dramatically. This
-lead us to investigate what could be causing this variety, and one possible
-explanation is the various performance on the quadrants.
+However, it must be noted, that the error bars are very large and complicate any conclusion, as it shows that the performance varies quite dramatically. This lead us to investigate what could be causing this variety, and one possible explanation is the various performance on the quadrants.
 
-Taking a look at Figure \ref{fig:eval_quads} here we can see the same metrics,
-but this time it is further divided among the various quadrants. What is
-immediately obvious us that the error bars are less varied, due to the
-performance differences across quadrants. Interestingly, in some cases like the
-models with 6 downsampling layers for the first quadrant has large performance
-differences, but no reason as to why this happens was found. Since in this case
-all bars are averages of three numbers, it is plausible that due to bad luck,
-sometimes the network does not achieve as good of a performance as in other
-runs. % TODO talk in discussion
+Taking a look at Figure \ref{fig:eval_quads} here we can see the same metrics, but this time it is further divided among the various quadrants. What is immediately obvious us that the error bars are less varied, due to the performance differences across quadrants. Interestingly, in some cases like the models with 6 downsampling layers for the first quadrant has large performance differences, but no reason as to why this happens was found. Since in this case all bars are averages of three numbers, it is plausible that due to bad luck, sometimes the network does not achieve as good of a performance as in other runs. % TODO talk in discussion
 
-In general, all models performed the best at the first quadrant (top left) and
-third quadrant (bottom left), while the performance was lower on the second
-quadrant (top right) and the fourth quadrant (bottom right). Looking at the
-means and error bars now, it seems that the model with three downsampling layers
-performs best or close to best in all folds, while having more layers can
-sometimes reach similar performance it might also lead to worse (like in case of
-three downsampling steps in quadrant 3); hence, we cannot say that for our input
-size, the increased depth helps dramatically. But our previous decision to
-choose the network of depth three in the following studies still stands, as even
-tough the performance difference is not that different, this network is
-consitently beating the smaller network and at the same time has much less
-parameters than the larger networks.
+In general, all models performed the best at the first quadrant (top left) and third quadrant (bottom left), while the performance was lower on the second quadrant (top right) and the fourth quadrant (bottom right). Looking at the means and error bars now, it seems that the model with three downsampling layers performs best or close to best in all folds, while having more layers can sometimes reach similar performance it might also lead to worse (like in case of three downsampling steps in quadrant 3); hence, we cannot say that for our input size, the increased depth helps dramatically. But our previous decision to choose the network of depth three in the following studies still stands, as even tough the performance difference is not that different, this network is consitently beating the smaller network and at the same time has much less parameters than the larger networks.
 
-\begin{figure}
+\begin{figure}[htbp]
     \centering
-    \begin{subfigure}[b]{0.8\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{resources/evaluations/eval_dice_mean_architecture_comparison.png}
-        \caption{Evaluation performance.}
-        \label{}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.8\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{resources/evaluations/postprocess_overall_dice_architecture_comparison.png}
-        \caption{Performance with post-processing.}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.8\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{resources/evaluations/tunnel_dice_architecture_comparison.png}
-        \caption{Performance on tunnels.}
-        \label{fig:eval-depth-tunnels}
-    \end{subfigure}
-    \caption{Performance evaluations of the neural networks for various depths
-    and fixed 10 pixel overlap.}
-    \label{fig:eval:depth}
+    \includegraphics[width=0.9\textwidth]{resources/evaluations/eval_dice_mean_architecture_comparison.png}
+    \caption{Evaluation performance.}
+    \label{fig:eval_dice_mean_architecture_comparison}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[htbp]
     \centering
-    \begin{subfigure}[b]{0.8\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{resources/evaluations/eval_dice_mean_by_quad_arch.png}
-        \caption{Evaluation performance.}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.8\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{resources/evaluations/postprocess_overall_dice_by_quad_arch.png}
-        \caption{Performance with post-processing.}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.8\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{resources/evaluations/tunnel_dice_by_quad_arch.png}
-        \caption{Performance on tunnels.}
-        \label{subfig:eval_tunnels}
-    \end{subfigure}
-    \caption{Performance evaluations of the neural networks for various depths
-    and fixed 10 pixel overlap.}
-    \label{fig:eval_quads}
+    \includegraphics[width=0.9\textwidth]{resources/evaluations/postprocess_overall_dice_architecture_comparison.png}
+    \caption{Performance with post-processing.}
+    \label{fig:postprocess_overall_dice_architecture_comparison}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth]{resources/evaluations/tunnel_dice_architecture_comparison.png}
+    \caption{Performance on tunnels.}
+    \label{fig:eval-depth-tunnels}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth]{resources/evaluations/eval_dice_mean_by_quad_arch.png}
+    \caption{Evaluation performance.}
+    \label{fig:eval_dice_mean_by_quad_arch}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth]{resources/evaluations/postprocess_overall_dice_by_quad_arch.png}
+    \caption{Performance with post-processing.}
+    \label{fig:postprocess_overall_dice_by_quad_arch}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth]{resources/evaluations/tunnel_dice_by_quad_arch.png}
+    \caption{Performance on tunnels.}
+    \label{fig:eval_tunnels}
 \end{figure}
 
 \subsection*{Different architectures}
@@ -1305,35 +742,35 @@ clear, there also seems not be any clear clearly better architecture than the
 rest.
 
 
-\begin{figure}
+\begin{figure}[htbp]
     \begin{center}
         \includegraphics[width=0.9\linewidth]{resources/evaluations/diffarchs/eval_dice_mean_architecture_comparison.png}
     \end{center}
     \caption{dice}
     \label{fig:eval-diff-arch-dice}
 \end{figure}
-\begin{figure}
+\begin{figure}[htbp]
     \begin{center}
         \includegraphics[width=0.9\linewidth]{resources/evaluations/diffarchs/postprocess_overall_dice_architecture_comparison.png}
     \end{center}
     \caption{overall dice}
     \label{}
 \end{figure}
-\begin{figure}
+\begin{figure}[htbp]
     \begin{center}
         \includegraphics[width=0.9\linewidth]{resources/evaluations/diffarchs/postprocess_clean_matched_dice_architecture_comparison.png}
     \end{center}
     \caption{dice on cleaned matches}
     \label{}
 \end{figure}
-\begin{figure}
+\begin{figure}[htbp]
     \begin{center}
         \includegraphics[width=0.9\linewidth]{resources/evaluations/diffarchs/postprocess_matched_dice_architecture_comparison.png}
     \end{center}
     \caption{dice on all matches}
     \label{}
 \end{figure}
-\begin{figure}
+\begin{figure}[htbp]
     \begin{center}
         \includegraphics[width=0.9\linewidth]{resources/evaluations/diffarchs/tunnel_dice_architecture_comparison.png}
     \end{center}
@@ -1342,35 +779,35 @@ rest.
 \end{figure}
 
 
-\begin{figure}
+\begin{figure}[htbp]
     \begin{center}
         \includegraphics[width=\linewidth]{resources/evaluations/diffarchs/eval_dice_mean_by_quad_arch.png}
     \end{center}
     \caption{eval dice}
     \label{fig:eval-diff-arch-dice-quads}
 \end{figure}
-\begin{figure}
+\begin{figure}[htbp]
     \begin{center}
         \includegraphics[width=\linewidth]{resources/evaluations/diffarchs/postprocess_overall_dice_by_quad_arch.png}
     \end{center}
     \caption{overall dice}
     \label{fig:eval-diff-arch-dice-overall-quads}
 \end{figure}
-\begin{figure}
+\begin{figure}[htbp]
     \begin{center}
         \includegraphics[width=\linewidth]{resources/evaluations/diffarchs/postprocess_clean_matched_dice_by_quad_arch.png}
     \end{center}
     \caption{clean matched}
     \label{fig:eval_diff_arch_clean_match_dice_quads}
 \end{figure}
-\begin{figure}
+\begin{figure}[htbp]
     \begin{center}
         \includegraphics[width=0.8\linewidth]{resources/evaluations/diffarchs/postprocess_matched_dice_by_quad_arch.png}
     \end{center}
     \caption{matched dice}
     \label{fig:eval_diff_arch_matched_dice_quads}
 \end{figure}
-\begin{figure}
+\begin{figure}[htbp]
     \begin{center}
         \includegraphics[width=0.8\linewidth]{resources/evaluations/diffarchs/tunnel_dice_by_quad_arch.png}
     \end{center}
