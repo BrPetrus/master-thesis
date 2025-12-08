@@ -66,13 +66,14 @@
       span multiple paragraphs.
     },
     thanks      = {%
-      These are the acknowledgements for my thesis, which can
+        I am very grateful to my advisor, Assoc. Prof. RNDr. Martin Maška, Ph.D., for his sustained mentorship, constructive critiques, and ready availability throughout the whole time.
 
-      span multiple paragraphs.
+        I want to thank my friends for providing me with a great deal of encouragement. My deepest gratitude goes to my partner, Tereza Zuskinová, who has offered me unconditional support that carried me through the most challenging part of this research.
     },
     bib         = biblio.bib,
     %% Remove the following line to use the JVS 2018 faculty logo.
     facultyLogo = fithesis-fi,
+    %declaration = {test}
 }
 \usepackage{makeidx}      %% The `makeidx` package contains
 \makeindex                %% helper commands for index typesetting.
@@ -114,10 +115,13 @@
 \markright{\textsc{Introduction}}
 \addcontentsline{toc}{chapter}{Introduction}
 
-Theses are rumoured to be \enquote{the capstones of education}, so
-I decided to write one of my own. If all goes well, I will soon
-have a diploma under my belt. Wish me luck!
-[TODO: explain semantic segmentation]
+Semantic segmentation is a critical task in computer vision that involves assigning a specific class label to every pixel in an image. This thesis applies this methodology to the segmentation of tunnelling nanotubes (TNTs), which are protrusions observed during cell morphogenesis in Drosophila wings. While the exact function of these structures remains under investigation, their analysis is currently limited by the difficulty of manually annotating them in three-dimensional space.
+
+The dataset for this research, provided by Dr Osamu Shimmi from the University of Tartu, captures a cellular structure known as the Interplanar Amida Network (IPAN). This network consists of vertical "pillars" connected by horizontal TNTs, captured via 3D fluorescent microscopy. The data presents significant challenges for automated analysis: it is heavily anisotropic, and while the dataset spans twenty time slots, ground truth annotations were provided for only two time steps. As such, the dataset is sparsely annotated.
+
+To address these challenges, we adapted the U-Net architecture, a standard for biomedical segmentation, to better handle the specific constraints of our data. An anisotropic version of a U-Net-like architecture called AnisoUNet, which utilises anisotropic kernels, is introduced. Additionally, we investigate an attention mechanism to improve the performance of the network. A 4-fold cross-validation is employed along with training on crops of TNTs to train the model.
+
+Chapter 1 provides an overview of the biological context and data preprocessing. Chapter 2 reviews related work on TNT and curvilinear structure segmentation. Chapter 3 describes the implemented neural network architectures, including the AnisoUNet and attention variants. Chapter 4 outlines the training methodology, including data splitting and loss functions. Chapter 5 covers the technical implementation and software environment. Chapter 6 evaluates the models, presenting an ablation study on hyperparameters and comparative benchmarks. Finally, Chapter 7 concludes the thesis with a discussion.
 
 
 \chapter{Data}
@@ -224,6 +228,7 @@ The presented model works with 2D data, but our data is 3D. Fortunately, the mod
 \end{figure}
 
 \section{Anisotropic U-Net (AnisoUNet)}
+\label{sec:anisounet}
 
 Papers such as the influential VGGNet \parencite{simonyan2015vgg} demonstrated that model depth is one of the critical hyperparameters of a network that can be optimised to improve its accuracy. This inspired us to create the following architecture.
 
@@ -341,7 +346,7 @@ This is still quite challenging to do correctly, as not every tunnel lies neatly
 Finally, during the training, we need to know when to stop. For this purpose, during each run, approximately 30% of the crops for training are randomly picked and form the validation set.
 
 \section{Loss functions}
-Since we can view finding tunnelling nanotubes as a binary classification problem applied at every pixel, it naturally comes to using a binary cross-entropy loss to train the network to segment the images. However, our dataset is heavily imbalanced, as it contains a significantly higher number of negative examples. To somewhat help the training pay more attention to the tunnels, the cross-entropy was weighted by a factor of 50, which was estimated as the ratio of pixels classified as background and pixels assigned to some tunnel by the biologist. The weighted BCE loss is defined as in \parencite{Jadon2020loss}{PyTorchBCE}, where $y$ stands for prediction, $\hat{y}$ is the true label, and $beta$ is the weight:
+Since we can view finding tunnelling nanotubes as a binary classification problem applied at every pixel, it naturally comes to using a binary cross-entropy loss to train the network to segment the images. However, our dataset is heavily imbalanced, as it contains a significantly higher number of negative examples. To somewhat help the training pay more attention to the tunnels, the cross-entropy was weighted by a factor of 50, which was estimated as the ratio of pixels classified as background and pixels assigned to some tunnel by the biologist. The weighted BCE loss is defined as in \parencite{Jadon2020loss,PyTorchBCE}, where $y$ stands for prediction, $\hat{y}$ is the true label, and $beta$ is the weight:
 
 \[ L_{BCE}(y, \hat{y}) = -(\beta y \log(\hat{y}) + (1-y)\log(1-\hat{y}) \]
 
