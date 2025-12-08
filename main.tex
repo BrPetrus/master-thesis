@@ -58,8 +58,8 @@
     advisor     = {Assoc. Prof. RNDr. Martin Maška, Ph.D.},
     title       = {Segmentation of Tunneling Nanotubes Using U-Net-Like Neural Networks},
     TeXtitle    = {Segmentation of Tunneling Nanotubes Using U-Net-Like Neural Networks},
-    keywords    = {keyword1, keyword2, ...},
-    TeXkeywords = {keyword1, keyword2, \ldots},
+    keywords    = {neural networks, segmentation, tunnelling nanotubes},
+    TeXkeywords = {neural networks, segmentation, tunnelling nanotubes},
     abstract    = {%
       This is the abstract of my thesis, which can
 
@@ -87,6 +87,7 @@
 \usepackage{subcaption}
 \usepackage[style=numeric]{biblatex}  %% use square brackets for citations
 \subcaptionsetup{font=small}      % For subcaptions
+\usepackage{overpic}  %% Place text over the images
 
 \lstset{
   basicstyle      = \ttfamily,
@@ -102,7 +103,7 @@
 \floatsetup[table]{capposition=top}
 \usepackage[babel]{csquotes} %% Context-sensitive quotation marks
 
-\usepackage[ruled]{algorithm2e}
+\usepackage[ruled]{algorithm2e}  %% Algorithms
 
 \begin{document}
 %% The \chapter* command can be used to produce unnumbered chapters:
@@ -542,17 +543,21 @@ the network segments tunnels is correctly identifies. For this purpose we
 developed the following extra metrics.
 
 
-\begin{figure}
+\begin{figure}[htbp]
     \centering
     \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\linewidth]{resources/inkscape/matching_simple.png}
-        \caption{}
+        \centering
+        \begin{overpic}[width=\textwidth]{resources/inkscape/matching_simple.png}
+            \put(8,85){\Large \textbf{(a)}}
+        \end{overpic}
         \label{fig:matchingsimple}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.45\linewidth}
-        \includegraphics[width=\linewidth]{resources/inkscape/matching_multiple.png}
-        \caption{}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \begin{overpic}[width=\textwidth]{resources/inkscape/matching_multiple.png}
+            \put(8,85){\Large \textbf{(b)}}
+        \end{overpic}
         \label{fig:matchingmultiple}
     \end{subfigure}
     \caption{An example of three vertical pillars (black circles) and tunnels
