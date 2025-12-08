@@ -518,15 +518,18 @@ While reviewing the training loop, you may notice mentions of determinism and se
 While running the training and evaluations, many more metrics are calculated beyond the Dice score presented in later chapters. They are still present, but were not used in the final evaluations.
 
 \chapter{Evaluation}
-In this chapter we describe how and evaluate the different networks on the whole dataset and how a study on the depth and overlap was done.
+This chapter discusses how the different networks were evaluated on the entire dataset and presents the results of an ablation study designed to set the values of the depth and overlap hyperparameters. The chapter ends with performance benchmarks across the architectures.
 
 \section{Metrics}
-For evaluating the resulting predictions we decided to use Dice scores as they are commonly used in many biomedical papers [TODO citation needed] but the end user is not interested in the quality of the scores on cutouts around tunnels, instead we must somehow use our neural network for predicting over the whole images. For this purpose, we will present the Dice scores calculated using the stitched predictions as described in Section \ref{sec:runningthenetwork}. In these cases the labels are binarised, and with the binary prediction mask, the final score is calculated. Similarly, this is done with the postprocessed images. These numbers are by itself important, but we would also like to investigate how the network does on the level of tunnels and in terms of how well does it segment tunnels which are really present as compared to faint artefacts.
+% todo : consider citation
+For evaluating the resulting predictions, we decided to use Dice scores as they are commonly used in many biomedical papers, but the end user is not interested in the quality of the scores on cutouts around tunnels, or how every neural network was trained; it is crucial to know how the neural network performs on the whole image.
+
+As described in Section \ref{sec:runningthenetwork}, the images are tiled and then stitched together with a configurable amount of overlap. Later in Section \ref{sec:postprocessing}, the postprocessing of the predictions is discussed. The first two metrics we will discuss are calculated as the Dice scores of the binarised output (with and without preprocessing) and the binary reference annotations. Furthermore, we will conduct a detailed analysis of segmentation performance, particularly focusing on how well the network identifies and delineates individual tunnels within the images. 
 
 \subsection*{Mapping}
 \label{sec:mapping}
-It is obviously important to calculate Dice on the whole images for the final evaluations, but is it sometimes quite important to also see how well the network segments tunnels is correctly identifies. For this purpose we developed the following extra metrics.
 
+We define a mapping between the predictions and the tunnels in the reference annotation to investigate performance at the tunnel level and the performance on clearly identified tunnels, excluding false positives (FPs).
 
 \begin{figure}[htbp]
     \centering
@@ -545,43 +548,45 @@ It is obviously important to calculate Dice on the whole images for the final ev
         \end{overpic}
         \label{fig:matchingmultiple}
     \end{subfigure}
-    \caption{An example of three vertical pillars (black circles) and tunnels (in black) connecting them. In Subfigure \ref{fig:matchingsimple} we can see one good prediction and one false one. In SubFigure \ref{fig:matchingmultiple} we can see a single large prediction covering both tunnels.}
+    \caption{Three vertical pillars, shown as black circles, are connected by TNTs, also shown as black curves. In \ref{fig:matchingsimple} the network found two tunnels. Identifying a real tunnel correctly is considered a true positive (TP) and is shown in blue, while the second prediction, in red, is a false positive. In \ref{fig:matchingmultiple}, the network predicts a single tunnel, which covers both real tunnels. This is also considered to be a TP.}
     \label{fig:matchingdiagram}
 \end{figure}
 
-The way we have defined specially look at tunnels which were correctly identified and see how well the network worked in segmenting them out. In Figure \ref{fig:matchingsimple} we can see a simple hypothetical schematic of a situation in which a we have three vertical pillars, shown here as three black circles, and two tunnels connecting them, here the tunnels are in black. Now the neural network might predict multiple connected components, but only some of them are right matches and correspond to a tunnel. In this figure, it is okay to say that the blue tunnel is predicting one of the true tunnels, albeit it is little bit oversegmenting the tunnel. On the other hand, the red prediction is completely off and it is not connected to any underlying tunnel; therefore, this should be counted as a false predictions.
+In Figure \ref{fig:matchingdiagram} we can see a schematic of a situation with three pillars and several predictions. In Figure \ref{fig:matchingsimple} a network predicted a single TP, FP, and FN.
+Whereas in Figure \ref{fig:matchingmultiple}, a situation where a single prediction covers both tunnels is more complicated. This might be present near a cluster of pillars and tunnels, where a clear separation is difficult to see. The tunnels might theoretically even cross each other. While discarding these results is possible, we will consider such a situation a success and label it as finding two TPs. A situation where two predictions cover a label is not investigated.
 
-As we look into the data we might see that often time the tunnels, especially in places where there a cluster of tunnels might not be perfectly separated. They may be touching or even crossing each other. In some cases two tunnels visually look like they have joined together. In this cases if we picked the strategy in \ref{fig:matchingsimple} where predictions and labels are matched according to the closest match, we would severally penalise predictions which touch. This is a problem as it is weird to penalise the network if single predicted component covers multiple predictions. The problem is again schematically visualised in Figure \ref{fig:matchingmultiple}, where a tunnel prediction in blue, matches two different tunnels in black). I would argue that it is unfair to penalise the metrics in this case.
+Mathematically, the mapping is implemented by examining the tunnels in the following manner. After the postprocessing defined in Section \ref{sec:postprocessing} the predictions form a set $P$, whose elements are the binary masks of each connected component. Likewise, we can view the reference annotations as a set $L$, where each element is also a binary mask for each instance of a tunnel. Given these two sets, we define a mapping between the two sets as a set of tuples $(l,p)$, where $l$ and $p$ form a pair describing which predicted component matched a tunnel in the reference annotation. The set of all possible matches is defined as:
 
-This idea is technically implemented in the following manner inside the evaluations. We take the predictions of the neural networks and calculate the component components in 3D. As described previously, the components are filtered by size and thresholded. Now comes the matching. In the first pass the application will iterate over all labels in the ground truth and see if there are any predictions which contain at least 50\% of the mask. All of these matches are then accumulated. In the implementation and further diagrams we refer to this as all matches. The value 50\% was chosen so that a single ground truth label cannot be contained in multiple predicted connected components.
+\[ \text{mapping}(P,L)=\{(l,\hat{p})|\forall l \in L, \hat{p} = \text{argmax}_{p \in P} \text{recall}(p,l) \land \text{recall}(\hat{p}, l) > 0.5\} \]
 
-Now that we have assigned possible multiple labels to each predicted connected component we can divide the mapping into what is referred to as clean matches and all matches. In Figure \ref{fig:bipartitematching} we see a diagram of an example of a possible matching. In these case the network predicted three tunnels, and the data has three labeled tunnels. In this case a predicted tunnel denoted as $p_1$ is uniquely mapped to label $l_1$. Since $p_1$ is not connected to any other label, we call this a clean match. On the other hand predicted connected component $p_2$ has according to the aforementioned algorithm been mapped to two different labels $l_2$ and $l_3$. As previously argued it would be unwise to disregard this mapping as a bad one, therefore we will also accept this mapping and it will show up in following metrics when we refer to all matches.
+The deciding factor is how much of the label is covered by the prediction, which is equivalent to the recall score, and we set it to 0.5, as at least half of the label must be covered. This definition formalises the mapping shown in Figure \ref{fig:matchingdiagram}.
 
-Finally, this allows us to quantify how well different networks understand the image not on a pixel by pixel manner, but in terms of the whole tunnels. We can look at the prediction $p_3$ as a false positive, since it is not mapped to any tunnel, while the label is $l_4$ is viewed as a missed tunnel, and therefore called a false negative. All clean matches ($p_1$->$l_1$) are considered to be a true positives, while multiple matches are, according to the precious arguments, also considered as a true positive, in fact this is counted as a single true positive.
+Lastly, we would like to investigate so-called clean matches, where a prediction matches just a single label:
 
-To summarise, we are going to look at the Dice score for the following cases:
+\[ \text{clean\_mapping} = \{ (l, p) | p \text{ matches just single label} \} \]
+
+These definition allows us to talk about the result in Figure \ref{fig:matchingmultiple} in two ways. When considering all matches, the prediction $p_1$ covers both tunnels; however, when examining clean matches, no matches are found.
+
+The defined matching enables us to quantify how well the network performs at the pixel level, as well as in terms of identifying individual instances of tunnels.
+
+\subsection*{All metrics}
+
+Now we will define the full set of Dice scores, which will be evaluated for each architecture:
+
 \begin{itemize}
-    \item{Test: In this case we are looking at performance on cutouts of tunnels in one particular quadrant}
-    \item{Evalution: In this case we are calculating the performance from the overall stitched binary images.}
-    \item{Postprocesed overall: In this metric, the postprocessing described in Section \ref{sec:postprocessing} is applied on top of the predictions, and whole images are evaluated}
-    \item{Postprocessed Clean matches: In this metric, we overlay the binary masks of cleanly matched tunnels and predictions and calculate the Dice score.}
-    \item{Postprocessed all matches: Like above, but even predictions mapped to multiple labels are used.}
-    \item{Tunnel metric: Here we care about just the mapping described in Figure \ref{fig:bipartitematching}}
+    \item{Test(pixel level): Look at the performance on crops of tunnels.}
+    \item{Evaluation (pixel level): Look at the performance derived from the overall stitched binary images}
+   \item{Postprocessed overall (pixel level): Look at the performance derived from the overall stitched binary images after postprocessing}
 \end{itemize}
-% todo: definitely deserves more attention
-% todo: as an example, show the quad with all sort of tunnels connected together
-% todo : btw am i explainign the how we binarise the labels?
 
-\begin{figure}[htbp]
-    \begin{center}
-        \includegraphics[width=0.4\linewidth]{resources/inkscape/matching_bipartite.png}
-    \end{center}
-    \caption{A diagram showing how multiple }.
-    \label{fig:bipartitematching}
-\end{figure}
+Next, we will use the matches defined above. In these cases, the matches are taken, and a binary image is created by aggregating the binary sets using a binary logical OR operator. This means that for each pixel, if any of the corresponding pixels in the matches are true, the pixel in the resulting binary image will also be true. This aggregation process enables us to create a single comprehensive binary image that captures all the features represented by the matches, effectively highlighting the areas of interest identified earlier, ignoring artefacts caused by false positives and false negatives.
 
-Lastly, to reiterate the idea presented in the training Section [TODO: not written yet], we are always training the network on three of the four possible quadrants. As such, four different models are always trained and the results will averaged.
-
+\begin{itemize}
+    \item{Postprocessed matches (pixel level): Look at the performance derived from all the matches.}
+    \item{Postprocessed clean matches (pixel level): Look at the performance of just the clean matches.}
+    \item{Tunnel metric (tunnel level): Here the performance is calculated from the tunnels instead of pixels.}
+\end{itemize}
+% todo: as an example, show the quad with all sorts of tunnels connected together.
 \section{Ablation study}
 In this section we will present experimentally inferred sizes of hyperparameters for the neural network.
 
