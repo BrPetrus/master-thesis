@@ -900,29 +900,14 @@ In the final study, we took a look at the first quadrant, which reached the high
 
 % what could be done
 % - 
-In this work we took on a journey to investigate the feasibility of using
-U-Net-like neural networks for segmenting nanotubular structures. Facing a very
-sparsely labeled dataset of just two images we were able to train several neural
-networks with various depths and attention mechanism. This was achieved through
-the use of cross-fold learning and training the network on just cutouts of the
-data where the tunnels were present.
 
-Given the sparse annotations we were unable to explore how the different cutout
-sizes influence the need for more complex network with deeper layers. In the
-future another interesting topic would be to explore how the results could be
-post-processed to further cleanup unwanted artefacts in the predictions.
+This thesis successfully explored the application of U-Net-like architectures for the automated semantic segmentation of Tunneling Nanotubes (TNTs) in 3D fluorescent microscopy images of Drosophila wings. The research was conducted on a challenging dataset defined by high anisotropy and extremely sparse annotations, with ground truth labels available for only two time steps.
 
-Nevertheless, given the cirmustances and sometimes imperfect labels the neural
-networks can be used to find predictions which are meaningful, even if the
-network has a tendency to oversegment and flag various protrusion as false
-tunnels with the correctly matched tunnels having Dice scores of around 0.6-0.7.
-Mutltiple architectures with various attension mechanism were explored and shown
-to provide small improvements on certains quadrants, but unfortunately no
-architecture was found to have the best performance compared to the others.
+To overcome these significant data constraints, the work focused on three core contributions: the AnisoUNet architecture, a robust training strategy, and a complete inference system. We designed and implemented an anisotropic variant of the standard U-Net (AnisoUNet), which was crucial for effectively processing 3D images with severely restricted Z-axis resolution and enabling the training of deeper networks. This was supported by a robust 4-fold cross-validation training pipeline, a strategy essential for maximising the utility of the sparse annotations. Finally, a comprehensive and user-friendly inference implementation was provided making the segmentation tool immediately accessible to non-technical users in biological research.
 
-As such the current implementation can be easily used by any machine equiped
-with a GPU and the inference code deals automatically with the tiling and
-stitching providing an easy to use interface for the user.
+Multiple architectures, including variants with attention mechanisms (CSAM and USE-Net), were evaluated. The results demonstrated the feasibility of using deep learning for segmenting these fine nanotubular structures, even under such data limitations. The achieved performance in real-world testing and across most quadrants typically ranged between 0.5 and 0.6. This indicates that while the networks can find meaningful predictions, their main limitation is a tendency to oversegment and flag various cellular protrusions as false tunnels. No single complex architecture consistently outperformed the simpler AnisoUNet across all tests, suggesting that future improvements should focus more on data quality and post-processing rather than architectural complexity.
+
+In the future, it might be interesting to refine the post-processing e.g. using a different method to segment the pillars. Also, future research might focus on temporal tracking of these tunnels once more annotations are acquired.
 
 
 \end{document}
