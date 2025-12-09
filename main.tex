@@ -663,12 +663,14 @@ In general, all models performed the best at the third quadrant (top left) and t
     \label{fig:postprocessoverallquadsdepth}
 \end{figure}
 
-\subsection*{Different architectures}
+\section{Different architectures}
 \label{sec:diff-architectures}
 
 As we have discussed in the previous section, we did a 2D hyperparameter search to choose a reasonable estimate of the depth and overlap values, since these are used by our advanced neural networks. We picked three downsampling layers and an overlap of 10 pixels. In this section, the evaluation of other networks is presented.
 
 We decided to study the following architectures: a basic implementation of UNet called BasicUNet as described in Section \ref{sec:unet}. The anisotropic version AnisoUNet as described in Section \ref{sec:anisounet}, a version of AnisoUNet with the CSAM module as described in Section \ref{sec-csammodule}, and finally the UseNet variant of AnisoUNet architecture from Section \ref{sec-seblock}. All models use a 10 pixel overlap, and their depth is equal to three downsampling blocks, with the exception of BasicUNet, which has two downsampling blocks. For every AnisoUNet variant, both 3D and 2D versions were trained, as is described in Section \ref{sec:anisounet}.
+
+\subsection*{Metrics}
 
 Moving on to the results, Figs. \ref{fig:eval-diff-arch-dice}- \ref{fig:eval-diff-arch-tunnel} show the same metrics we discussed in Section \ref{sec:ablation-depth} aggregated across all the cross folds, while \ref{fig:eval-diff-arch-dice-quads}-\ref{fig:eval-diff-arch-tunnel-quads} show the performance for each quadrant. The means and standard deviations of all metrics were calculated exactly the same as in the previous section; again, every combination was trained three times.
 
@@ -758,6 +760,29 @@ Looking at the advanced metrics, the overall Dice metric in Figure \ref{fig:eval
     \caption{tunnels}
     \label{fig:eval-diff-arch-tunnel-quads}
 \end{figure}
+
+\subsection*{Benchmarks}
+The neural network was trained and run on a machine at the faculty with AMD EPYC 7702P 64 Core CPU, 504 GB of memory, and the A100-SXM4-80GB Nvidia GPU. Table \ref{table:benchmarks} shows the inference time of the network and memory requirements. The number of parameters and the estimated size were gathered using the \texttt{torch-info} package, while the peak memory time was gathered using \texttt{PyTorch} utilities.
+
+\begin{table}[htbp]
+    \centering
+    \label{table:benchmarks}
+    \caption{Memory benchmarks and inference times for the investigated networks. Each inference time is an average of 200 runs on random data of shape $7\times 64 \times 64$ with batch size 32. A sample corresponds to a single tile.}
+    \begin{tabular}{|c|c|c|c|c|c|c|}
+        \hline
+        \textbf{architecture name} & \textbf{number of parameters} & \textbf{est. memory [MB]} & \textbf{peak VRAM [MB]} & \textbf{inference time [ms]} & \textbf{inference time std [ms]} & \textbf{throughput [samples/sec]} \\
+        \hline
+        Aniso(2D) & 7701825 & 269.7 & 1578.11 & 21.036 & 4.1103 & 1521.2 \\ \hline
+        Aniso(3D) & 21711297 & 325.74 & 1689.06 & 35.6926 & 7.285 & 896.55 \\ \hline
+        UseNet(2D) & 7735509 & 269.8 & 1578.38 & 22.847 & 3.7819 & 1400.62 \\ \hline
+        UseNet(3D) & 21744981 & 325.84 & 1689.32 & 37.5545 & 6.2028 & 852.1 \\ \hline
+        CSAM(2D) & 8259587 & 274.46 & 1647.08 & 25.4008 & 4.3781 & 1259.8 \\ \hline
+        CSAM(3D) & 22269059 & 330.49 & 1757.44 & 39.9889 & 7.0677 & 800.22 \\ \hline
+        BasicUNet & 5420737 & 181.41 & 1449.24 & 18.2588 & 4.1531 & 1752.58 \\ \hline
+    \end{tabular}
+\end{table}
+
+\subsection*{Qualitative study}
 
 \section{Recommended values}
 As was discussed in the previous sections using the hyperparameter study and 
