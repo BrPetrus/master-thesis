@@ -341,7 +341,7 @@ We tackled this problem by doing a quadrant-based spatial 4-fold cross-validatio
     \label{fig:folding-visualisation}
 \end{figure}
 
-This is still quite challenging to do correctly, as not every tunnel lies neatly inside one of the quadrants. A split used in training is visualised in Figure \ref{fig: folding-visualisation}, where a possible split is shown in two colours: red represents crops belonging to the testing subset. The decision of whether a crop belongs to the testing subset or not is determined by examining the overlap with the training quadrant. If the crop lies with more than 20\% or has more than 50 voxels in the testing quadrant, it will not be included in the training subset. If at least 80\% of the crop is inside the testing quadrant, it is considered to be part of the testing subset.
+This is still quite challenging to do correctly, as not every tunnel lies neatly inside one of the quadrants. A split used in training is visualised in Figure \ref{fig:folding-visualisation}, where a possible split is shown in two colours: red represents crops belonging to the testing subset. The decision of whether a crop belongs to the testing subset or not is determined by examining the overlap with the training quadrant. If the crop lies with more than 20\% or has more than 50 voxels in the testing quadrant, it will not be included in the training subset. If at least 80\% of the crop is inside the testing quadrant, it is considered to be part of the testing subset.
 
 Finally, during the training, we need to know when to stop. For this purpose, during each run, approximately 30% of the crops for training are randomly picked and form the validation set.
 
@@ -541,7 +541,7 @@ We define a mapping between the predictions and the tunnels in the reference ann
     \begin{subfigure}[b]{0.4\textwidth}
         \centering
         \begin{overpic}[width=\textwidth]{resources/inkscape/matching_simple.png}
-            \put(8,85){\Large \textbf{(a)}}
+            \put(8,85){\Large\textbf{(a)}}
         \end{overpic}
         \label{fig:matchingsimple}
     \end{subfigure}
@@ -553,12 +553,12 @@ We define a mapping between the predictions and the tunnels in the reference ann
         \end{overpic}
         \label{fig:matchingmultiple}
     \end{subfigure}
-    \caption{Three vertical pillars, shown as black circles, are connected by TNTs, also shown as black curves. In \ref{fig:matchingsimple} the network found two tunnels. Identifying a real tunnel correctly is considered a true positive (TP) and is shown in blue, while the second prediction, in red, is a false positive. In \ref{fig:matchingmultiple}, the network predicts a single tunnel, which covers both real tunnels. This is also considered to be a TP.}
+    \caption{Three vertical pillars, shown as black circles, are connected by TNTs, also shown as black curves. In (a) the network found two tunnels. Identifying a real tunnel correctly is considered a true positive (TP) and is shown in blue, while the second prediction, in red, is a false positive. In (b), the network predicts a single tunnel, which covers both real tunnels. This is also considered to be a TP.}
     \label{fig:matchingdiagram}
 \end{figure}
 
-In Figure \ref{fig:matchingdiagram} we can see a schematic of a situation with three pillars and several predictions. In Figure \ref{fig:matchingsimple} a network predicted a single TP, FP, and FN.
-Whereas in Figure \ref{fig:matchingmultiple}, a situation where a single prediction covers both tunnels is more complicated. This might be present near a cluster of pillars and tunnels, where a clear separation is difficult to see. The tunnels might theoretically even cross each other. While discarding these results is possible, we will consider such a situation a success and label it as finding two TPs. A situation where two predictions cover a label is not investigated.
+In Figure \ref{fig:matchingdiagram} we can see a schematic of a situation with three pillars and several predictions. In (a) a network predicted a single TP, FP, and FN.
+Whereas in (b), a situation where a single prediction covers both tunnels is more complicated. This might be present near a cluster of pillars and tunnels, where a clear separation is difficult to see. The tunnels might theoretically even cross each other. While discarding these results is possible, we will consider such a situation a success and label it as finding two TPs. A situation where two predictions cover a label is not investigated.
 
 Mathematically, the mapping is implemented by examining the tunnels in the following manner. After the postprocessing defined in Section \ref{sec:postprocessing} the predictions form a set $P$, whose elements are the binary masks of each connected component. Likewise, we can view the reference annotations as a set $L$, where each element is also a binary mask for each instance of a tunnel. Given these two sets, we define a mapping between the two sets as a set of tuples $(l,p)$, where $l$ and $p$ form a pair describing which predicted component matched a tunnel in the reference annotation. The set of all possible matches is defined as:
 
@@ -644,7 +644,7 @@ First of all, the performance differences across various depths are not that sub
 
 However, it must be noted that the error bars are large and complicate any conclusion, as they show that the performance varies quite dramatically. This led us to investigate what could be causing this variety, and one possible explanation is the various performances on folds.
 
-Taking a look at Figure \ref{fig:eval_quads} here, we can see the same metrics, but this time it is further divided among the various quadrants on which the network was tested. What is immediately evident to us is that the error bars are less varied, due to the performance differences across quadrants. Interestingly, in some cases, such as the models with size downsampling layers for the first quadrant, there are significant performance differences, but no apparent reason for this was found. Since, in this case, all bars represent averages of three numbers, it is plausible that, due to bad luck, the network may not achieve as good a performance as in other runs. Another possible reason is that the deeper variants have significantly more parameters and are overfitting on the sparse dataset.
+Taking a look at Figure \ref{fig:evalquadsdepth} here, we can see the same metrics, but this time it is further divided among the various quadrants on which the network was tested. What is immediately evident to us is that the error bars are less varied, due to the performance differences across quadrants. Interestingly, in some cases, such as the models with size downsampling layers for the first quadrant, there are significant performance differences, but no apparent reason for this was found. Since, in this case, all bars represent averages of three numbers, it is plausible that, due to bad luck, the network may not achieve as good a performance as in other runs. Another possible reason is that the deeper variants have significantly more parameters and are overfitting on the sparse dataset.
 % TODO talk in discussion
 
 In general, all models performed the best at the third quadrant (top left) and the third quadrant (bottom left), while the performance was lower on the second quadrant (top right) and the fourth quadrant (bottom right). Looking at the means and error bars now, it seems that the model with three downsampling layers performs best or close to best in all quadrants, whereas having more layers can sometimes reach similar performance it might also lead to worse (like in case of three downsampling steps in quadrant 3); hence, we cannot say that for our input size, the increased depth helps dramatically. However, our previous decision to choose the network of depth three in the following studies still stands, as although the performance difference is not significant, this network consistently outperforms the smaller network, and at the same time, has many fewer parameters than the larger networks.
@@ -672,7 +672,7 @@ We decided to study the following architectures: a basic implementation of UNet 
 
 \subsection*{Metrics}
 
-Moving on to the results, Figs. \ref{fig:eval-diff-arch-dice}- \ref{fig:eval-diff-arch-tunnel} show the same metrics we discussed in Section \ref{sec:ablation-depth} aggregated across all the cross folds, while \ref{fig:eval-diff-arch-dice-quads}-\ref{fig:eval-diff-arch-tunnel-quads} show the performance for each quadrant. The means and standard deviations of all metrics were calculated exactly the same as in the previous section; again, every combination was trained three times.
+Moving on to the results, Figs. \ref{fig:eval-diff-arch-dice}- \ref{fig:eval-diff-arch-tunnel} show the same metrics we discussed in Section \ref{sec:ablationstudy} aggregated across all the cross folds, while \ref{fig:eval-diff-arch-dice-quads}-\ref{fig:eval-diff-arch-tunnel-quads} show the performance for each quadrant. The means and standard deviations of all metrics were calculated exactly the same as in the previous section; again, every combination was trained three times.
 
 We can again see large error bars in all figures, especially when looking at the tunnel metrics in Figure \ref{fig:eval-diff-arch-tunnel}. Like in the previous section, this is caused by the difference in performance across the folds and will be discussed after analysing the averages across folds.
 
@@ -706,21 +706,21 @@ Looking at the advanced metrics, the overall Dice metric in Figure \ref{fig:eval
     \begin{center}
         \includegraphics[width=0.8\textwidth]{resources/evaluations/diffarchs/postprocess_clean_matched_dice_architecture_comparison.png}
     \end{center}
-    \caption{dice on cleaned matches}
+    \caption{Dice metric on clean matches. Each bar represents the average of twelve model runs across the 4-fold cross-validation. Error bars represent the sample standard deviation.}
     \label{fig:eval-diff-arch-clean}
 \end{figure}
 \begin{figure}[htbp]
     \begin{center}
         \includegraphics[width=0.8\textwidth]{resources/evaluations/diffarchs/postprocess_matched_dice_architecture_comparison.png}
     \end{center}
-    \caption{dice on all matches}
+    \caption{Dice metric on all matches. Each bar represents the average of twelve model runs across the 4-fold cross-validation. Error bars represent the sample standard deviation.}
     \label{fig:eval-diff-arch-all}
 \end{figure}
 \begin{figure}[htbp]
     \begin{center}
         \includegraphics[width=0.8\textwidth]{resources/evaluations/diffarchs/tunnel_dice_architecture_comparison.png}
     \end{center}
-    \caption{dice on tunnel level}
+    \caption{Dice metric on clean matches. Each bar represents the average of twelve model runs across the 4-fold cross-validation. Error bars represent the sample standard deviation.}
     \label{fig:eval-diff-arch-tunnel}
 \end{figure}
 
@@ -729,35 +729,35 @@ Looking at the advanced metrics, the overall Dice metric in Figure \ref{fig:eval
     \begin{center}
         \includegraphics[width=\textwidth]{resources/evaluations/diffarchs/eval_dice_mean_by_quad_arch.png}
     \end{center}
-    \caption{eval dice}
+    \caption{Evaluation metric. Each bar represents the average of three model runs. Error bars represent the sample standard deviation.}
     \label{fig:eval-diff-arch-dice-quads}
 \end{figure}
 \begin{figure}[htbp]
     \begin{center}
         \includegraphics[width=\textwidth]{resources/evaluations/diffarchs/postprocess_overall_dice_by_quad_arch.png}
     \end{center}
-    \caption{overall dice}
+    \caption{Overall dice metric. Each bar represents the average of three model runs. Error bars represent the sample standard deviation.}
     \label{fig:eval-diff-arch-dice-overall-quads}
 \end{figure}
 \begin{figure}[htbp]
     \begin{center}
         \includegraphics[width=\textwidth]{resources/evaluations/diffarchs/postprocess_clean_matched_dice_by_quad_arch.png}
     \end{center}
-    \caption{clean matched}
+    \caption{Dice metric on clean matches. Each bar represents the average of three model runs. Error bars represent the sample standard deviation.}
     \label{fig:eval_diff_arch_clean_match_dice_quads}
 \end{figure}
 \begin{figure}[htbp]
     \begin{center}
         \includegraphics[width=\textwidth]{resources/evaluations/diffarchs/postprocess_matched_dice_by_quad_arch.png}
     \end{center}
-    \caption{matched dice}
+    \caption{Dice metric on all matches. Each bar represents the average of three model runs. Error bars represent the sample standard deviation.}
     \label{fig:eval_diff_arch_matched_dice_quads}
 \end{figure}
 \begin{figure}[htbp]
     \begin{center}
         \includegraphics[width=\textwidth]{resources/evaluations/diffarchs/tunnel_dice_by_quad_arch.png}
     \end{center}
-    \caption{tunnels}
+    \caption{Tunnel dice metric. Each bar represents the average of three model runs. Error bars represent the sample standard deviation.}
     \label{fig:eval-diff-arch-tunnel-quads}
 \end{figure}
 
@@ -766,9 +766,7 @@ The neural network was trained and run on a machine at the faculty with AMD EPYC
 
 \begin{table}[htbp]
     \centering
-    \label{table:benchmarks}
-    \caption{Memory benchmarks and inference times for the investigated networks. Each inference time is an average of 200 runs on random data of shape $7\times 64 \times 64$ with batch size 32. A sample corresponds to a single tile.}
-\resizebox{\textwidth}{!}{
+    \resizebox{\textwidth}{!}{
     \begin{tabular}{|c|c|c|c|c|c|c|}
         \hline
         \textbf{Architecture} & \textbf{Parameters} & \textbf{peak VRAM [MB]} & \textbf{inference time [ms]} & \textbf{throughput [samples/sec]} \\
@@ -781,7 +779,9 @@ The neural network was trained and run on a machine at the faculty with AMD EPYC
         CSAM(3D) & 22269059 & 1757.44 & 39.9889 & 800.22 \\ \hline
         BasicUNet & 5420737 & 1449.24 & 18.2588 & 1752.58 \\ \hline
     \end{tabular}
-}
+    }
+    \caption{Memory benchmarks and inference times for the investigated networks. Each inference time is an average of 200 runs on random data of shape $7\times 64 \times 64$ with batch size 32. A sample corresponds to a single tile.}
+    \label{table:benchmarks}
 \end{table}
 
 \subsection*{Qualitative study}
@@ -794,28 +794,28 @@ Figure \ref{fig:qualitative-quad2} shows the neural network prediction for vario
     \begin{subfigure}[b]{0.45\textwidth}
         \centering
         \begin{overpic}[width=\textwidth]{resources/qualitative/quad2eval/t017-composite-slice7.png}
-            \put(8,85){\Large \textbf{(a)}}
+            \put(8,85){\Large  \textcolor{white}{\textbf{(a)}}}
         \end{overpic}
         \label{fig:quad2orig}
     \end{subfigure}
     \begin{subfigure}[b]{0.45\textwidth}
         \centering
         \begin{overpic}[width=\textwidth]{resources/qualitative/quad2eval/t017-slice7-basicunet.png}
-            \put(8,85){\Large \textbf{(a)}}
+            \put(8,85){\Large  \textcolor{white}{\textbf{(b)}}}
         \end{overpic}
         \label{fig:quad2basicunet}
     \end{subfigure}
     \begin{subfigure}[b]{0.45\textwidth}
         \centering
         \begin{overpic}[width=\textwidth]{resources/qualitative/quad2eval/t017-slice7-csam3d.png}
-            \put(8,85){\Large \textbf{(a)}}
+            \put(8,85){\Large  \textcolor{white}{\textbf{(c)}}}
         \end{overpic}
         \label{fig:quad2csam3d}
     \end{subfigure}
     \begin{subfigure}[b]{0.45\textwidth}
         \centering
         \begin{overpic}[width=\textwidth]{resources/qualitative/quad2eval/t017-slice7-csam2d.png}
-            \put(8,85){\Large \textbf{(a)}}
+            \put(8,85){\Large  \textcolor{white}{\textbf{(d)}}}
         \end{overpic}
         \label{fig:quad2csam2d}
     \end{subfigure}
@@ -830,21 +830,21 @@ Continuing with the analysis in the third quadrant, where the 2D UseNet performa
     \begin{subfigure}[b]{0.3\textwidth}
         \centering
         \begin{overpic}[width=\textwidth]{resources/qualitative/quad3eval/t017-ce-slice7-gimp-crop.png}
-            \put(8,85){\Large \textbf{(a)}}
+            \put(8,85){\Large  \textcolor{white}{\textbf{(a)}}}
         \end{overpic}
         \label{fig:quad3gimp}
     \end{subfigure}
     \begin{subfigure}[b]{0.3\textwidth}
         \centering
         \begin{overpic}[width=\textwidth]{resources/qualitative/quad3eval/nice-slice7-crop.png}
-            \put(8,85){\Large \textbf{(b)}}
+            \put(8,85){\Large  \textcolor{white}{\textbf{(b)}}}
         \end{overpic}
         \label{fig:quad3nice}
     \end{subfigure}
     \begin{subfigure}[b]{0.3\textwidth}
         \centering
         \begin{overpic}[width=\textwidth]{resources/qualitative/quad3eval/nice-slice7-crop.png}
-            \put(8,85){\Large \textbf{(c)}}
+            \put(8,85){\Large  \textcolor{white}{\textbf{(c)}}}
         \end{overpic}
         \label{fig:quad3bad}
     \end{subfigure}
@@ -854,35 +854,35 @@ Continuing with the analysis in the third quadrant, where the 2D UseNet performa
 
 In the final study, we took a look at the first quadrant, which reached the highest scores. In Figure \ref{fig:qualitative-quad1}, a part of the dataset with minimal artefacts is shown. As can be seen, our networks tend to have a problem with oversegmentation and mark small structures as tunnels even though they are not. While the CSAM and UseNet variants do not improve the prediction by AnisoUNet, the prediction by AnisoUNet looks decent.
 
-\begin{figure}[h]
+\begin{figure}[htbp]
     \centering
-    \begin{subfigure}[b]{0.45\textwidth}
+    \begin{subfigure}{0.4\textwidth}
         \centering
-        \begin{overpic}[width=\textwidth]{resources/qualitative/quad1eval/t017-composite-slice7.png}
-            \put(8,85){\Large \textbf{(a)}}
+        \begin{overpic}[width=\textwidth]{resources/qualitative/quad1eval/t000-composite-slice-1.png}
+            \put(8,85){\Large  \textcolor{white}{\textbf{(a)}}}
         \end{overpic}
-        \label{fig:quad2orig}
+        \label{fig:quad1orig}
     \end{subfigure}
-    \begin{subfigure}[b]{0.45\textwidth}
+    \begin{subfigure}{0.40\textwidth}
         \centering
-        \begin{overpic}[width=\textwidth]{resources/qualitative/quad1eval/t017-slice7-basicunet.png}
-            \put(8,85){\Large \textbf{(a)}}
+        \begin{overpic}[width=\textwidth]{resources/qualitative/quad1eval/aniso2d-slice1.png}
+            \put(8,85){\Large  \textcolor{white}{\textbf{(b)}}}
         \end{overpic}
-        \label{fig:quad2basicunet}
+        \label{fig:quad1aniso}
     \end{subfigure}
-    \begin{subfigure}[b]{0.45\textwidth}
+    \begin{subfigure}{0.40\textwidth}
         \centering
-        \begin{overpic}[width=\textwidth]{resources/qualitative/quad1eval/t017-slice7-csam3d.png}
-            \put(8,85){\Large \textbf{(a)}}
+        \begin{overpic}[width=\textwidth]{resources/qualitative/quad1eval/usenet2d-slice1.png}
+            \put(8,85){\Large  \textcolor{white}{\textbf{(c)}}}
         \end{overpic}
-        \label{fig:quad2csam3d}
+        \label{fig:quad1usenet}
     \end{subfigure}
-    \begin{subfigure}[b]{0.45\textwidth}
+    \begin{subfigure}{0.40\textwidth}
         \centering
-        \begin{overpic}[width=\textwidth]{resources/qualitative/quad1eval/t017-slice7-csam2d.png}
-            \put(8,85){\Large \textbf{(a)}}
+        \begin{overpic}[width=\textwidth]{resources/qualitative/quad1eval/csam2d-slice-1.png}
+            \put(8,85){\Large  \textcolor{white}{\textbf{(d)}}}
         \end{overpic}
-        \label{fig:quad2csam2d}
+        \label{fig:quad1csam}
     \end{subfigure}
     \caption{Predictions on the first quadrant. (A) shows the original image (contrast-enhanced) with reference annotations in magenta. (B) shows the prediction of 2D AnisoUNet, (C) 2D version of UseNet variant, (D) shows the 2D version of CSAM variant. Green represents TP, red stands for FP and blue is for FN}
     \label{fig:qualitative-quad1}
