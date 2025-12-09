@@ -649,16 +649,16 @@ Taking a look at Figure \ref{fig:eval_quads} here, we can see the same metrics, 
 
 In general, all models performed the best at the third quadrant (top left) and the third quadrant (bottom left), while the performance was lower on the second quadrant (top right) and the fourth quadrant (bottom right). Looking at the means and error bars now, it seems that the model with three downsampling layers performs best or close to best in all quadrants, whereas having more layers can sometimes reach similar performance it might also lead to worse (like in case of three downsampling steps in quadrant 3); hence, we cannot say that for our input size, the increased depth helps dramatically. However, our previous decision to choose the network of depth three in the following studies still stands, as although the performance difference is not significant, this network consistently outperforms the smaller network, and at the same time, has many fewer parameters than the larger networks.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{resources/evaluations/eval_dice_mean_by_quad_arch.png}
+    \includegraphics[width=0.7\textwidth]{resources/evaluations/eval_dice_mean_by_quad_arch.png}
     \caption{Evaluation metrics for various folds. Each bar represents the average of three model runs. Error bars represent the sample standard deviation.}
     \label{fig:evalquadsdepth}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{resources/evaluations/postprocess_overall_dice_by_quad_arch.png}
+    \includegraphics[width=0.7\textwidth]{resources/evaluations/postprocess_overall_dice_by_quad_arch.png}
     \caption{Postprocess overall metric for various folds. Each bar represents the average of three model runs. Error bars represent the sample standard deviation.}
     \label{fig:postprocessoverallquadsdepth}
 \end{figure}
@@ -690,35 +690,35 @@ Looking at the advanced metrics, the overall Dice metric in Figure \ref{fig:eval
 
 \begin{figure}[htbp]
     \begin{center}
-        \includegraphics[width=\textwidth]{resources/evaluations/diffarchs/eval_dice_mean_architecture_comparison.png}
+        \includegraphics[width=0.8\textwidth]{resources/evaluations/diffarchs/eval_dice_mean_architecture_comparison.png}
     \end{center}
     \caption{Evaluation metrics for various folds. Each bar represents the average of three model runs. Error bars represent the sample standard deviation.}
     \label{fig:eval-diff-arch-dice}
 \end{figure}
 \begin{figure}[htbp]
     \begin{center}
-        \includegraphics[width=\textwidth]{resources/evaluations/diffarchs/postprocess_overall_dice_architecture_comparison.png}
+        \includegraphics[width=0.8\textwidth]{resources/evaluations/diffarchs/postprocess_overall_dice_architecture_comparison.png}
     \end{center}
     \caption{Postprocess overall metric. Each bar represents the average of twelve model runs across the 4-fold cross-validation. Error bars represent the sample standard deviation.}
     \label{fig:eval-diff-arch-overall}
 \end{figure}
 \begin{figure}[htbp]
     \begin{center}
-        \includegraphics[width=\textwidth]{resources/evaluations/diffarchs/postprocess_clean_matched_dice_architecture_comparison.png}
+        \includegraphics[width=0.8\textwidth]{resources/evaluations/diffarchs/postprocess_clean_matched_dice_architecture_comparison.png}
     \end{center}
     \caption{dice on cleaned matches}
     \label{fig:eval-diff-arch-clean}
 \end{figure}
 \begin{figure}[htbp]
     \begin{center}
-        \includegraphics[width=\textwidth]{resources/evaluations/diffarchs/postprocess_matched_dice_architecture_comparison.png}
+        \includegraphics[width=0.8\textwidth]{resources/evaluations/diffarchs/postprocess_matched_dice_architecture_comparison.png}
     \end{center}
     \caption{dice on all matches}
     \label{fig:eval-diff-arch-all}
 \end{figure}
 \begin{figure}[htbp]
     \begin{center}
-        \includegraphics[width=\textwidth]{resources/evaluations/diffarchs/tunnel_dice_architecture_comparison.png}
+        \includegraphics[width=0.8\textwidth]{resources/evaluations/diffarchs/tunnel_dice_architecture_comparison.png}
     \end{center}
     \caption{dice on tunnel level}
     \label{fig:eval-diff-arch-tunnel}
@@ -768,24 +768,48 @@ The neural network was trained and run on a machine at the faculty with AMD EPYC
     \centering
     \label{table:benchmarks}
     \caption{Memory benchmarks and inference times for the investigated networks. Each inference time is an average of 200 runs on random data of shape $7\times 64 \times 64$ with batch size 32. A sample corresponds to a single tile.}
+\resizebox{\textwidth}{!}{
     \begin{tabular}{|c|c|c|c|c|c|c|}
         \hline
-        \textbf{architecture name} & \textbf{number of parameters} & \textbf{est. memory [MB]} & \textbf{peak VRAM [MB]} & \textbf{inference time [ms]} & \textbf{inference time std [ms]} & \textbf{throughput [samples/sec]} \\
+        \textbf{Architecture} & \textbf{Parameters} & \textbf{peak VRAM [MB]} & \textbf{inference time [ms]} & \textbf{throughput [samples/sec]} \\
         \hline
-        Aniso(2D) & 7701825 & 269.7 & 1578.11 & 21.036 & 4.1103 & 1521.2 \\ \hline
-        Aniso(3D) & 21711297 & 325.74 & 1689.06 & 35.6926 & 7.285 & 896.55 \\ \hline
-        UseNet(2D) & 7735509 & 269.8 & 1578.38 & 22.847 & 3.7819 & 1400.62 \\ \hline
-        UseNet(3D) & 21744981 & 325.84 & 1689.32 & 37.5545 & 6.2028 & 852.1 \\ \hline
-        CSAM(2D) & 8259587 & 274.46 & 1647.08 & 25.4008 & 4.3781 & 1259.8 \\ \hline
-        CSAM(3D) & 22269059 & 330.49 & 1757.44 & 39.9889 & 7.0677 & 800.22 \\ \hline
-        BasicUNet & 5420737 & 181.41 & 1449.24 & 18.2588 & 4.1531 & 1752.58 \\ \hline
+        Aniso(2D) & 7701825 & 1578.11 & 21.036 & 1521.2 \\ \hline
+        Aniso(3D) & 21711297 & 1689.06 & 35.6926 & 896.55 \\ \hline
+        UseNet(2D) & 7735509 & 1578.38 & 22.847 & 1400.62 \\ \hline
+        UseNet(3D) & 21744981 & 1689.32 & 37.5545 & 852.1 \\ \hline
+        CSAM(2D) & 8259587 & 1647.08 & 25.4008 & 1259.8 \\ \hline
+        CSAM(3D) & 22269059 & 1757.44 & 39.9889 & 800.22 \\ \hline
+        BasicUNet & 5420737 & 1449.24 & 18.2588 & 1752.58 \\ \hline
     \end{tabular}
+}
 \end{table}
 
 \subsection*{Qualitative study}
+Lastly, we will investigate the performance in a qualitative manner. We will start by analysing the smaller performance in the second quadrant, then we will look at issues with large variance for the third quadrant in the UseNet 2D variant, and finally we will look at how the neural network handles parts with a relatively small amount of noise.
 
-\section{Recommended values}
-As was discussed in the previous sections using the hyperparameter study and 
+Figure \ref{fig:qualitative-quad2} shows the neural network prediction for various architectures. In the previous section, we showed that the performance in this quadrant is lower, which is caused by the networks' mistaking visual artefacts in the top right part of the image for TNTs. As similar artefacts are not present in other parts of the dataset, the neural network fails to learn to distinguish this. Interestingly, it can be seen that the 2D version handles this better than the 3D version, which could be caused by the fact that this particular artefact is present in multiple slices, confusing the network.
+
+\begin{figure}[htbp]
+    \centering
+    \caption{Predictions on the second quadrant. (A) shows the original image (contrast-enhanced) with binarised reference annotations in magenta. (B) shows the prediction of BasicUNet, (C) 3D version of CSAM variant, (D) shows the 2D version of CSAM. Green represents TP, red stands for FP and blue is for FN.}
+    \label{fig:qualitative-quad2}
+\end{figure}
+
+Continuing with the analysis in the third quadrant, where the 2D UseNet performance varied quite significantly. The Figure \ref{fig:qualitative-quad3} shows that due to probably bad luck during training, one of the models (reaching a tunnel dice score of 0.7) managed to correctly match two of the three tunnels, while the last one failed to match any (tunnel dice score is about 0.47), due to the poor prediction shown in the blue colour. The poorer prediction on the stitched images lead to missed opportunities with matching.
+
+\begin{figure}[htbp]
+    \centering
+    \caption{Predictions on part of the third quadrant. (A) shows the original image (contrast-enhanced) with reference annotations. Different colours correspond to different tunnels. (B) and (C) show predictions of two different models. Red means that a tunnel from reference was not matched to any predicted tunnel, while blue means that a predicted tunnel did not match any reference tunnel.}
+    \label{fig:qualitative-quad3}
+\end{figure}
+
+In the final study, we took a look at the first quadrant, which reached the highest scores. In Figure \ref{fig:qualitative-quad1}, a part of the dataset with minimal artefacts is shown. As can be seen, our networks tend to have a problem with oversegmentation and mark small structures as tunnels even though they are not. While the CSAM and UseNet variants do not improve the prediction by AnisoUNet, the prediction by AnisoUNet looks decent.
+
+\begin{figure}[htbp]
+    \centering
+    \caption{Predictions on the first quadrant. (A) shows the original image (contrast-enhanced) with reference annotations in magenta. (B) shows the prediction of 2D AnisoUNet, (C) 2D version of UseNet variant, (D) shows the 2D version of CSAM variant. Green represents TP, red stands for FP and blue is for FN}
+    \label{fig:qualitative-quad1}
+\end{figure}
 
 \chapter{Discussion and conclusion}
 % what to do next
