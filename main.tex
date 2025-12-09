@@ -538,7 +538,7 @@ We define a mapping between the predictions and the tunnels in the reference ann
 
 \begin{figure}[htbp]
     \centering
-    \begin{subfigure}[b]{0.45\textwidth}
+    \begin{subfigure}[b]{0.4\textwidth}
         \centering
         \begin{overpic}[width=\textwidth]{resources/inkscape/matching_simple.png}
             \put(8,85){\Large \textbf{(a)}}
@@ -546,7 +546,7 @@ We define a mapping between the predictions and the tunnels in the reference ann
         \label{fig:matchingsimple}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.45\textwidth}
+    \begin{subfigure}[b]{0.4\textwidth}
         \centering
         \begin{overpic}[width=\textwidth]{resources/inkscape/matching_multiple.png}
             \put(8,85){\Large \textbf{(b)}}
@@ -616,7 +616,7 @@ Figure \ref{fig:parametersearchstudy} showcases the Dice score of the various ne
 
 \begin{figure}[htbp]
     \begin{center}
-        \includegraphics{resources/evaluations/eval_dice_mean_heatmap.png}
+        \includegraphics[width=0.7\textwidth]{resources/evaluations/eval_dice_mean_heatmap.png}
     \end{center}
     \caption{Evaluation Dice score for various depths of the network. The best value is highlighted in yellow.}
     \label{fig:parametersearchstudy}
@@ -626,14 +626,14 @@ What we can also see from this hyperparameter search is that the effect of the n
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=\textwidth]{resources/evaluations/eval_dice_mean_architecture_comparison.png}
+    \includegraphics[width=0.7\textwidth]{resources/evaluations/eval_dice_mean_architecture_comparison.png}
     \caption{Evaluation metric. Each bar represents the average of twelve model runs across the 4-fold cross-validation. Error bars represent the sample standard deviation.}
     \label{fig:evaldepth}
 \end{figure}
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=\textwidth]{resources/evaluations/postprocess_overall_dice_architecture_comparison.png}
+    \includegraphics[width=0.7\textwidth]{resources/evaluations/postprocess_overall_dice_architecture_comparison.png}
     \caption{Postprocess overall metric. Each bar represents the average of twelve model runs across the 4-fold cross-validation. Error bars represent the sample standard deviation.}
     \label{fig:postprocessoveralldepth}
 \end{figure}
@@ -791,6 +791,34 @@ Figure \ref{fig:qualitative-quad2} shows the neural network prediction for vario
 
 \begin{figure}[htbp]
     \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \begin{overpic}[width=\textwidth]{resources/qualitative/quad2eval/t017-composite-slice7.png}
+            \put(8,85){\Large \textbf{(a)}}
+        \end{overpic}
+        \label{fig:quad2orig}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \begin{overpic}[width=\textwidth]{resources/qualitative/quad2eval/t017-slice7-basicunet.png}
+            \put(8,85){\Large \textbf{(a)}}
+        \end{overpic}
+        \label{fig:quad2basicunet}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \begin{overpic}[width=\textwidth]{resources/qualitative/quad2eval/t017-slice7-csam3d.png}
+            \put(8,85){\Large \textbf{(a)}}
+        \end{overpic}
+        \label{fig:quad2csam3d}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \begin{overpic}[width=\textwidth]{resources/qualitative/quad2eval/t017-slice7-csam2d.png}
+            \put(8,85){\Large \textbf{(a)}}
+        \end{overpic}
+        \label{fig:quad2csam2d}
+    \end{subfigure}
     \caption{Predictions on the second quadrant. (A) shows the original image (contrast-enhanced) with binarised reference annotations in magenta. (B) shows the prediction of BasicUNet, (C) 3D version of CSAM variant, (D) shows the 2D version of CSAM. Green represents TP, red stands for FP and blue is for FN.}
     \label{fig:qualitative-quad2}
 \end{figure}
@@ -799,6 +827,27 @@ Continuing with the analysis in the third quadrant, where the 2D UseNet performa
 
 \begin{figure}[htbp]
     \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \begin{overpic}[width=\textwidth]{resources/qualitative/quad3eval/t017-ce-slice7-gimp-crop.png}
+            \put(8,85){\Large \textbf{(a)}}
+        \end{overpic}
+        \label{fig:quad3gimp}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \begin{overpic}[width=\textwidth]{resources/qualitative/quad3eval/nice-slice7-crop.png}
+            \put(8,85){\Large \textbf{(b)}}
+        \end{overpic}
+        \label{fig:quad3nice}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \begin{overpic}[width=\textwidth]{resources/qualitative/quad3eval/nice-slice7-crop.png}
+            \put(8,85){\Large \textbf{(c)}}
+        \end{overpic}
+        \label{fig:quad3bad}
+    \end{subfigure}
     \caption{Predictions on part of the third quadrant. (A) shows the original image (contrast-enhanced) with reference annotations. Different colours correspond to different tunnels. (B) and (C) show predictions of two different models. Red means that a tunnel from reference was not matched to any predicted tunnel, while blue means that a predicted tunnel did not match any reference tunnel.}
     \label{fig:qualitative-quad3}
 \end{figure}
@@ -807,6 +856,34 @@ In the final study, we took a look at the first quadrant, which reached the high
 
 \begin{figure}[htbp]
     \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \begin{overpic}[width=\textwidth]{resources/qualitative/quad2eval/t017-composite-slice7.png}
+            \put(8,85){\Large \textbf{(a)}}
+        \end{overpic}
+        \label{fig:quad2orig}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \begin{overpic}[width=\textwidth]{resources/qualitative/quad2eval/t017-slice7-basicunet.png}
+            \put(8,85){\Large \textbf{(a)}}
+        \end{overpic}
+        \label{fig:quad2basicunet}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \begin{overpic}[width=\textwidth]{resources/qualitative/quad2eval/t017-slice7-csam3d.png}
+            \put(8,85){\Large \textbf{(a)}}
+        \end{overpic}
+        \label{fig:quad2csam3d}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \begin{overpic}[width=\textwidth]{resources/qualitative/quad2eval/t017-slice7-csam2d.png}
+            \put(8,85){\Large \textbf{(a)}}
+        \end{overpic}
+        \label{fig:quad2csam2d}
+    \end{subfigure}
     \caption{Predictions on the first quadrant. (A) shows the original image (contrast-enhanced) with reference annotations in magenta. (B) shows the prediction of 2D AnisoUNet, (C) 2D version of UseNet variant, (D) shows the 2D version of CSAM variant. Green represents TP, red stands for FP and blue is for FN}
     \label{fig:qualitative-quad1}
 \end{figure}
