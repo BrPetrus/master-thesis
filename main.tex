@@ -562,11 +562,11 @@ Whereas in Figure \ref{fig:matchingmultiple}, a situation where a single predict
 
 Mathematically, the mapping is implemented by examining the tunnels in the following manner. After the postprocessing defined in Section \ref{sec:postprocessing} the predictions form a set $P$, whose elements are the binary masks of each connected component. Likewise, we can view the reference annotations as a set $L$, where each element is also a binary mask for each instance of a tunnel. Given these two sets, we define a mapping between the two sets as a set of tuples $(l,p)$, where $l$ and $p$ form a pair describing which predicted component matched a tunnel in the reference annotation. The set of all possible matches is defined as:
 
-\[ \text{mapping}(P,L)=\{(l,\hat{p})|\forall l \in L, \hat{p} = \text{argmax}_{p \in P} \text{recall}(p,l) \land \text{recall}(\hat{p}, l) > 0.5\} \]
+\[ \text{mapping}(P,L)=\{(l,\hat{p})|\forall l \in L, \hat{p} = \text{argmax}_{p \in P} \text{recall}(p,l) \land \text{recall}(\hat{p},l) > 0.5 \} \]
 
 The deciding factor is how much of the label is covered by the prediction, which is equivalent to the recall score, and we set it to 0.5, as at least half of the label must be covered. This definition formalises the mapping shown in Figure \ref{fig:matchingdiagram}.
 
-Lastly, we would like to investigate so-called clean matches, where a prediction matches just a single label:
+Lastly, we would like to investigate so-called clean matches, or 1-1 matches, where a prediction matches just a single label:
 
 \[ \text{clean\_mapping} = \{ (l, p) | p \text{ matches just single label} \} \]
 
@@ -594,21 +594,23 @@ Next, we will use the matches defined above. In these cases, the matches are tak
 % todo: as an example, show the quad with all sorts of tunnels connected together.
 
 \section{Ablation study}
-In this section we will present experimentally inferred sizes of hyperparameters for the neural network.
+\label{sec:ablationstudy}
+In this section, we present experimentally inferred sizes of hyperparameters for the 3D variant of AnisoUNet.
 
-\subsection*{Choice of depth and overlap for the network}
-\label{sec:ablation-depth}
-While working on the network the choice of depth and overlap is not obvious, but it is a very important parameter as every advanced architecture is build on top of the anisotropic unet described in Chapter [TODO], which has customizable depth. Moreover, the reason why the anisotropic version was created is to allow us to change the depth.
+It is not apparent how to set the tiling overlap, but the choice of this hyperparameter affects every neural network we have discussed. Also, every advanced neural network built on top of the AnisoUNet network, described in Section \ref{sec:anisounet}, has configurable model depth.
 
-In general it is accepted that the ability to teach deeper network helped improve neural networks performance and in some sense, the ability to teach deeper networks lead us to the neural network revolution. [TODO cit. needed] % TODO citation needed But, the size of the network should be somehow connected to the complexity of the problem, both in terms of size of the context and the image complexity. To find a reasonable value for this parameters we decided to do a 2D hyperparameter search study. 
+% TODO: think about citing something
+In general, it is accepted that the ability to teach deeper networks helped improve neural networks' performance and, in some sense, the ability to teach deeper networks led us to the neural network revolution. Nevertheless, the size of the network should be connected to the complexity of the problem, both in terms of the size of the context and the image complexity. To find a reasonable value for these parameters, we decided to do a 2D hyperparameter search study. 
+
 % todo: talk about this in the discussion
-We took the 3D version of the Anisotropic architecture (AnisoUNet3D) and considered five different versions. The shallowest one has exactly two downsampling layers --- so it is referenced as a network with depth equal to 2 --- and the deepest one has 6 downsampling layers. Six downsampling layers was chosen as this is enough to reduce the original size 7x64x64 to 7x1x1 as such, there is no need to have a deeper network.
 
-For the overlap hyperparameter we chose the values 0px, 10px, 20px, 30px, and 40px. The value 40px was chosen arbitrarily, as in this case, the neighbouring cells already share more than half of the volume.
+Taking the aforementioned AnisoUNet3D architecture, we considered five different depths. The shallowest one has exactly two downsampling layers, so it is referenced as a network with depth equal to 2, and the deepest one has six downsampling layers. Six downsampling layers were chosen, as this is sufficient to reduce the original size of 7x64x64 to 7x1x1; therefore, a deeper network is not necessary.
 
-As the overlap is a hyperparameter of the postprocessing, this means that only five different architectures must be trained to perform this analysis. Since we are doing cross fold analysis, we are training 20 models. Finally, since neural networks employ randomness, each combination of fold and architecture is repeated three times, leading to training 60 models for this evaluation.
+For the overlap hyperparameter, we chose the values 0px, 10px, 20px, 30px, and 40px. The value 40px was chosen arbitrarily, as in this case, the neighbouring cells already share more than half of the volume.
 
-The Figure \ref{fig:parametersearchstudy} showcases the dice score of the various networks. Every number is the mean performance across the 4-cross fold validation and 3 independent runs i.e. an average of 12 networks. Overall the highest number is highlighted and it corresponds to the version with three downsampling layers and 10px overlap; thus, all following models will be using this combination of hyperparameters.
+As the overlap is a hyperparameter used during the inference on the whole images, this means that only five different architectures must be trained to perform this analysis. Since we are doing 4-fold cross-validation, we are training 20 models. Finally, since neural networks employ randomness, each combination of a fold and architecture is repeated three times, leading to training 60 models for this hyperparameter study.
+
+Figure \ref{fig:parametersearchstudy} showcases the Dice score of the various networks. Every number is the mean performance across the 4-fold cross-validation and three independent runs. Overall, the highest number is highlighted, corresponding to the version with three downsampling layers and a 10px overlap. Therefore, all subsequent models will use these values for the hyperparameters.
 
 % TODO: tripple check, i had very different numbers before
 
@@ -616,63 +618,49 @@ The Figure \ref{fig:parametersearchstudy} showcases the dice score of the variou
     \begin{center}
         \includegraphics{resources/evaluations/eval_dice_mean_heatmap.png}
     \end{center}
-    \caption{Evaluation Dice score for various depths of the network. Best values is highlighted.}
+    \caption{Evaluation Dice score for various depths of the network. The best value is highlighted in yellow.}
     \label{fig:parametersearchstudy}
 \end{figure}
 
-
-What we can also see from this hyperparameter search is that the effect of number of downsampling layers is rather marginal and there is not a clear trend of more downsampling layers leading to better performance or vice-versa. Another effect that is visible is that while changing between 10 pixels to 20 or 30 pixels does minimal change in the performance, the difference between 0 pixels and all others is visible in every case. Also it is interesting to see, that although the changes are not greatly different, the network with three downsampling layers seems to always beat the others.
-
-For further studies, we took a look at just 10 pixel overlap and looked at other metrics, which were introduced in the previous chapters. In Figure \ref{fig:eval:depth} the effect of the depth is studied more. I chose three different metrics to investigate the effect of postprocessing and the performance on the level of tunnels. Just to make clear, in these graphs, each average is calculated as the mean of the performance across four cross folds and three runs. The error bars are +- a single sample standard deviation of these values.
-
-First of all, it is visible, that the performance differences across various depths is not that significant, but overall the network with three downsampling steps and the network with five downsampling steps are achieving consistently the highest averages, while the networks with two and six downsampling steps are performing the worst. I believe this can be explained by the fact, that the deepest network is unreasonable large for our given problem, while the smallest network might suffer from not enough layers.
-
-However, it must be noted, that the error bars are very large and complicate any conclusion, as it shows that the performance varies quite dramatically. This lead us to investigate what could be causing this variety, and one possible explanation is the various performance on the quadrants.
-
-Taking a look at Figure \ref{fig:eval_quads} here we can see the same metrics, but this time it is further divided among the various quadrants. What is immediately obvious us that the error bars are less varied, due to the performance differences across quadrants. Interestingly, in some cases like the models with 6 downsampling layers for the first quadrant has large performance differences, but no reason as to why this happens was found. Since in this case all bars are averages of three numbers, it is plausible that due to bad luck, sometimes the network does not achieve as good of a performance as in other runs. % TODO talk in discussion
-
-In general, all models performed the best at the first quadrant (top left) and third quadrant (bottom left), while the performance was lower on the second quadrant (top right) and the fourth quadrant (bottom right). Looking at the means and error bars now, it seems that the model with three downsampling layers performs best or close to best in all folds, while having more layers can sometimes reach similar performance it might also lead to worse (like in case of three downsampling steps in quadrant 3); hence, we cannot say that for our input size, the increased depth helps dramatically. But our previous decision to choose the network of depth three in the following studies still stands, as even tough the performance difference is not that different, this network is consitently beating the smaller network and at the same time has much less parameters than the larger networks.
+What we can also see from this hyperparameter search is that the effect of the number of downsampling layers is rather marginal. Another effect that is visible is that while changing between 10 pixels to 20 or 30 pixels does minimal change in the performance, the difference between 0 pixels and all others is visible in every case. Also, it is interesting to see that although the changes are not significantly different, the network with three downsampling layers consistently beat the others.
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.9\textwidth]{resources/evaluations/eval_dice_mean_architecture_comparison.png}
-    \caption{Evaluation performance.}
-    \label{fig:eval_dice_mean_architecture_comparison}
+    \includegraphics[width=\textwidth]{resources/evaluations/eval_dice_mean_architecture_comparison.png}
+    \caption{Evaluation metric. Each bar represents the average of twelve model runs across the 4-fold cross-validation. Error bars represent the sample standard deviation.}
+    \label{fig:evaldepth}
 \end{figure}
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.9\textwidth]{resources/evaluations/postprocess_overall_dice_architecture_comparison.png}
-    \caption{Performance with post-processing.}
-    \label{fig:postprocess_overall_dice_architecture_comparison}
+    \includegraphics[width=\textwidth]{resources/evaluations/postprocess_overall_dice_architecture_comparison.png}
+    \caption{Postprocess overall metric. Each bar represents the average of twelve model runs across the 4-fold cross-validation. Error bars represent the sample standard deviation.}
+    \label{fig:postprocessoveralldepth}
+\end{figure}
+
+In Figure \ref{fig:evaldepth}, the effect of the depth is studied further on the Evaluation metric. Figure \ref{fig:postprocessoveralldepth} shows the Postprocessed overall metric.
+
+First of all, the performance differences across various depths are not that substantial, but overall, the network with three downsampling steps and the network with five downsampling steps are achieving the highest averages consistently, whereas the networks with two and six downsampling steps are performing the worst. This can be explained by the fact that the deepest network is unreasonably large for our given problem, while the smallest network might suffer from not enough layers.
+
+However, it must be noted that the error bars are large and complicate any conclusion, as they show that the performance varies quite dramatically. This led us to investigate what could be causing this variety, and one possible explanation is the various performances on folds.
+
+Taking a look at Figure \ref{fig:eval_quads} here, we can see the same metrics, but this time it is further divided among the various quadrants on which the network was tested. What is immediately evident to us is that the error bars are less varied, due to the performance differences across quadrants. Interestingly, in some cases, such as the models with size downsampling layers for the first quadrant, there are significant performance differences, but no apparent reason for this was found. Since, in this case, all bars represent averages of three numbers, it is plausible that, due to bad luck, the network may not achieve as good a performance as in other runs. Another possible reason is that the deeper variants have significantly more parameters and are overfitting on the sparse dataset.
+% TODO talk in discussion
+
+In general, all models performed the best at the third quadrant (top left) and the third quadrant (bottom left), while the performance was lower on the second quadrant (top right) and the fourth quadrant (bottom right). Looking at the means and error bars now, it seems that the model with three downsampling layers performs best or close to best in all quadrants, whereas having more layers can sometimes reach similar performance it might also lead to worse (like in case of three downsampling steps in quadrant 3); hence, we cannot say that for our input size, the increased depth helps dramatically. However, our previous decision to choose the network of depth three in the following studies still stands, as although the performance difference is not significant, this network consistently outperforms the smaller network, and at the same time, has many fewer parameters than the larger networks.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{resources/evaluations/eval_dice_mean_by_quad_arch.png}
+    \caption{Evaluation metrics for various folds. Each bar represents the average of three model runs. Error bars represent the sample standard deviation.}
+    \label{fig:evalquadsdepth}
 \end{figure}
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.9\textwidth]{resources/evaluations/tunnel_dice_architecture_comparison.png}
-    \caption{Performance on tunnels.}
-    \label{fig:eval-depth-tunnels}
-\end{figure}
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.9\textwidth]{resources/evaluations/eval_dice_mean_by_quad_arch.png}
-    \caption{Evaluation performance.}
-    \label{fig:eval_dice_mean_by_quad_arch}
-\end{figure}
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.9\textwidth]{resources/evaluations/postprocess_overall_dice_by_quad_arch.png}
-    \caption{Performance with post-processing.}
-    \label{fig:postprocess_overall_dice_by_quad_arch}
-\end{figure}
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.9\textwidth]{resources/evaluations/tunnel_dice_by_quad_arch.png}
-    \caption{Performance on tunnels.}
-    \label{fig:eval_tunnels}
+    \includegraphics[width=\textwidth]{resources/evaluations/postprocess_overall_dice_by_quad_arch.png}
+    \caption{Postprocess overall metric for various folds. Each bar represents the average of three model runs. Error bars represent the sample standard deviation.}
+    \label{fig:postprocessoverallquadsdepth}
 \end{figure}
 
 \subsection*{Different architectures}
