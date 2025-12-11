@@ -55,18 +55,22 @@
     department  = Department of Visual Computing,
     author      = Bruno Petrus,
     gender      = m,
-    advisor     = {Assoc. Prof. RNDr. Martin Maška, Ph.D.},
+    advisor     = {Assoc. Prof. Martin Maška, Ph.D.},
     title       = {Segmentation of Tunneling Nanotubes Using U-Net-Like Neural Networks},
     TeXtitle    = {Segmentation of Tunneling Nanotubes Using U-Net-Like Neural Networks},
-    keywords    = {neural networks, segmentation, tunnelling nanotubes},
-    TeXkeywords = {neural networks, segmentation, tunnelling nanotubes},
+    keywords    = {neural networks, segmentation, tunnelling nanotubes, U-Net architecture, fluorescence microscopy},
+    TeXkeywords = {neural networks, segmentation, tunnelling nanotubes, U-Net architecture, fluorescence microscopy},
     abstract    = {%
-      This is the abstract of my thesis, which can
-
-      span multiple paragraphs.
+        This thesis addresses the automated semantic segmentation of Tunnelling Nanotubes (TNTs) in 3D Drosophila wing microscopy images. The work tackled challenges posed by high spatial anisotropy and extremely sparse annotations.
+        
+        The primary contribution is the development of AnisoUNet, an anisotropic U-Net variant tailored for processing 3D data with restricted Z-axis resolution. The solution utilised a robust 4-fold cross-validation pipeline and a comprehensive inference system.
+        
+        The study demonstrates the feasibility of using deep learning for segmenting these nanoscale structures under severe data limitations. The resulting segmentation capability offers a basis for automating the quantitative analysis of cell morphogenesis dynamics.
     },
     thanks      = {%
         I am very grateful to my advisor, Assoc. Prof. RNDr. Martin Maška, Ph.D., for his sustained mentorship, constructive critiques, and ready availability throughout the whole time.
+
+        I am also grateful to Prof. Osamu Shimmi (University of Tartu, Estonia) and Dr Ngan Vi Tran (University of Tartu, Estonia) for providing the dataset analysed in this thesis.
 
         I want to thank my friends for providing me with a great deal of encouragement. My deepest gratitude goes to my partner, Tereza Zuskinová, who has offered me unconditional support that carried me through the most challenging part of this research.
     },
@@ -74,6 +78,21 @@
     %% Remove the following line to use the JVS 2018 faculty logo.
     facultyLogo = fithesis-fi,
     %declaration = {test}
+    declaration = {
+        Hereby I declare that this paper is my original authorial work, which
+        I have worked out on my own. All sources, references, and literature
+        used or excerpted during elaboration of this work are properly cited
+        and listed in complete reference to the due source.
+        
+
+        \noindent During the preparation of the thesis, I used the following AI tools:
+        \begin{itemize}
+            \item{Grammarly for grammar check.}
+            \item{GitHub Copilot for faster code development, writing documentation, and code consultations.}
+            \item{ChatGPT to improve my writing style.}
+        \end{itemize}
+        I declare that I used these tools in accordance with the principles of academic integrity. I checked the content and took full responsibility for it. 
+    }
 }
 \usepackage{makeidx}      %% The `makeidx` package contains
 \makeindex                %% helper commands for index typesetting.
