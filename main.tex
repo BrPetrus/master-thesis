@@ -61,11 +61,11 @@
     keywords    = {neural networks, segmentation, tunnelling nanotubes, U-Net architecture, fluorescence microscopy},
     TeXkeywords = {neural networks, segmentation, tunnelling nanotubes, U-Net architecture, fluorescence microscopy},
     abstract    = {%
-        This thesis addresses the automated semantic segmentation of Tunnelling Nanotubes (TNTs) in 3D \textit{Drosophila} wing microscopy images. The work tackled challenges posed by high spatial anisotropy and extremely sparse annotations.
-        
-        The primary contribution is the development of AnisoUNet, an anisotropic U-Net variant tailored for processing 3D data with restricted Z-axis resolution. The solution utilised a robust 4-fold cross-validation pipeline and a comprehensive inference system.
-        
-        The study demonstrates the feasibility of using deep learning for segmenting these nanoscale structures under severe data limitations. The resulting segmentation capability offers a basis for automating the quantitative analysis of cell morphogenesis dynamics.
+        This thesis addresses the automated semantic segmentation of Tunnelling Nanotubes (TNTs) in 3D \textit{Drosophila} wing microscopy images. The work tackled challenges posed by high spatial anisotropy and sparse reference annotations.
+
+        The primary contribution is the development of AnisoUNet, an anisotropic U-Net-like architecture designed to effectively handle the highly anisotropic nature of the 3D data. The solution utilised a robust 4-fold cross-validation pipeline.
+
+        The study demonstrates the feasibility of using U-Net-like architectures for segmenting these nanoscale structures under data limitations. The resulting segmentation capability offers a basis for automating the quantitative analysis of cell morphogenesis dynamics.
     },
     thanks      = {%
         I am very grateful to my advisor, Assoc. Prof. RNDr. Martin Maška, Ph.D., for his sustained mentorship, constructive critiques, and ready availability throughout the whole time.
@@ -927,6 +927,9 @@ To overcome these significant data constraints, the work focused on three core c
 Multiple architectures, including variants with attention mechanisms (CSAM and USE-Net), were evaluated. The results demonstrated the feasibility of using deep learning for segmenting these fine nanotubular structures, even under such data limitations. The achieved performance in real-world testing and across most quadrants typically ranged between 0.5 and 0.6. This indicates that while the networks can find meaningful predictions, their main limitation is a tendency to oversegment and flag various cellular protrusions as false tunnels. No single complex architecture consistently outperformed the simpler AnisoUNet across all tests, suggesting that future improvements should focus more on data quality and post-processing rather than architectural complexity.
 
 In the future, it might be interesting to refine the post-processing e.g. using a different method to segment the pillars. Also, future research might focus on temporal tracking of these tunnels once more annotations are acquired.
+
+\appendix
+\chapter{Archive}
 
 
 \end{document}
