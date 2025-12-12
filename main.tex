@@ -545,7 +545,7 @@ While reviewing the training loop, you may notice mentions of determinism and se
 While running the training and evaluations, many more metrics are calculated beyond the Dice score presented in later chapters. They are still present, but were not used in the final evaluations.
 
 \chapter{Evaluation}
-This chapter discusses how the different networks were evaluated on the entire dataset and presents the results of an ablation study designed to set the values of the depth and overlap hyperparameters. The chapter ends with performance benchmarks across the architectures.
+This chapter discusses how the different networks were evaluated on the entire dataset and presents the results of an ablation study designed to choose the values of the depth and overlap hyperparameters. The chapter ends with performance benchmarks across the architectures.
 
 \section{Metrics}
 % todo : consider citation
@@ -556,7 +556,7 @@ As described in Section \ref{sec:runningthenetwork}, the images are tiled and th
 \subsection*{Mapping}
 \label{sec:mapping}
 
-We define a mapping between the predictions and the tunnels in the reference annotation to investigate performance at the tunnel level and the performance on clearly identified tunnels, excluding false positives (FPs).
+We define a mapping between the predictions and the tunnels in the reference annotation to investigate performance at the tunnel level and the performance on clearly identified tunnels.
 
 \begin{figure}[htbp]
     \centering
@@ -575,42 +575,43 @@ We define a mapping between the predictions and the tunnels in the reference ann
         \end{overpic}
         \label{fig:matchingmultiple}
     \end{subfigure}
-    \caption{Three vertical pillars, shown as black circles, are connected by TNTs, also shown as black curves. In (a) the network found two tunnels. Identifying a real tunnel correctly is considered a true positive (TP) and is shown in blue, while the second prediction, in red, is a false positive. In (b), the network predicts a single tunnel, which covers both real tunnels. This is also considered to be a TP.}
+    \caption{Three vertical pillars, shown as black circles, are connected by TNTs, shown as black regions between black circles. (a) The network found two tunnels. Identifying a real tunnel correctly is considered a true positive (TP) and is shown in blue, while the second prediction, in red, is a false positive. (b) The network predicts a single tunnel, which covers both real tunnels. This is considered to be a TP.}
     \label{fig:matchingdiagram}
 \end{figure}
 
-In Figure \ref{fig:matchingdiagram} we can see a schematic of a situation with three pillars and several predictions. In (a) a network predicted a single TP, FP, and FN.
-Whereas in (b), a situation where a single prediction covers both tunnels is more complicated. This might be present near a cluster of pillars and tunnels, where a clear separation is difficult to see. The tunnels might theoretically even cross each other. While discarding these results is possible, we will consider such a situation a success and label it as finding two TPs. A situation where two predictions cover a label is not investigated.
+In Fig. \ref{fig:matchingdiagram}, we can see a schematic of a situation with three pillars and several predictions. In Fig. \ref{fig:matchingdiagram}(a) a network predicted a single true positive (TP), false positive (FP), and false negative (FN).
+In Fig. \ref{fig:matchingdiagram}(b), a situation where a single prediction covers both tunnels is more complicated. This might be present near a cluster of pillars and tunnels, where a clear separation is difficult to see. The tunnels might theoretically even cross each other. While discarding these results is possible, we will consider such a situation a success and label it as finding two TPs.
 
 Mathematically, the mapping is implemented by examining the tunnels in the following manner. After the postprocessing defined in Section \ref{sec:postprocessing} the predictions form a set $P$, whose elements are the binary masks of each connected component. Likewise, we can view the reference annotations as a set $L$, where each element is also a binary mask for each instance of a tunnel. Given these two sets, we define a mapping between the two sets as a set of tuples $(l,p)$, where $l$ and $p$ form a pair describing which predicted component matched a tunnel in the reference annotation. The set of all possible matches is defined as:
 
-\[ \text{mapping}(P,L)=\{(l,\hat{p})|\forall l \in L, \hat{p} = \text{argmax}_{p \in P} \text{recall}(p,l) \land \text{recall}(\hat{p},l) > 0.5 \} \]
+\begin{align*}
+ \text{mapping}(P,L)= \{(l,\hat{p})|(\forall l \in L, \hat{p} = \text{argmax}_{p \in P} \text{recall}(p,l)) \\
+ \land \, \text{recall}(\hat{p},l) > 0.5 \}
+\end{align*}
 
-The deciding factor is how much of the label is covered by the prediction, which is equivalent to the recall score, and we set it to 0.5, as at least half of the label must be covered. This definition formalises the mapping shown in Figure \ref{fig:matchingdiagram}.
+The decisive factor is how much of the label is covered by the prediction, which is equivalent to the recall score, and we set it to 0.5, as more than half of the label must be covered. This definition formalises the mapping shown in Fig. \ref{fig:matchingdiagram}.
 
 Lastly, we would like to investigate so-called clean matches, or 1-1 matches, where a prediction matches just a single label:
 
-\[ \text{clean\_mapping} = \{ (l, p) | p \text{ matches just single label} \} \]
+\[ \text{clean\_mapping} = \{ (l, p) | p \text{ matches just single label} \} \, .\]
 
-These definition allows us to talk about the result in Figure \ref{fig:matchingmultiple} in two ways. When considering all matches, the prediction $p_1$ covers both tunnels; however, when examining clean matches, no matches are found.
-
-The defined matching enables us to quantify how well the network performs at the pixel level, as well as in terms of identifying individual instances of tunnels.
+The defined matching enables us to quantify how well the network performs at the voxel level, as well as in terms of identifying individual instances of tunnels.
 
 \subsection*{All metrics}
 
 Now we will define the full set of Dice scores, which will be evaluated for each architecture:
 
 \begin{itemize}
-    \item{Test(pixel level): Look at the performance on crops of tunnels.}
-    \item{Evaluation (pixel level): Look at the performance derived from the overall stitched binary images}
-   \item{Postprocessed overall (pixel level): Look at the performance derived from the overall stitched binary images after postprocessing}
+    \item{Test(voxel level): Look at the performance on crops of tunnels.}
+    \item{Evaluation (voxel level): Look at the performance derived from the overall stitched binary images.}
+   \item{Postprocessed overall (voxel level): Look at the performance derived from the overall stitched binary images after postprocessing.}
 \end{itemize}
 
-Next, we will use the matches defined above. In these cases, the matches are taken, and a binary image is created by aggregating the binary sets using a binary logical OR operator. This means that for each pixel, if any of the corresponding pixels in the matches are true, the pixel in the resulting binary image will also be true. This aggregation process enables us to create a single comprehensive binary image that captures all the features represented by the matches, effectively highlighting the areas of interest identified earlier, ignoring artefacts caused by false positives and false negatives.
+Next, we will use the matches defined above. In these cases, the matches are taken, and a binary image is created by aggregating the binary sets using a binary logical OR operator. This means that for each voxel, if any of the corresponding voxels in the matches are true, the voxel in the resulting binary image will also be true. This aggregation process enables us to create a single comprehensive binary image that captures all the features represented by the matches, effectively highlighting the areas of interest identified earlier, ignoring artefacts caused by false positives and false negatives.
 
 \begin{itemize}
-    \item{Postprocessed matches (pixel level): Look at the performance derived from all the matches.}
-    \item{Postprocessed clean matches (pixel level): Look at the performance of just the clean matches.}
+    \item{Postprocessed matches (voxel level): Look at the performance derived from all the matches.}
+    \item{Postprocessed clean matches (voxel level): Look at the performance of just the clean matches.}
     \item{Tunnel metric (tunnel level): Here the performance is calculated from the tunnels instead of pixels.}
 \end{itemize}
 % todo: as an example, show the quad with all sorts of tunnels connected together.
@@ -619,16 +620,16 @@ Next, we will use the matches defined above. In these cases, the matches are tak
 \label{sec:ablationstudy}
 In this section, we present experimentally inferred sizes of hyperparameters for the 3D variant of AnisoUNet.
 
-It is not apparent how to set the tiling overlap, but the choice of this hyperparameter affects every neural network we have discussed. Also, every advanced neural network built on top of the AnisoUNet network, described in Section \ref{sec:anisounet}, has configurable model depth.
+It is not apparent how to set the tiling overlap, but the choice of this hyperparameter affects every neural network we have discussed. Also, every advanced neural network built on top of the AnisoUNet network, described in Section \ref{sec:anisounet}, has a configurable model depth.
 
 % TODO: think about citing something
-In general, it is accepted that the ability to teach deeper networks helped improve neural networks' performance and, in some sense, the ability to teach deeper networks led us to the neural network revolution. Nevertheless, the size of the network should be connected to the complexity of the problem, both in terms of the size of the context and the image complexity. To find a reasonable value for these parameters, we decided to do a 2D hyperparameter search study. 
+In general, it is accepted that the ability to teach deeper networks has helped improve the performance of neural networks, and, in some sense, the ability to teach deeper networks has led to the neural network revolution. Nevertheless, the size of the network should be connected to the complexity of the problem, both in terms of the size of the context and the image complexity. To determine a reasonable value for these parameters, we conducted a 2-D hyperparameter search study. 
 
 % todo: talk about this in the discussion
 
-Taking the aforementioned AnisoUNet3D architecture, we considered five different depths. The shallowest one has exactly two downsampling layers, so it is referenced as a network with depth equal to 2, and the deepest one has six downsampling layers. Six downsampling layers were chosen, as this is sufficient to reduce the original size of 7x64x64 to 7x1x1; therefore, a deeper network is not necessary.
+Taking the aforementioned AnisoUNet3D architecture, we considered five different depths. The shallowest one has exactly two downsampling layers, so it is referenced as a network with depth equal to 2, and the deepest one has six downsampling layers. Six downsampling layers were chosen, as this is sufficient to reduce the original size of 7x64x64 to 7x1x1; therefore, a deeper network is not feasible.
 
-For the overlap hyperparameter, we chose the values 0px, 10px, 20px, 30px, and 40px. The value 40px was chosen arbitrarily, as in this case, the neighbouring cells already share more than half of the volume.
+For the overlap hyperparameter, we considered the values 0px, 10px, 20px, 30px, and 40px. The value 40px was chosen arbitrarily, as in this case, the neighbouring cells already share more than half of the volume.
 
 As the overlap is a hyperparameter used during the inference on the whole images, this means that only five different architectures must be trained to perform this analysis. Since we are doing 4-fold cross-validation, we are training 20 models. Finally, since neural networks employ randomness, each combination of a fold and architecture is repeated three times, leading to training 60 models for this hyperparameter study.
 
@@ -644,7 +645,7 @@ Figure \ref{fig:parametersearchstudy} showcases the Dice score of the various ne
     \label{fig:parametersearchstudy}
 \end{figure}
 
-What we can also see from this hyperparameter search is that the effect of the number of downsampling layers is rather marginal. Another effect that is visible is that while changing between 10 pixels to 20 or 30 pixels does minimal change in the performance, the difference between 0 pixels and all others is visible in every case. Also, it is interesting to see that although the changes are not significantly different, the network with three downsampling layers consistently beat the others.
+What we can also see from this hyperparameter search is that the effect of the number of downsampling layers is rather marginal. Another effect that is visible is that while changing between 10 pixels to 20 or 30 pixels does minimal change in the performance, the difference between 0 pixels and all others is visible in every case. Also, it is interesting to see that although the changes are not dramatically different, the network with three downsampling layers consistently beat the others.
 
 \begin{figure}[htbp]
     \centering
@@ -660,16 +661,16 @@ What we can also see from this hyperparameter search is that the effect of the n
     \label{fig:postprocessoveralldepth}
 \end{figure}
 
-In Figure \ref{fig:evaldepth}, the effect of the depth is studied further on the Evaluation metric. Figure \ref{fig:postprocessoveralldepth} shows the Postprocessed overall metric.
+In Fig. \ref{fig:evaldepth}, the effect of the depth is studied further on the Evaluation metric. Figure \ref{fig:postprocessoveralldepth} shows the Postprocessed overall metric.
 
 First of all, the performance differences across various depths are not that substantial, but overall, the network with three downsampling steps and the network with five downsampling steps are achieving the highest averages consistently, whereas the networks with two and six downsampling steps are performing the worst. This can be explained by the fact that the deepest network is unreasonably large for our given problem, while the smallest network might suffer from not enough layers.
 
 However, it must be noted that the error bars are large and complicate any conclusion, as they show that the performance varies quite dramatically. This led us to investigate what could be causing this variety, and one possible explanation is the various performances on folds.
 
-Taking a look at Figure \ref{fig:evalquadsdepth} here, we can see the same metrics, but this time it is further divided among the various quadrants on which the network was tested. What is immediately evident to us is that the error bars are less varied, due to the performance differences across quadrants. Interestingly, in some cases, such as the models with size downsampling layers for the first quadrant, there are significant performance differences, but no apparent reason for this was found. Since, in this case, all bars represent averages of three numbers, it is plausible that, due to bad luck, the network may not achieve as good a performance as in other runs. Another possible reason is that the deeper variants have significantly more parameters and are overfitting on the sparse dataset.
+Taking a look at Fig. \ref{fig:evalquadsdepth} here, we can see the same metrics, but this time it is further divided among the various quadrants on which the network was tested. What is immediately evident to us is that the error bars are less varied, due to the performance differences across quadrants. Interestingly, in some cases, such as the models with size downsampling layers for the first quadrant, there are substantial performance differences, but no apparent reason for this was found. Since, in this case, all bars represent averages of three numbers, it is plausible that, due to bad luck, the network may not achieve as good a performance as in other runs. Another possible reason is that the deeper variants have significantly more parameters and are overfitting on the sparse dataset.
 % TODO talk in discussion
 
-In general, all models performed the best at the third quadrant (top left) and the third quadrant (bottom left), while the performance was lower on the second quadrant (top right) and the fourth quadrant (bottom right). Looking at the means and error bars now, it seems that the model with three downsampling layers performs best or close to best in all quadrants, whereas having more layers can sometimes reach similar performance it might also lead to worse (like in case of three downsampling steps in quadrant 3); hence, we cannot say that for our input size, the increased depth helps dramatically. However, our previous decision to choose the network of depth three in the following studies still stands, as although the performance difference is not significant, this network consistently outperforms the smaller network, and at the same time, has many fewer parameters than the larger networks.
+In general, all models performed the best at the third quadrant (top left) and the third quadrant (bottom left), while the performance was lower on the second quadrant (top right) and the fourth quadrant (bottom right). Looking at the means and error bars now, it seems that the model with three downsampling layers performs best or close to best in all quadrants, whereas having more layers can sometimes reach similar performance it might also lead to worse (like in case of three downsampling steps in the third quadrant); hence, we cannot say that for our input size, the increased depth helps dramatically. However, our previous decision to choose the network of depth three in the following studies still stands, as although the performance difference is not substantial, this network consistently outperforms the smaller network, and at the same time, has many fewer parameters than the larger networks.
 
 \begin{figure}[H]
     \centering
@@ -690,25 +691,25 @@ In general, all models performed the best at the third quadrant (top left) and t
 
 As we have discussed in the previous section, we did a 2D hyperparameter search to choose a reasonable estimate of the depth and overlap values, since these are used by our advanced neural networks. We picked three downsampling layers and an overlap of 10 pixels. In this section, the evaluation of other networks is presented.
 
-We decided to study the following architectures: a basic implementation of UNet called BasicUNet as described in Section \ref{sec:unet}. The anisotropic version AnisoUNet as described in Section \ref{sec:anisounet}, a version of AnisoUNet with the CSAM module as described in Section \ref{sec-csammodule}, and finally the UseNet variant of AnisoUNet architecture from Section \ref{sec-seblock}. All models use a 10 pixel overlap, and their depth is equal to three downsampling blocks, with the exception of BasicUNet, which has two downsampling blocks. For every AnisoUNet variant, both 3D and 2D versions were trained, as is described in Section \ref{sec:anisounet}.
+We decided to study the following architectures: a basic implementation of UNet called BasicUNet as described in Section \ref{sec:unet}. The anisotropic version AnisoUNet as described in Section \ref{sec:anisounet}, a version of AnisoUNet with the CSAM module as described in Section \ref{sec-csammodule}, and finally the UseNet variant of AnisoUNet architecture from Section \ref{sec-seblock}. All models use a 10-voxel overlap, and their depth is equal to three downsampling blocks, with the exception of BasicUNet, which has two downsampling blocks. For every AnisoUNet variant, both 3D and 2D versions were trained, as is described in Section \ref{sec:anisounet}.
 
 \subsection*{Metrics}
 
 Moving on to the results, Figs. \ref{fig:eval-diff-arch-dice}- \ref{fig:eval-diff-arch-tunnel} show the same metrics we discussed in Section \ref{sec:ablationstudy} aggregated across all the cross folds, while \ref{fig:eval-diff-arch-dice-quads}-\ref{fig:eval-diff-arch-tunnel-quads} show the performance for each quadrant. The means and standard deviations of all metrics were calculated exactly the same as in the previous section; again, every combination was trained three times.
 
-We can again see large error bars in all figures, especially when looking at the tunnel metrics in Figure \ref{fig:eval-diff-arch-tunnel}. Like in the previous section, this is caused by the difference in performance across the folds and will be discussed after analysing the averages across folds.
+We can again see large error bars in all figures, especially when looking at the tunnel metrics in Fig. \ref{fig:eval-diff-arch-tunnel}. Like in the previous section, this is caused by the difference in performance across the folds and will be discussed after analysing the averages across folds.
 
-We can clearly see that the Basicunet architecture is performing worse in every metric than the rest of the architectures, which points to the fact that the reduced depth and isotropic kernels are not suitable for highly anisotropic data such as ours, and shows that anisotropic kernels in the pooling operations greatly help the network learn.
+We can clearly see that the BasicUNet architecture is performing worse in every metric than the rest of the architectures, which points to the fact that the reduced depth and isotropic kernels are not suitable for highly anisotropic data such as ours, and shows that anisotropic kernels in the pooling operations greatly help the network learn.
 
 While it is difficult to assess the overall trends due to the error bars, the various attention mechanisms do not provide much improvement for the AnisoUNet neural network. The average values of the evaluation metric for the CSAM and USENet variants are slightly higher for the 3D versions, while they lower the average performance in the 2D case. Moreover, the 2D version of AnisoUNet slightly outperforms the 3D version. The same is happening for the AnisoUNet-CSAM variant, but it is not true for the UseNet variant.
 
-Moving to the advanced metric, we can observe that postprocessing is slightly improving the Dice score, indicating that the removal of all small components helps eliminate artefacts. While comparing the Figs \ref{fig:eval-diff-arch-clean} and \ref{fig:eval-diff-arch-all}, we can see that the networks reach higher performance when looking at the correctly identified tunnels. This means that the tunnel's accuracy is hindered by finding false tunnels and/or not fully segmenting real tunnels. It is also clear that the difference in performance between the cleanly matched and all matches is not substantial.
+Moving to the advanced metric, we can observe that postprocessing is slightly improving the Dice score, indicating that the removal of all small components helps eliminate artefacts. While comparing Figs. \ref{fig:eval-diff-arch-clean} and \ref{fig:eval-diff-arch-all}, we can see that the networks reach higher performance when looking at the correctly identified tunnels. This means that the tunnel's accuracy is hindered by finding false tunnels and/or not fully segmenting real tunnels. It is also clear that the difference in performance between the cleanly matched and all matches is not substantial.
 
 Finally, the Tunnel metric shows that the performance is even more varied across the folds. Interestingly, the 2D versions have a higher average performance than the 3D versions, but at the same time, they exhibit much greater variation in their performance.
 
-Moving to the evaluations per quadrant, in Figure \ref{fig:eval-diff-arch-dice-quads}, we can see that all neural architectures perform the best on the first and third quadrant, whereas the second quadrant is the most problematic. There does not seem to be a clear winner between the architectures, as a particular attention mechanism outperforms the standard AnisoUNet in one quadrant but is then surpassed in another. Lastly, the difference between the 2D and 3D variants is not significant in most quadrants; they differ significantly in the second quadrant, where the 2D versions outperform the 3D ones.
+Moving to the evaluations per quadrant, in Figure \ref{fig:eval-diff-arch-dice-quads}, we can see that all neural architectures perform the best on the first and third quadrant, whereas the second quadrant is the most problematic. There does not seem to be a clear winner between the architectures, as a particular attention mechanism outperforms the standard AnisoUNet in one quadrant but is then surpassed in another. Lastly, the difference between the 2D and 3D variants is not dramatic in most quadrants; they differ substantially in the second quadrant, where the 2D versions outperform the 3D ones.
 
-Looking at the advanced metrics, the overall Dice metric in Figure \ref{fig:eval-diff-arch-dice-overall-quads} shows that, again, the postprocessing consistently improves the performance of all models. Moving to the cleanly matched in Figure \ref{fig:eval_diff_arch_clean_match_dice_quads} and all matches in Figure \ref{fig:eval_diff_arch_matched_dice_quads}, it is clear that the networks are achieving significantly better performance compared to the overall score. Again, this suggests that the neural networks have issues with noise and false positives. Interestingly, the noteworthy performance difference between the second quadrant and the rest seems to disappear here. A possible explanation is that while the neural network performs similarly on clear data, its ability to handle noise and differentiate between real tunnels and artefacts varies. Lastly, the tunnel metric in Figure \ref{fig:eval-diff-arch-tunnel-quads} shows that the networks struggled to correctly identify what is and what is not a tunnel in the second quadrant. The best performance was achieved by the 2D version of AnisoUNet, reaching a Dice score of $0.772$. Again, it appears that the 2D version tends to outperform the 3D version in this task as well. It is also noteworthy that in this metric, the performance of a given network can vary significantly, as in the case of 2D UseNet in the third quadrant. No clear explanation was found, and it is likely caused by random fluctuations in the training performance, as these bars were generated from three values.
+Looking at the advanced metrics, the overall Dice metric in Fig. \ref{fig:eval-diff-arch-dice-overall-quads} shows that, again, the postprocessing consistently improves the performance of all models. Moving to the cleanly matched in Fig. \ref{fig:eval_diff_arch_clean_match_dice_quads} and all matches in Fig. \ref{fig:eval_diff_arch_matched_dice_quads}, it is clear that the networks are achieving substantially better performance compared to the overall score. Again, this suggests that the neural networks have issues with noise and false positives. Interestingly, the noteworthy performance difference between the second quadrant and the rest seems to disappear here. A possible explanation is that while the neural network performs similarly on clear data, its ability to handle noise and differentiate between real tunnels and artefacts varies. Lastly, the tunnel metric in Fig. \ref{fig:eval-diff-arch-tunnel-quads} shows that the networks struggled to correctly identify what is and what is not a tunnel in the second quadrant. The best performance was achieved by the 2D version of AnisoUNet, reaching a Dice score of $0.772$. Again, it appears that the 2D version tends to outperform the 3D version in this task as well. It is also noteworthy that in this metric, the performance of a given network can vary substantially, as in the case of 2D UseNet in the third quadrant. No clear explanation was found, and it is likely caused by random fluctuations in the training performance, as these bars were generated from three values.
 
 \begin{figure}[htbp]
     \begin{center}
@@ -784,25 +785,25 @@ Looking at the advanced metrics, the overall Dice metric in Figure \ref{fig:eval
 \end{figure}
 
 \subsection*{Benchmarks}
-The neural network was trained and run on a machine at the faculty with AMD EPYC 7702P 64 Core CPU, 504 GB of memory, and the A100-SXM4-80GB Nvidia GPU. Table \ref{table:benchmarks} shows the inference time of the network and memory requirements. The number of parameters and the estimated size were gathered using the \texttt{torch-info} package, while the peak memory time was gathered using \texttt{PyTorch} utilities.
+The neural network was trained and run on a computational server with AMD EPYC 7702P 64 Core CPU, 504 GB of memory, and the A100-SXM4-80GB Nvidia GPU. Table \ref{table:benchmarks} shows the inference time of the network and memory requirements. The number of parameters and the estimated size were gathered using the \texttt{torch-info} package, while the peak memory time was gathered using \texttt{PyTorch} utilities.
 
 \begin{table}[htbp]
     \centering
     \resizebox{\textwidth}{!}{
     \begin{tabular}{|c|c|c|c|c|c|c|}
         \hline
-        \textbf{Architecture} & \textbf{Parameters} & \textbf{peak VRAM [MB]} & \textbf{inference time [ms]} & \textbf{throughput [samples/sec]} \\
+        \textbf{Architecture} & \textbf{Parameters} & \textbf{peak VRAM [MB]} & \textbf{inference time [ms]} & \textbf{throughput [samples/s]} \\
         \hline
-        Aniso(2D) & 7701825 & 1578.11 & 21.036 & 1521.2 \\ \hline
-        Aniso(3D) & 21711297 & 1689.06 & 35.6926 & 896.55 \\ \hline
-        UseNet(2D) & 7735509 & 1578.38 & 22.847 & 1400.62 \\ \hline
-        UseNet(3D) & 21744981 & 1689.32 & 37.5545 & 852.1 \\ \hline
-        CSAM(2D) & 8259587 & 1647.08 & 25.4008 & 1259.8 \\ \hline
-        CSAM(3D) & 22269059 & 1757.44 & 39.9889 & 800.22 \\ \hline
-        BasicUNet & 5420737 & 1449.24 & 18.2588 & 1752.58 \\ \hline
+        Aniso(2D) & 7.70 M & 1578.11 & 21.04 & 1521.2 \\ \hline
+        Aniso(3D) & 21.71 M & 1689.06 & 35.69 & 896.55 \\ \hline
+        UseNet(2D) & 7.73 M & 1578.38 & 22.85 & 1400.62 \\ \hline
+        UseNet(3D) & 21.74 M & 1689.32 & 37.55 & 852.1 \\ \hline
+        CSAM(2D) & 8.26 M & 1647.08 & 25.40 & 1259.8 \\ \hline
+        CSAM(3D) & 22.27 M & 1757.44 & 39.99 & 800.22 \\ \hline
+        BasicUNet & 5.42 M & 1449.24 & 18.26 & 1752.58 \\ \hline
     \end{tabular}
     }
-    \caption{Memory benchmarks and inference times for the investigated networks. Each inference time is an average of 200 runs on random data of shape $7\times 64 \times 64$ with batch size 32. A sample corresponds to a single tile.}
+    \caption{Memory footprints and inference times for the investigated networks. Each inference time is an average of 200 runs on random data of shape $7\times 64 \times 64$ with batch size of 32. A sample corresponds to a single tile.}
     \label{table:benchmarks}
 \end{table}
 
@@ -816,65 +817,65 @@ Figure \ref{fig:qualitative-quad2} shows the neural network prediction for vario
     \begin{subfigure}[b]{0.45\textwidth}
         \centering
         \begin{overpic}[width=\textwidth]{resources/qualitative/quad2eval/t017-composite-slice7.png}
-            \put(8,85){\Large  \textcolor{white}{\textbf{(a)}}}
+            \put(3,90){\Large  \textcolor{white}{\textbf{(a)}}}
         \end{overpic}
         \label{fig:quad2orig}
     \end{subfigure}
     \begin{subfigure}[b]{0.45\textwidth}
         \centering
         \begin{overpic}[width=\textwidth]{resources/qualitative/quad2eval/t017-slice7-basicunet.png}
-            \put(8,85){\Large  \textcolor{white}{\textbf{(b)}}}
+            \put(3,90){\Large  \textcolor{white}{\textbf{(b)}}}
         \end{overpic}
         \label{fig:quad2basicunet}
     \end{subfigure}
     \begin{subfigure}[b]{0.45\textwidth}
         \centering
         \begin{overpic}[width=\textwidth]{resources/qualitative/quad2eval/t017-slice7-csam3d.png}
-            \put(8,85){\Large  \textcolor{white}{\textbf{(c)}}}
+            \put(3,90){\Large  \textcolor{white}{\textbf{(c)}}}
         \end{overpic}
         \label{fig:quad2csam3d}
     \end{subfigure}
     \begin{subfigure}[b]{0.45\textwidth}
         \centering
         \begin{overpic}[width=\textwidth]{resources/qualitative/quad2eval/t017-slice7-csam2d.png}
-            \put(8,85){\Large  \textcolor{white}{\textbf{(d)}}}
+            \put(3,90){\Large  \textcolor{white}{\textbf{(d)}}}
         \end{overpic}
         \label{fig:quad2csam2d}
     \end{subfigure}
-    \caption{Predictions on the second quadrant. (A) shows the original image (contrast-enhanced) with binarised reference annotations in magenta. (B) shows the prediction of BasicUNet, (C) 3D version of CSAM variant, (D) shows the 2D version of CSAM. Green represents TP, red stands for FP and blue is for FN.}
+    \caption{Predictions on the second quadrant. (a) The original image (contrast-enhanced) with binarised reference annotations in magenta. (b) The prediction of BasicUNet, (c) 3D version of CSAM variant, (d) shows the 2D version of CSAM. Green represents TP, red stands for FP and blue for FN.}
     \label{fig:qualitative-quad2}
 \end{figure}
 
-Continuing with the analysis in the third quadrant, where the 2D UseNet performance varied quite significantly. The Figure \ref{fig:qualitative-quad3} shows that due to probably bad luck during training, one of the models (reaching a tunnel dice score of 0.7) managed to correctly match two of the three tunnels, while the last one failed to match any (tunnel dice score is about 0.47), due to the poor prediction shown in the blue colour. The poorer prediction on the stitched images lead to missed opportunities with matching.
+Continuing with the analysis in the third quadrant, where the 2D UseNet performance varied quite substantially. Figure \ref{fig:qualitative-quad3} shows that due to probably bad luck during the training, one of the models (reaching a tunnel Dice score of 0.7) managed to correctly match two of the three tunnels, while the last one failed to match any (tunnel Dice score is about 0.47), due to the poor prediction shown in the blue colour. The poorer prediction on the stitched images lead to missed opportunities with matching.
 
 \begin{figure}[htbp]
     \centering
     \begin{subfigure}[b]{0.3\textwidth}
         \centering
         \begin{overpic}[width=\textwidth]{resources/qualitative/quad3eval/t017-ce-slice7-gimp-crop.png}
-            \put(8,85){\Large  \textcolor{white}{\textbf{(a)}}}
+            \put(3,85){\Large  \textcolor{white}{\textbf{(a)}}}
         \end{overpic}
         \label{fig:quad3gimp}
     \end{subfigure}
     \begin{subfigure}[b]{0.3\textwidth}
         \centering
         \begin{overpic}[width=\textwidth]{resources/qualitative/quad3eval/nice-slice7-crop.png}
-            \put(8,85){\Large  \textcolor{white}{\textbf{(b)}}}
+            \put(3,85){\Large  \textcolor{white}{\textbf{(b)}}}
         \end{overpic}
         \label{fig:quad3nice}
     \end{subfigure}
     \begin{subfigure}[b]{0.3\textwidth}
         \centering
-        \begin{overpic}[width=\textwidth]{resources/qualitative/quad3eval/nice-slice7-crop.png}
-            \put(8,85){\Large  \textcolor{white}{\textbf{(c)}}}
+        \begin{overpic}[width=\textwidth]{resources/qualitative/quad3eval/bad-slice7-crop.png}
+            \put(3,85){\Large  \textcolor{white}{\textbf{(c)}}}
         \end{overpic}
         \label{fig:quad3bad}
     \end{subfigure}
-    \caption{Predictions on part of the third quadrant. (A) shows the original image (contrast-enhanced) with reference annotations. Different colours correspond to different tunnels. (B) and (C) show predictions of two different models. Red means that a tunnel from reference was not matched to any predicted tunnel, while blue means that a predicted tunnel did not match any reference tunnel.}
+    \caption{Predictions on part of the third quadrant. (a) The original image (contrast-enhanced) with reference annotations. Different colours correspond to different tunnels. (b) and (c) Predictions of two different UseNet models. Red means that a tunnel from reference was not matched to any predicted tunnel, while blue means that a predicted tunnel did not match any reference tunnel.}
     \label{fig:qualitative-quad3}
 \end{figure}
 
-In the final study, we took a look at the first quadrant, which reached the highest scores. In Figure \ref{fig:qualitative-quad1}, a part of the dataset with minimal artefacts is shown. As can be seen, our networks tend to have a problem with oversegmentation and mark small structures as tunnels even though they are not. While the CSAM and UseNet variants do not improve the prediction by AnisoUNet, the prediction by AnisoUNet looks decent.
+Finally, we take a look at the first quadrant, which reached the highest scores. In Fig. \ref{fig:qualitative-quad1}, a part of the dataset with minimal artefacts is shown. As can be seen, our networks tend to have a problem with oversegmentation and mark small structures as tunnels even though they are not. While the CSAM and UseNet variants do not improve the prediction by AnisoUNet, the prediction by AnisoUNet looks decent.
 
 \begin{figure}[htbp]
     \centering
