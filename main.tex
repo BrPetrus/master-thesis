@@ -61,11 +61,11 @@
     keywords    = {neural networks, segmentation, tunnelling nanotubes, U-Net architecture, fluorescence microscopy},
     TeXkeywords = {neural networks, segmentation, tunnelling nanotubes, U-Net architecture, fluorescence microscopy},
     abstract    = {%
-        This thesis addresses the automated semantic segmentation of Tunnelling Nanotubes (TNTs) in 3D \textit{Drosophila} wing microscopy images. The work tackled challenges posed by high spatial anisotropy and sparse reference annotations.
+        This thesis addresses the automated semantic segmentation of tunnelling nanotubes (TNTs) in 3D \textit{Drosophila} wing microscopy images. The work tackled challenges posed by a high spatial anisotropy of the analysed image data and its sparse reference annotations.
 
-        The primary contribution is the development of AnisoUNet, an anisotropic U-Net-like architecture designed to effectively handle the highly anisotropic nature of the 3D data. The solution utilised a robust 4-fold cross-validation pipeline.
+        The primary contribution is the development of AnisoUNet, an anisotropic U-Net-like architecture designed to effectively handle the highly anisotropic nature of the processed 3D image data. The solution utilised a robust 4-fold cross-validation pipeline.
 
-        The study demonstrates the feasibility of using U-Net-like architectures for segmenting these nanoscale structures under data limitations. The resulting segmentation capability offers a basis for automating the quantitative analysis of cell morphogenesis dynamics.
+        The study demonstrates the feasibility of using U-Net-like architectures for segmenting nanoscale curvilinear structures. The resulting segmentation capability offers a basis for automating the quantitative analysis of TNT morphogenesis and dynamics.
     },
     thanks      = {%
         I am very grateful to my advisor, Assoc. Prof. RNDr. Martin Maška, Ph.D., for his sustained mentorship, constructive critiques, and ready availability throughout the whole time.
@@ -882,36 +882,36 @@ Finally, we take a look at the first quadrant, which reached the highest scores.
     \begin{subfigure}{0.4\textwidth}
         \centering
         \begin{overpic}[width=\textwidth]{resources/qualitative/quad1eval/t000-composite-slice-1.png}
-            \put(8,85){\Large  \textcolor{white}{\textbf{(a)}}}
+            \put(3,87){\Large  \textcolor{white}{\textbf{(a)}}}
         \end{overpic}
         \label{fig:quad1orig}
     \end{subfigure}
     \begin{subfigure}{0.40\textwidth}
         \centering
         \begin{overpic}[width=\textwidth]{resources/qualitative/quad1eval/aniso2d-slice1.png}
-            \put(8,85){\Large  \textcolor{white}{\textbf{(b)}}}
+            \put(3,87){\Large  \textcolor{white}{\textbf{(b)}}}
         \end{overpic}
         \label{fig:quad1aniso}
     \end{subfigure}
     \begin{subfigure}{0.40\textwidth}
         \centering
         \begin{overpic}[width=\textwidth]{resources/qualitative/quad1eval/usenet2d-slice1.png}
-            \put(8,85){\Large  \textcolor{white}{\textbf{(c)}}}
+            \put(3,87){\Large  \textcolor{white}{\textbf{(c)}}}
         \end{overpic}
         \label{fig:quad1usenet}
     \end{subfigure}
     \begin{subfigure}{0.40\textwidth}
         \centering
         \begin{overpic}[width=\textwidth]{resources/qualitative/quad1eval/csam2d-slice-1.png}
-            \put(8,85){\Large  \textcolor{white}{\textbf{(d)}}}
+            \put(3,87){\Large  \textcolor{white}{\textbf{(d)}}}
         \end{overpic}
         \label{fig:quad1csam}
     \end{subfigure}
-    \caption{Predictions on the first quadrant. (A) shows the original image (contrast-enhanced) with reference annotations in magenta. (B) shows the prediction of 2D AnisoUNet, (C) 2D version of UseNet variant, (D) shows the 2D version of CSAM variant. Green represents TP, red stands for FP and blue is for FN}
+    \caption{Predictions on the first quadrant. (a) The original image (contrast-enhanced) with reference annotations in magenta. (b) The prediction of 2D AnisoUNet, (c) 2D version of UseNet variant, (d) 2D version of CSAM variant. Green represents TP, red stands for FP and blue for FN.}
     \label{fig:qualitative-quad1}
 \end{figure}
 
-\chapter{Discussion and conclusion}
+\chapter{Conclusion}
 % what to do next
 % talk about:
 % - stitching x overlap size x size
@@ -924,13 +924,13 @@ Finally, we take a look at the first quadrant, which reached the highest scores.
 % what could be done
 % - 
 
-This thesis successfully explored the application of U-Net-like architectures for the automated semantic segmentation of Tunneling Nanotubes (TNTs) in 3D fluorescent microscopy images of Drosophila wings. The research was conducted on a challenging dataset defined by high anisotropy and extremely sparse annotations, with ground truth labels available for only two time steps.
+This thesis successfully explored the application of U-Net-like architectures for the automated semantic segmentation of tunnelling nanotubes (TNTs) in 3D fluorescence microscopy images of \textit{Drosophila} wings. The research was conducted on a challenging dataset defined by high anisotropy and extremely sparse annotations, with reference labels available for only two time frames.
 
-To overcome these significant data constraints, the work focused on three core contributions: the AnisoUNet architecture, a robust training strategy, and a complete inference system. We designed and implemented an anisotropic variant of the standard U-Net (AnisoUNet), which was crucial for effectively processing 3D images with severely restricted Z-axis resolution and enabling the training of deeper networks. This was supported by a robust 4-fold cross-validation training pipeline, a strategy essential for maximising the utility of the sparse annotations. Finally, a comprehensive and user-friendly inference implementation was provided making the segmentation tool immediately accessible to non-technical users in biological research.
+To overcome these image data constraints, the work focused on three core contributions: the AnisoUNet architecture, a robust training strategy, and a complete inference system. We designed and implemented an anisotropic variant of the standard U-Net (AnisoUNet), which was crucial for effectively processing 3D images with severely restricted z-axis resolution and enabling the training of deeper networks. This was supported by a robust 4-fold cross-validation training pipeline, a strategy essential for maximising the utility of the sparse annotations. Finally, a comprehensive and user-friendly inference implementation was provided, making the segmentation tool immediately accessible to non-technical users in biological research.
 
-Multiple architectures, including variants with attention mechanisms (CSAM and USE-Net), were evaluated. The results demonstrated the feasibility of using deep learning for segmenting these fine nanotubular structures, even under such data limitations. The achieved performance in real-world testing and across most quadrants typically ranged around 0.5. This indicates that while the networks can find meaningful predictions, their main limitation is a tendency to oversegment and flag various cellular protrusions as false tunnels. No single complex architecture consistently outperformed the simpler AnisoUNet across all tests, suggesting that future improvements should focus more on data quality and post-processing rather than architectural complexity.
+Multiple architectures, including variants with attention mechanisms (CSAM and USE-Net), were evaluated. The results demonstrated the feasibility of using deep learning for segmenting these fine nanotubular structures, even under such data limitations. The achieved performance in real-world testing and across most quadrants typically ranged around 0.5 of Dice score. This indicates that while the networks can find meaningful predictions, their main limitation is a tendency to oversegment and flag various cellular protrusions as false tunnels. No single complex architecture consistently outperformed the simpler AnisoUNet across all tests, suggesting that future improvements should focus more on data quality and post-processing rather than architectural complexity.
 
-In the future, it might be interesting to refine the post-processing e.g. using a different method to segment the pillars. Also, future research might focus on temporal tracking of these tunnels once more annotations are acquired.
+In the future, it might be interesting to refine the post-processing, e.g. using a different method to segment the pillars. Also, future research might focus on temporal tracking of these tunnels once more annotations are acquired.
 
 \appendix
 \chapter{Digital Archive}
