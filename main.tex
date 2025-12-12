@@ -139,7 +139,7 @@
 
 Semantic segmentation is a critical task in computer vision that involves assigning a specific class label to every image element in a given image. This thesis focuses on the segmentation of tunnelling nanotubes (TNTs), which are cell membrane protrusions observed during cell morphogenesis in \textit{Drosophila} wings. While the exact function of these structures remains under investigation, their image-based analysis is currently limited by the difficulty of manually annotating them in three-dimensional space.
 
-The dataset for this research, provided by Prof Osamu Shimmi from the University of Tartu, captures a cellular structure known as the Interplanar Amida Network (IPAN). This network consists of vertical "pillars" connected by horizontal TNTs, captured using fluorescence microscopy. The image data presents significant challenges for automated analysis: it is heavily anisotropic, and while the dataset spans twenty time slots, reference annotations were provided for only two time steps. As such, the dataset is sparsely annotated.
+The dataset for this research, provided by Prof Osamu Shimmi from the University of Tartu, captures a cellular structure known as the Interplanar Amida Network (IPAN). This network consists of vertical "pillars" connected by horizontal TNTs, captured using fluorescence microscopy. The image data presents significant challenges for automated analysis: it is heavily anisotropic, and while the dataset spans twenty frames, reference annotations were provided for only two time frames. As such, the dataset is sparsely annotated.
 
 To address these challenges, we adapted the U-Net architecture, a standard for biomedical segmentation, to better handle the specific constraints of our image data. An anisotropic version of a U-Net-like architecture called AnisoUNet, which utilises anisotropic kernels, is introduced. Additionally, we investigate an attention mechanism to improve the network's performance. The performance of our network is extensively evaluated using a 4-fold cross-validation, and its design choices are justified using an ablation study.
 
@@ -165,7 +165,7 @@ During the development of the larva, specifically in the pre-pupal stage, the pu
 
 In \parencite{Tran2024Programmed}, the authors refer to the overall structure as Interplanar Amida Network (IPAN). They note that IPAN is dynamic and can change significantly in just half an hour, during which the TNTs may connect with different vertical pillars or completely disappear, while some TNTs exhibit stability. While the authors delve into greater depth regarding what exactly happens during the creation and disappearance of these structures, they are limited to a qualitative investigation. The goal of this thesis was to explore U-Net-like models for segmenting tunnelling nanotubes in these 3D images, thereby helping researchers analyse TNT properties in a qualitative fashion. 
 
-Although multiple datasets were acquired, we obtained sparse reference annotations for only one of them; hence, we will focus on this one in this work. In Fig. \ref{fig:dataexamples}, a single z-slice and a volume visualisation of the image data are shown. The whole dataset comprises twenty frames and was captured by using a single fluorescent dye. Each frame consists of seven $512 \times 512$ grayscale, 16-bit images. Each of the z-slices represents a region of $56.32 \times 56.32 \, \mu m$ and the slices are $1\mu m$ apart, meaning that each voxel is about $1 \times 0.11 \times 0.11 \, \mu m$ in size. Since the dye is activated in cell membranes, the pillars in our data appear hollow. 
+Although multiple datasets were acquired, we obtained sparse reference annotations for only one of them; hence, we will focus on this one in this work. In Fig. \ref{fig:dataexamples}, a single z-slice and a volume visualisation of the image data are shown. The whole dataset comprises twenty frames and was captured by using a single fluorescent dye. Each frame consists of seven $512 \times 512$ grayscale, 16-bit images. Each of the z-slices represents a region of $56.32 \times 56.32 \, \mu m$ and the slices are $1 \, \mu m$ apart, meaning that each voxel is about $1 \times 0.11 \times 0.11 \, \mu m$ in size. Since the dye is activated in cell membranes, the pillars in our data appear hollow. 
 
 \section*{Labelling and preprocessing}
 
@@ -173,38 +173,37 @@ The biologists created a protocol which they followed by annotating the samples.
 
 After preprocessing is done, the protocol states that, by picking random frames, at least 100 instances of tunnels must be annotated, and each frame must be fully annotated. Also, segments originating from the surrounding tissue should be ignored. According to this protocol, two frames were picked — the 0th and 17th frames — to label. The reference annotations for a single slice of the 0th frame are shown in Fig. \ref{fig:gt-slice-3}. Overall, 127 tunnels are fully annotated.
 
-Sometimes it is rather challenging to decide if the protrusion is a TNT or not. In Figure \ref{fig:gt-slice-3}, two protrusion-like structures are highlighted using yellow circles. Although their structure appears essentially the same as that of a TNT, it is unclear why they were not labelled too. This illustrates a possible difficulty in assessing the segmentation accuracy
+Sometimes it is rather challenging to decide if the protrusion is a TNT or not. In Fig. \ref{fig:gt-slice-3}, two protrusion-like structures are highlighted using yellow circles. Although their structure appears essentially the same as that of a TNT, it is unclear why they were not labelled too. This illustrates a possible difficulty in assessing the segmentation accuracy
 
 Afterwards, the labels were manually checked, and two cases of label duplication were identified and corrected by assigning a unique number to the new connected component.
 
 \begin{figure}[p]
     \centering
-    \begin{subfigure}{0.48\textwidth}
+    \begin{overpic}[width=0.42\textwidth]{resources/t017z0_saturated1percent.png}
         \centering
-        \includegraphics[width=\textwidth]{resources/mask000-slice3-composite-circles.png}
-    \end{subfigure}
-    \begin{subfigure}{0.48\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{resources/mask000-slice3-saturated.png}
-    \end{subfigure}\hfill
-    \caption{Single slice of the data on the left (contrast-enhanced) with overlaid tunnel labels in magenta. Two yellow circles emphasise two places with potentially missing labels. On the right, the instance labels for that particular slice.}
-    \label{fig:gt-slice-3}
+        \put(3,90){\Large  \textcolor{white}{\textbf{(a)}}}
+    \end{overpic}\hfill
+    \begin{overpic}[width=0.55\textwidth]{resources/data/volume_viewer_modified.png}
+        \put(3,68){\Large{\textbf{(b)}}}
+    \end{overpic}
+    \caption{(a) Single z-slice of the image data at T=17. (b) Volume visualisation of the IPAN structure. Both images were contrast-enhanced for visualisation purposes.}
+    % \caption{A single z-slice of the image data at the 17th frame is shown. Right: a volume visualisation of the IPAN strudata from a different frame. Both images were contrast-enhanced for visualisation purposes.}
+    \label{fig:dataexamples}
 \end{figure}
 
 \begin{figure}[p]
     \centering
-    \begin{subfigure}{0.42\textwidth}
-        \includegraphics[width=\textwidth]{resources/t017z0_saturated1percent.png}
-        \label{fig:dataexamplesslice}
-    \end{subfigure}\hfill
-    \begin{subfigure}{0.55\textwidth}
-        \includegraphics[width=\textwidth]{resources/data/volume_viewer_modified.png}
-        \label{fig:dataexamlesvolume}
-    \end{subfigure}
-    \caption{A single z-slice of the image data at time 17 is shown. Right: a volume visualisation of the IPAN strudata from different time slots. Both images were contrast-enhanced for visualisation purposes.}
-    \label{fig:dataexamples}
+    \begin{overpic}[width=0.48\textwidth]{resources/mask000-slice3-composite.png}
+        \centering
+        \put(3,90){\Large  \textcolor{white}{\textbf{(a)}}}
+    \end{overpic}
+    \begin{overpic}[width=0.48\textwidth]{resources/mask000-slice3-saturated.png}
+        \centering
+        \put(3,90){\Large  \textcolor{white}{\textbf{(b)}}}
+    \end{overpic}\hfill
+    \caption{(a) Single z-slice of the image data (contrast-enhanced) with overlaid tunnel labels in magenta. Two yellow circles emphasise two places with potentially missing labels. (b) The instance labels for that particular z-slice.}
+    \label{fig:gt-slice-3}
 \end{figure}
-
 
 \chapter{Related Work}
 
@@ -447,40 +446,32 @@ A potential issue with using small tiles centred at tunnels is that we may intro
 
 All our networks are trained on square crops of size $7 \times 64 \times 64$ voxels, but the original images are larger at $7 \times 512 \times 512$ voxels. This is solved by using an overlap-tiling strategy similar to the one by Ronneberger et al. \parencite{Ronneberger2015}. The original images are split into tiles first, with a configurable amount of overlap. The network sequentially processes the tiles and then stitches them together to create the final prediction. The predictions are then thresholded with a value of 0.5.
 
-\begin{figure}[htbp]
+\begin{figure}[tbp]
     \centering
-    \begin{subfigure}[t]{0.45\textwidth}
+    \begin{overpic}[width=0.46\textwidth]{resources/overlaps_and_processing/quad3.png}
         \centering
-        \includegraphics[width=\textwidth]{resources/overlaps_and_processing/quad3.png}
-        \caption{}
-        \label{fig:stitchingoverlaporig}
-    \end{subfigure}\hfill
-    \begin{subfigure}[t]{0.45\textwidth}
+        \put(3,90){\Large  \textcolor{white}{\textbf{(a)}}}
+    \end{overpic}
+    \begin{overpic}[width=0.46\textwidth]{resources/overlaps_and_processing/quad3_10px_postprocessed.png}
         \centering
-        \includegraphics[width=\textwidth]{resources/overlaps_and_processing/quad3_10px_postprocessed.png}
-        \caption{} 
-        \label{fig:stitchingoverlappost}
-    \end{subfigure}
+        \put(3,90){\Large  \textcolor{white}{\textbf{(b)}}}
+    \end{overpic}
 
-    \begin{subfigure}[t]{0.45\textwidth}
+    \begin{overpic}[width=0.46\textwidth]{resources/overlaps_and_processing/quad3_0px_threshold_0_circles.png}
         \centering
-        \includegraphics[width=\textwidth]{resources/overlaps_and_processing/quad3_0px_threshold_0_circles.png}
-        \caption{}
-        \label{fig:stitchingoverlap0}
-    \end{subfigure}\hfill
-    \begin{subfigure}[t]{0.45\textwidth}
+        \put(3,90){\Large  \textcolor{white}{\textbf{(c)}}}
+    \end{overpic}
+    \begin{overpic}[width=0.46\textwidth]{resources/overlaps_and_processing/quad3_10px_threshold_0.png}
         \centering
-        \includegraphics[width=\textwidth]{resources/overlaps_and_processing/quad3_10px_threshold_0.png}
-        \caption{}
-        \label{fig:stitchingoverlap10}
-    \end{subfigure}
+        \put(3,90){\Large  \textcolor{white}{\textbf{(d)}}}
+    \end{overpic}
 
-    \caption{\ref{fig:stitchingoverlaporig} shows a crop of the dataset which has been contrast-adjusted, and the \ref{fig:stitchingoverlappost} shows neural network prediction with 10px overlap between tiles and postprocessing. The second row illustrates the impact of tile overlaps on the network's thresholded prediction. In \ref{fig:stitchingoverlap0}, no overlap was used, and possible edge artefacts are emphasised with blue circles, while overlap with 10 px is used in \ref{fig:stitchingoverlap10}.}
+    \caption{(a) A crop of the dataset which has been contrast-adjusted. (b) Neural network prediction with 10 pixel overlap between tiles and postprocessing applied.(c) Thresholded prediction without any tiling. Possible edge artefacts are emphasised with blue circles. (d) Thresholded prediction with 10 pixel overlap.}
 
     \label{fig:stitchingoverlap}
 \end{figure}
 
-The idea of using a configurable overlap size originated from the following observation. In Fig. \ref{fig:stitchingoverlap0}, several sharp artefacts can be seen at tile borders, possibly because only part of the structure is visible, leading the network to classify it as a tunnel. This led us to the idea that if we use larger overlaps and aggregate them, these effects on tile borders will get suppressed. As can be seen in Fig. \ref{fig:stitchingoverlap10}, using a larger overlap suppresses some of these artefacts. For aggregating the overlaps, a simple averaging was chosen due to its simplicity.
+The idea of using a configurable overlap size originated from the following observation. In Fig. \ref{fig:stitchingoverlap}(c), several sharp artefacts can be seen at tile borders, possibly because only part of the structure is visible, leading the network to classify it as a tunnel. This led us to the idea that if we use larger overlaps and aggregate them, these effects on tile borders will get suppressed. As can be seen in Fig. \ref{fig:stitchingoverlap}(d), using a larger overlap suppresses some of these artefacts. For aggregating the overlaps, a simple averaging was chosen due to its simplicity.
 
 % todo in discussion mention that maybe this was not the best idea, maybe we
 % should have chosen larger context. The context x precision tradeoff.
@@ -519,16 +510,16 @@ The overall structure of the project code is as follows: a single TNTSegment pac
 
 As for the other tooling, here is the list of the most important tools:
 \begin{itemize}
-    \item{MLflow \parencite{Zaharia2018MLflow} is a tool for handling machine learning pipelines. It allows for tracking experiments, comparing results, saving and loading models, deploying models, and more. In this work, it's nice to use UI was used to keep track of the experiments.}
-    \item{NumPy \parencite{Harris2020Numpy} has become one of the fundamental packages in scientific computing in the Python ecosystem. It provides a very efficient implementation of many common operations on N-dimensional arrays.}
-    \item{scikit-learn \parencite{Pedregosa2011scikit} provides a great framework for building machine learning models, not just deep learning models. The library was primarily used for splitting datasets and utilising its framework for handling batching. }
-    \item{scikit-image \parencite{vanderWalt2014skimage} is a package providing various algorithms for processing images, e.g. segmentation algorithms, point transform, and mathematical morphology. I used it to handle the postprocessing of masks and to find connected components.}
-    \item{PyTorch \parencite{Ansel2024PyTorch} is a popular deep learning framework with a focus on flexibility and speed. This enables users to create highly performing neural networks quickly. It automatically creates computational graphs, allowing it to compute gradient updates efficiently. It automatically handles connecting to various hardware, such as CPUs and GPUs. These advantages made PyTorch one of the most used packages in the Python machine learning ecosystem.}
-    \item{MONAI \parencite{Cardoso2022Monai}is another open-source framework for building neural networks on top of PyTorch. It focuses on building models used in the medical area. In the project, this package handles augmentations of the dataset, providing first-class support for 3D data, unlike PyTorch.}
-    \item{Matplotlib \parencite{Hunter2007Matplotlib} is a library for visualising data in an interactive fashion. The vast majority of graphs in this text were created using it.}
-    \item{Pandas \parencite{Pandas} is a popular library for handling data. It provides a DataFrame object for efficient data manipulation, reshaping, and indexing, among many other things. In this work, the final evaluations were created using the Pandas library.}
+    \item{\texttt{MLflow} \parencite{Zaharia2018MLflow} is a tool for handling machine learning pipelines. It allows for tracking experiments, comparing results, saving and loading models, deploying models, and more. In this work, it's nice to use UI was used to keep track of the experiments.}
+    \item{\texttt{NumPy} \parencite{Harris2020Numpy} has become one of the fundamental packages in scientific computing in the Python ecosystem. It provides a very efficient implementation of many common operations on N-dimensional arrays.}
+    \item{\texttt{scikit-learn} \parencite{Pedregosa2011scikit} provides a great framework for building machine learning models, not just deep learning models. The library was primarily used for splitting datasets and utilising its framework for handling batching. }
+    \item{\texttt{scikit-image} \parencite{vanderWalt2014skimage} is a package providing various algorithms for processing images, e.g. segmentation algorithms, point transform, and mathematical morphology. I used it to handle the postprocessing of masks and to find connected components.}
+    \item{\texttt{PyTorch} \parencite{Ansel2024PyTorch} is a popular deep learning framework with a focus on flexibility and speed. This enables users to create highly performing neural networks quickly. It automatically creates computational graphs, allowing it to compute gradient updates efficiently. It automatically handles connecting to various hardware, such as CPUs and GPUs. These advantages made \texttt{PyTorch} one of the most used packages in the Python machine learning ecosystem.}
+    \item{\texttt{MONAI} \parencite{Cardoso2022Monai}is another open-source framework for building neural networks on top of \texttt{PyTorch}. It focuses on building models used in the medical area. In the project, this package handles augmentations of the dataset, providing first-class support for 3D data, unlike \texttt{PyTorch}.}
+    \item{\texttt{Matplotlib} \parencite{Hunter2007Matplotlib} is a library for visualising data in an interactive fashion. The vast majority of graphs in this text were created using it.}
+    \item{\texttt{Pandas} \parencite{Pandas} is a popular library for handling data. It provides a DataFrame object for efficient data manipulation, reshaping, and indexing, among many other things. In this work, the final evaluations were created using the Pandas library.}
 \end{itemize}
-Along with these tools, a formatter called Ruff, a tifffile package for reading and writing images, and torchinfo package for benchmarking the number of parameters of any model were also used.
+Along with these tools, a formatter called \texttt{ruff}, a \texttt{tifffile} package for reading and writing images, and \texttt{torchinfo} package for benchmarking the number of parameters of any model were also used.
 
 \section{Environment}
 Handling dependencies in Python can become tricky, especially for reproducing the environments. For this purpose, the environment's dependencies and building a virtual environment are resolved by a tool called \texttt{uv} \parencite{uv2025}, developed by Astral. The developer uses a TOML file to specify project dependencies. This file is then used by \texttt{uv} to recreate the environment.
@@ -645,7 +636,7 @@ Figure \ref{fig:parametersearchstudy} showcases the Dice score of the various ne
     \label{fig:parametersearchstudy}
 \end{figure}
 
-What we can also see from this hyperparameter search is that the effect of the number of downsampling layers is rather marginal. Another effect that is visible is that while changing between 10 pixels to 20 or 30 pixels does minimal change in the performance, the difference between 0 pixels and all others is visible in every case. Also, it is interesting to see that although the changes are not dramatically different, the network with three downsampling layers consistently beat the others.
+What we can also see from this hyperparameter search is that the effect of the number of downsampling layers is rather marginal. Another effect that is visible is that while changing between 10 pixels to 20 or 30 pixels does minimal change in the performance, the difference between 0 pixels and all others is visible in every case. Also, it is interesting to see that although the changes are not dramatically different, the network with three downsampling layers consistently beats the others.
 
 \begin{figure}[htbp]
     \centering
