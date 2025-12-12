@@ -326,31 +326,31 @@ This is the last architecture we will explore in this work and will be referred 
 
 \chapter{Training}
 \label{sec:training}
-This chapter explains how the aforementioned neural networks were trained. How the data was split to allow cross-fold learning, and finally, how the network can be run to segment images of different sizes.
+This chapter explains how the aforementioned neural networks were trained, how the image data was split to allow cross-fold learning, and finally, how the network can be run to segment images of different sizes.
 
-\section{Splitting the data}
+\section{Data Splitting}
 \label{sec:processing_data}
 % [TODO mention alternatives to supervised learning somewhere]
 
-As mentioned in Chapter \ref{sec:data}, we have only two fully annotated time frames, each of 7x512x512 voxels. Splitting such a small dataset into training and testing sets presents a challenge, which is further complicated by the need to experiment with fully 3D networks. If we were to treat each depth slice independently, it would allow mixing of testing and training data; however, this could introduce bias. This bias arises because the pillars are nearly vertical, meaning their position is roughly the same in all z-slices, and the tunnels are not limited to a single z-slice. Moreover, if we consistently use all seven depth slices, we would essentially be training on one time frame while testing on a different one. In our opinion, this approach is unfeasible.
+As mentioned in Chapter \ref{sec:data}, we have only two fully annotated frames, each of $7 \times 512 \times 512$ voxels. Splitting such a small dataset into training and testing sets presents a challenge, which is further complicated by the need to experiment with fully 3D networks. If we were to treat each depth slice independently, it would allow mixing of testing and training data; however, this could introduce bias. This bias arises because the pillars are nearly vertical, meaning their position is roughly the same in all z-slices, and the tunnels are not limited to a single z-slice. Moreover, if we consistently use all seven depth slices, we would essentially be training on one time frame while testing on a different one. In our opinion, this approach is unfeasible.
 
-However, as U-Nets have demonstrated, they do not require a vast labelled dataset to be trained. In the original paper, a few dozen images were used to train the networks to segment medical images \parencite{Ronneberger2015}. Similarly, we were able to reproduce the results of the CS-Net paper \parencite{Mou2021} and train a retina vessel segmentation network with just a few dozen images.
+However, as U-Nets have demonstrated, they do not require a vast labelled dataset to be trained. In the original paper \parencite{Ronneberger2015}, a few dozen images were used to train the networks to segment medical images. Similarly, we were able to reproduce the results of the CS-Net paper \parencite{Mou2021} and train a retina vessel segmentation network with just a few dozen images.
 
-While splitting the dataset into quadrants would still yield only about eight images, we decided to look at the level of the annotated instances of tunnels. Since there are more than 100 of these TNTs, we can train a network on just the crops of the TNTs. Then we can tile the entire image and stitch the predictions of the neural networks similarly to what was done in the original U-Net paper \parencite{Ronneberger2015}.
+While splitting the dataset into quadrants would still yield only about eight images, we decided to look at the level of the annotated instances of tunnels. Since there are more than 100 of TNTs, we can train a network on just the crops of the TNTs. Then we can tile the entire image and stitch the predictions of the neural networks similarly to what was done in the original U-Net paper \parencite{Ronneberger2015}.
 
 The actual splitting logic iterates through every single TNT and crops it out. As the tunnels have different sizes, we decided to cut out the bounding boxes of the tunnels with a set of minimum sizes. For the minimum size, we opted for a $7 \times 90 \times 90$ shape, as it comfortably fits the majority of tunnels and provides a decent context around it. A decent number of tunnels are smaller than this. To expand the size to fit the minimum volume size, we decided to expand them with relevant data instead of padding by 0.
 
-\begin{figure}[htbp]
+\begin{figure}[t]
     \begin{center}
         \includegraphics[width=0.5\textwidth]{resources/training/t017_upperright_modified.png}
     \end{center}
-    \caption{Part of a single slice of the data (contrast enhanced). Two yellow arrows point out noisy sections.}
+    \caption{Part of a single z-slice of the image data (contrast enhanced). Two green arrows point out noisy sections.}
     \label{fig:upperright}
 \end{figure}
 
-It is still important to be able to somehow split the dataset into the training and testing sets. As the dataset is rather sparse, choosing a random subset to evaluate performance is not ideal, and there is a random chance that some tunnels from the testing set may be visible in a cutout of a tunnel in the training set. Another problem is how the various parts of the dataset do not have the same number of tunnels, tunnels of the same morphology and the same amount of noise and irrelevant structures. For example, in the upper right corner in Figure \ref{fig:upperright} we can find some irrelevant structures which are not present in the rest of the dataset. Given these problems, it is pretty tricky to split the dataset in such a way that all possible types of artefacts and tunnel structures are visible in both the testing and training subsets.
+It is still important to be able to somehow split the dataset into the training and testing sets. As the dataset is rather sparse, choosing a random subset to evaluate performance is not ideal, and there is a random chance that some tunnels from the testing set may be visible in a cutout of a tunnel in the training set. Another problem is how the various parts of the dataset do not have the same number of tunnels, tunnels of the same morphology and the same amount of noise and irrelevant structures. For example, in the upper right corner in Fig. \ref{fig:upperright} we can find some irrelevant structures which are not present in the rest of the dataset. Given these problems, it is pretty tricky to split the dataset in such a way that all possible types of artefacts and tunnel structures are visible in both the testing and training subsets.
 
-We tackled this problem by doing a quadrant-based spatial 4-fold cross-validation. In each training run, one of the four quadrants is selected as the testing quadrant, and all cropped TNTs belonging to this quadrant form the testing subset. This helps mitigate the small dataset and enables us to study how the different folds affect the performance of the neural network.
+We tackled this problem by doing a quadrant-based spatial 4-fold cross-validation. In each training run, one of the four quadrants is selected as the testing quadrant, and all cropped TNTs belonging to this quadrant form the testing subset. This helps to mitigate the dataset size and enables us to study how the different folds affect the performance of the neural network.
 
 \begin{figure}[htbp]
     \begin{center}
@@ -360,9 +360,9 @@ We tackled this problem by doing a quadrant-based spatial 4-fold cross-validatio
     \label{fig:folding-visualisation}
 \end{figure}
 
-This is still quite challenging to do correctly, as not every tunnel lies neatly inside one of the quadrants. A split used in training is visualised in Figure \ref{fig:folding-visualisation}, where a possible split is shown in two colours: red represents crops belonging to the testing subset. The decision of whether a crop belongs to the testing subset or not is determined by examining the overlap with the training quadrant. If the crop lies with more than 20\% or has more than 50 voxels in the testing quadrant, it will not be included in the training subset. If at least 80\% of the crop is inside the testing quadrant, it is considered to be part of the testing subset.
+This is still quite challenging to do correctly, as not every tunnel lies neatly inside one of the quadrants. A split used in training is visualised in Figure \ref{fig:folding-visualisation}, where a possible split is shown in two colours: red represents crops belonging to the testing subset. The decision of whether a crop belongs to the testing subset or not is determined by examining the overlap with the training quadrant. If the crop lies with more than 20\% or has more than 50 voxels in the testing quadrant, it is not included in the training subset. If at least 80\% of the crop is inside the testing quadrant, it is considered to be part of the testing subset.
 
-Finally, during the training, we need to know when to stop. For this purpose, during each run, approximately 30% of the crops for training are randomly picked and form the validation set.
+Finally, during the training, we need to know when to stop. For this purpose, during each run, approximately 30\% of the crops for training are randomly picked and form the validation set.
 
 \section{Loss functions}
 Since we can view finding tunnelling nanotubes as a binary classification problem applied at every pixel, it naturally comes to using a binary cross-entropy loss to train the network to segment the images. However, our dataset is heavily imbalanced, as it contains a significantly higher number of negative examples. To somewhat help the training pay more attention to the tunnels, the cross-entropy was weighted by a factor of 50, which was estimated as the ratio of pixels classified as background and pixels assigned to some tunnel by the biologist. The weighted BCE loss is defined as in \parencite{Jadon2020loss,PyTorchBCE}, where $y$ stands for prediction, $\hat{y}$ is the true label, and $beta$ is the weight:
