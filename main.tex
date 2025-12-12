@@ -493,7 +493,7 @@ Even after this step, some leftover artefacts may remain, some of which are link
 
 As mentioned in the previous section, even after applying the overlap strategy, some artefacts remain. Moreover, some artefacts actually closely resemble thin structures but are not true tunnels. Many of these false tunnels are small and not connected to any pillar, nor are they significantly present at multiple z-slices. Therefore, an easy way to filter would be by using their volume.
 
-\begin{figure}[htbp]
+\begin{figure}[t]
     \begin{center}
         \includegraphics[width=\textwidth]{resources/histogramofsizes.png}
     \end{center}
@@ -504,9 +504,12 @@ As mentioned in the previous section, even after applying the overlap strategy, 
 
 The value of 100 voxels, realising that some of the tiny tunnels might get removed, but as will be shown later, the network tends to find more tunnels than what is available in the reference annotations. Hence, I believe this to be a reasonable assumption to make. Figure \ref{fig:histogramoflabelsizes} shows a histogram of the distribution of labels' volumes. Removing components with a volume smaller than 100 voxels removed just a small number of all tunnels.
 
+\clearpage
+\newpage
+
 \chapter{Implementation}
 
-The high-level logic of the training loop is discussed in Section \ref{sec:optimisers}, and the inference is discussed in \ref{sec:runningthenetwork}. This chapter addresses some of the technical details of the implementation. The complete code, written in Python and Bash, is available in the thesis's archive along with several trained networks and a full user's reference.
+The high-level logic of the training loop is discussed in Section \ref{sec:optimisers}, and the inference is discussed in Section \ref{sec:runningthenetwork}. This chapter addresses some of the technical details of the implementation. The complete code, written in Python and Bash, is available in the thesis's archive along with several trained networks and a full user's reference.
 
 Although the Python programming language is an interpreted and dynamically typed language, and therefore is comparatively slower than other lower-level languages traditionally used in image processing, such as C++, its nature allows it to rapidly prototype new applications. Moreover, many packages call code written in other languages, such as C++, Fortran or C, to alleviate the performance problem. Lastly, Python has become a widely adopted language in the area of neural networks, and many researchers publish their code in Python; thus, Python was chosen to handle the implementation part.
 
@@ -516,26 +519,26 @@ The overall structure of the project code is as follows: a single TNTSegment pac
 
 As for the other tooling, here is the list of the most important tools:
 \begin{itemize}
-    \item{MLflow is a tool for handling machine learning pipelines. It allows for tracking experiments, comparing results, saving and loading models, deploying models, and more. In this work, it's nice to use UI was used to keep track of the experiments \parencite{Zaharia2018MLflow}}
-    \item{NumPy has become one of the fundamental packages in scientific computing in the Python ecosystem. It provides a very efficient implementation of many common operations on N-dimensional arrays. \parencite{Harris2020Numpy}}
-    \item{scikit-learn provides a great framework for building machine learning models, not just deep learning models. The library was primarily used for splitting datasets and utilising its framework for handling batching. \parencite{Pedregosa2011scikit}}
-    \item{scikit-image is a package providing various algorithms for processing images, e.g. segmentation algorithms, point transform, and mathematical morphology. I used it to handle the postprocessing of masks and to find connected components.\parencite{vanderWalt2014skimage}}
-    \item{PyTorch is a popular deep learning framework with a focus on flexibility and speed. This enables users to create highly performing neural networks quickly. It automatically creates computational graphs, allowing it to compute gradient updates efficiently. It automatically handles connecting to various hardware, such as CPUs and GPUs. These advantages made PyTorch one of the most used packages in the Python machine learning ecosystem \parencite{Ansel2024PyTorch}.}
-    \item{MONAI is another open-source framework for building neural networks on top of PyTorch. It focuses on building models used in the medical area. In the project, this package handles augmentations of the dataset, providing first-class support for 3D data, unlike PyTorch. \parencite{Cardoso2022Monai}}
-    \item{Matplotlib is a library for visualising data in an interactive fashion. The vast majority of graphs in this text were created using it. \parencite{Hunter2007Matplotlib}}
-    \item{Pandas is a popular library for handling data. It provides a DataFrame object for efficient data manipulation, reshaping, and indexing, among many other things. In this work, the final evaluations were created using the Pandas library. \parencite{Pandas}}
+    \item{MLflow \parencite{Zaharia2018MLflow} is a tool for handling machine learning pipelines. It allows for tracking experiments, comparing results, saving and loading models, deploying models, and more. In this work, it's nice to use UI was used to keep track of the experiments.}
+    \item{NumPy \parencite{Harris2020Numpy} has become one of the fundamental packages in scientific computing in the Python ecosystem. It provides a very efficient implementation of many common operations on N-dimensional arrays.}
+    \item{scikit-learn \parencite{Pedregosa2011scikit} provides a great framework for building machine learning models, not just deep learning models. The library was primarily used for splitting datasets and utilising its framework for handling batching. }
+    \item{scikit-image \parencite{vanderWalt2014skimage} is a package providing various algorithms for processing images, e.g. segmentation algorithms, point transform, and mathematical morphology. I used it to handle the postprocessing of masks and to find connected components.}
+    \item{PyTorch \parencite{Ansel2024PyTorch} is a popular deep learning framework with a focus on flexibility and speed. This enables users to create highly performing neural networks quickly. It automatically creates computational graphs, allowing it to compute gradient updates efficiently. It automatically handles connecting to various hardware, such as CPUs and GPUs. These advantages made PyTorch one of the most used packages in the Python machine learning ecosystem.}
+    \item{MONAI \parencite{Cardoso2022Monai}is another open-source framework for building neural networks on top of PyTorch. It focuses on building models used in the medical area. In the project, this package handles augmentations of the dataset, providing first-class support for 3D data, unlike PyTorch.}
+    \item{Matplotlib \parencite{Hunter2007Matplotlib} is a library for visualising data in an interactive fashion. The vast majority of graphs in this text were created using it.}
+    \item{Pandas \parencite{Pandas} is a popular library for handling data. It provides a DataFrame object for efficient data manipulation, reshaping, and indexing, among many other things. In this work, the final evaluations were created using the Pandas library.}
 \end{itemize}
 Along with these tools, a formatter called Ruff, a tifffile package for reading and writing images, and torchinfo package for benchmarking the number of parameters of any model were also used.
 
 \section{Environment}
 Handling dependencies in Python can become tricky, especially for reproducing the environments. For this purpose, the environment's dependencies and building a virtual environment are resolved by a tool called \texttt{uv} \parencite{uv2025}, developed by Astral. The developer uses a TOML file to specify project dependencies. This file is then used by \texttt{uv} to recreate the environment.
 
-For convenience, I am also including a \texttt{requirements.txt} file, which was automatically generated from a virtual Python environment; however, the officially supported version uses the \texttt {uv} package manager. The details of recreating the environment are described in the attached file \texttt{README.md}.
+For convenience, I am also including a \texttt{requirements.txt} file, which was automatically generated from a virtual Python environment; however, the officially supported version uses the \texttt {uv} package manager. The details of recreating the environment are described in the file \texttt{README.md}. All of this is available as part of the digital archive in the Information System.
 
-\section*{Various implementation details}
+\section{Various implementation details}
 While reviewing the code, the reader may encounter the following observations, which I believe are worth mentioning and explaining in more detail.
 
-While the implementation of CSAM required only minor changes to correctly permutate the dimensions of the input, SE blocks were programmed from scratch. I took the PyTorch implementation of 2D SE and replaced the operations with their 3D equivalents. Mainly, the squeeze operation is a 3D average pooling layer, and the linear layers are replaced with convolution layers followed by \texttt{ReLU}. The final difference compared to the description available in Section \ref{sec-seblock} is that the first convolutional operator in the excitation operation reduces the number of channels from $C$ to $C/r$, where $r$ is called a reduction factor. Then the \texttt{ReLU} is run, and the final convolution operator expands the number of channels back to $C$. The purpose of this reduction factor was explored in \parencite{Hu2018}, where they studied the tradeoff between performance and computational cost. We used the number $16$ for the value, as is suggested by the authors.
+While the implementation of CSAM required only minor changes to correctly permutate the dimensions of the input, SE blocks were programmed from scratch. I took the PyTorch implementation of 2D SE and replaced the operations with their 3D equivalents. Mainly, the squeeze operation is a 3D average pooling layer, and the linear layers are replaced with convolution layers followed by \texttt{ReLU}. The final difference compared to the description available in Section \ref{sec-seblock} is that the first convolutional operator in the excitation operation reduces the number of channels from $C$ to $C/r$, where $r$ is a reduction factor. Then the \texttt{ReLU} is run, and the final convolution operator expands the number of channels back to $C$. The purpose of this reduction factor was explored in \parencite{Hu2018}, where they studied the tradeoff between performance and computational cost. We used the number $16$ for the value, as suggested by the authors \parencite{Hu2018}.
 
 While reviewing the training loop, you may notice mentions of determinism and seed setting. The effect of seeds and deterministic algorithms in PyTorch was briefly investigated while fixing various bugs in the training loop. Currently, the user must manually seed the random number generator; however, the training still exhibits random behaviour.
 
