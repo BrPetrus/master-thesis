@@ -122,8 +122,11 @@
 \usepackage{floatrow} %% Putting captions above tables
 \floatsetup[table]{capposition=top}
 \usepackage[babel]{csquotes} %% Context-sensitive quotation marks
+\usepackage{float}
+
 
 \usepackage[ruled]{algorithm2e}  %% Algorithms
+\newfloat{floatingalgorithm}{tbp}
 
 \begin{document}
 %% The \chapter* command can be used to produce unnumbered chapters:
@@ -354,7 +357,7 @@ We tackled this problem by doing a quadrant-based spatial 4-fold cross-validatio
 
 \begin{figure}[htbp]
     \begin{center}
-        \includegraphics[width=0.6\linewidth]{resources/dataset/vis_split_t0.png}
+        \includegraphics[width=0.4\textwidth]{resources/dataset/vis_split_t0_crop.png}
     \end{center}
     \caption{Maximum projection of the binarised reference annotations for the first fold. Red crops belong to crops which were placed into the testing set, while blue crops form the training set. Tunnels whose crops were significantly present in both training and testing quadrants were discarded; thus, the tunnels do not have any colour.}
     \label{fig:folding-visualisation}
@@ -365,43 +368,26 @@ This is still quite challenging to do correctly, as not every tunnel lies neatly
 Finally, during the training, we need to know when to stop. For this purpose, during each run, approximately 30\% of the crops for training are randomly picked and form the validation set.
 
 \section{Loss functions}
-Since we can view finding tunnelling nanotubes as a binary classification problem applied at every pixel, it naturally comes to using a binary cross-entropy loss to train the network to segment the images. However, our dataset is heavily imbalanced, as it contains a significantly higher number of negative examples. To somewhat help the training pay more attention to the tunnels, the cross-entropy was weighted by a factor of 50, which was estimated as the ratio of pixels classified as background and pixels assigned to some tunnel by the biologist. The weighted BCE loss is defined as in \parencite{Jadon2020loss,PyTorchBCE}, where $y$ stands for prediction, $\hat{y}$ is the true label, and $beta$ is the weight:
+Since we can view finding tunnelling nanotubes as a binary classification problem applied at every pixel, it naturally comes to using a binary cross-entropy loss to train the network to segment the images. However, our dataset is heavily imbalanced, as it contains a significantly higher number of negative examples. To somewhat help the training pay more attention to the tunnels, the cross-entropy was weighted by a factor of 50, which was estimated as the ratio of voxels classified as background and voxels assigned to some tunnel by the biologist. The weighted BCE loss is defined as in \parencite{Jadon2020loss,PyTorchBCE}, where $y$ stands for prediction, $\hat{y}$ is the true label, and $\beta$ is the weight:
 
-\[ L_{BCE}(y, \hat{y}) = -(\beta y \log(\hat{y}) + (1-y)\log(1-\hat{y}) \]
+\[ L_{BCE}(y, \hat{y}) = -(\beta y \log(\hat{y}) + (1-y)\log(1-\hat{y}) \, .\]
 
-To further improve the performance of the training, we drew inspiration from the CS-Net paper, which uses Dice loss. Some papers claim that the combination of Dice loss and cross-entropy loss leads to better performance in many segmentation tasks \parencite{ma2020segmentationlossodyssey}. This is defined as taking $L_{Dice} = 1 - \text{Dice}$, meaning that as we obtain segmentation results closer to the ideal mask, we approach 0. The loss function was defined using as in the paper \parencite{ma2020segmentationlossodyssey} as:
-\[ L_{Dice}=1-\frac{2\sum_{i=1}^{N}{g_i*s_i}}{\sum_{i=1}^{N}{g_i^2}+\sum_{i=1}^{N}{s_i^2}} \]
+To further improve the performance of the training, we drew inspiration from the CS-Net paper, which uses Dice loss. Some papers claim that the combination of Dice loss and cross-entropy loss leads to better performance in many segmentation tasks \parencite{ma2020segmentationlossodyssey}. This is defined as taking $L_{Dice} = 1 - \text{Dice}$, meaning that as we obtain segmentation results closer to the ideal mask, we approach 0. The loss function was defined using as \parencite{ma2020segmentationlossodyssey}:
+\[ L_{Dice}=1-\frac{2\sum_{i=1}^{N}{g_i \cdot s_i}}{\sum_{i=1}^{N}{g_i^2}+\sum_{i=1}^{N}{s_i^2}} \]
 where $g_i$ is the binary indicator for the foreground and $s_i$ is the probability of assigning the pixel to the foreground class.
 
 The final loss is the combination of $L_{BCE}$ and $L_{Dice}$:
 
-\[ L_{final} = 0.5 L_{Dice} + 0.5 L_{BCE} \]
+\[ L_{final} = 0.5 L_{Dice} + 0.5 L_{BCE} \, .\]
 
 We used a linear combination of the losses, as mentioned in \parencite{ma2020segmentationlossodyssey}.
 
 \section{Optimisers, learning rates, regularisation}
+\label{sec:optimisers}
 
-During the development of the training loop, we observed that setting the learning rate to 0.0001 and weight decay to 0.0001 provided a stable learning. As such, we maintained a constant learning rate during training and did not experiment with these values due to time constraints. We chose to use an adaptive gradient algorithm for training the neural networks called AdamW, which is a variant of the commonly used Adam optimiser.
+During the development of the training loop shown in Algorithm \ref{alg:training}, we observed that setting the learning rate to 0.0001 and weight decay to 0.0001 provided a stable learning. As such, we maintained a constant learning rate during training and did not experiment with these values any further. We chose to use an adaptive gradient algorithm for training the neural networks called AdamW, which is a variant of the commonly used Adam optimiser \parencite{loshchilov2019}.
 
-Regularisation is a common technique in machine learning that reduces overfitting by discouraging values with large magnitudes \parencite{Bishop2024DeepLearning}. One of the standard regularisation techniques in deep learning is weight decay, also known as L2 normalisation, which penalises large weights [TODO check]. However, while L2 normalisation and weight decay are the same, this is not true for the Adam optimiser. The authors argue that using their version, called AdamW, achieves better generalisation performance as it properly decouples the weight decay \parencite{loshchilov2019}. Since we have a sparse dataset, we wanted to include the weight decay regularisation technique. However, no significant difference in the training performance was observed.
-
-\section{Augmentations}
-
-A common problem with training neural networks is their capacity to overfit on the training part of the dataset. This often leads to poor generalisation performance. This is especially true for tiny datasets such as ours. One of the common ways to address this problem, as mentioned in the original U-Net paper, is the use of augmentations \parencite{Ronneberger2015} to enlarge the training set artificially. In our case, we decided to use only augmentations that do not require interpolation. The reason is that, unlike many other tasks, we are potentially dealing with relatively thin structures, which could be easily suppressed or blurred and become invisible with improper interpolation.
-
-In each batch, a different set of transforms is used. This works by setting a random probability for this particular transform to be applied. For the training we are:
-
-\begin{itemize}
-    \item{Adding random noise with a Gaussian distribution of mean 0 and 0.01 standard deviation with probability 0.5, which adds very faint noise. This is a relatively low amount of noise and was chosen during the development of the network as we did not want to change the images to look completely different to the original ones.}
-    \item{Random flipping in every axis.}
-    \item{Random spatial crop which always crops to the preset size of $7 \times 64 \times 64$ from any other size.}
-\end{itemize}
-
-A potential issue with using small tiles centred at tunnels is that we may introduce unwanted bias into the network, as it might learn to always try to find the tunnel in the middle. The design designation behind using random spatial crop was to try to suppress this, as the program now randomly finds a crop of the wanted size, which reduces this problem.
-
-\section{Training loop}
-\label{sec:trainingloop}
-Overall, the network training loop is shown in Algorithm \ref{alg:training}.
+Regularisation is a common technique in machine learning that reduces overfitting by discouraging values with large magnitudes \parencite{Bishop2024DeepLearning}. One of the standard regularisation techniques in deep learning is weight decay, also known as L2 normalisation, which penalises large weights \parencite{Bishop2024DeepLearning}. However, while L2 normalisation and weight decay are the same, this is not true for the Adam optimiser. The authors argue that using their version, called AdamW, achieves better generalisation performance as it properly decouples the weight decay \parencite{loshchilov2019}. Since we have a sparse dataset, we wanted to include the weight decay regularisation technique. However, no significant difference in the training performance was observed.
 
 \begin{algorithm}
     \small  
@@ -440,12 +426,26 @@ Overall, the network training loop is shown in Algorithm \ref{alg:training}.
     $EvaluateModel(model, full\_test\_data)$\;
 }
 \end{algorithm}
+\clearpage
 
+\section{Augmentations}
+
+A common problem with training neural networks is their capacity to overfit on the training part of the dataset. This often leads to poor generalisation performance. This is especially true for tiny datasets such as ours. One of the common ways to address this problem, as mentioned in the original U-Net paper, is the use of augmentations \parencite{Ronneberger2015} to enlarge the training set artificially. In our case, we decided to use only augmentations that do not require interpolation. The reason is that, unlike many other tasks, we are potentially dealing with relatively thin structures, which could be easily suppressed or blurred and become invisible with improper interpolation.
+
+In each batch, a different set of transforms is used. This works by setting a random probability for this particular transform to be applied. For the training we are:
+
+\begin{itemize}
+    \item{Adding random noise with a Gaussian distribution of mean 0 and 0.01 standard deviation with probability 0.5, which adds very faint noise. This is a relatively low amount of noise and was chosen during the development of the network as we did not want to change the images to look completely different to the original ones.}
+    \item{Random flipping in every axis.}
+    \item{Random spatial crop which always crops to the preset size of $7 \times 64 \times 64$ from any other size.}
+\end{itemize}
+
+A potential issue with using small tiles centred at tunnels is that we may introduce unwanted bias into the network, as it might learn to always try to find the tunnel in the middle. The design designation behind using random spatial crop was to try to suppress this, as the program now randomly finds a crop of the wanted size, which reduces this problem.
 
 \section{Inference on large images}
 \label{sec:runningthenetwork}
 
-All our networks are trained on square crops of size $7 \times 64 \times 64$ voxels, but the original images are larger at $7 \times 512 \times 512$ voxels. This is solved by using an overlap-tiling strategy similar to the one by Ronneberger et al. \parencite{Ronneberger2015}. The original images are split into tiles first, with a configurable amount of overlap in pixels. The network sequentially processes the tiles and then stitches them together to create the final prediction. The predictions are then thresholded with a value of 0.5.
+All our networks are trained on square crops of size $7 \times 64 \times 64$ voxels, but the original images are larger at $7 \times 512 \times 512$ voxels. This is solved by using an overlap-tiling strategy similar to the one by Ronneberger et al. \parencite{Ronneberger2015}. The original images are split into tiles first, with a configurable amount of overlap. The network sequentially processes the tiles and then stitches them together to create the final prediction. The predictions are then thresholded with a value of 0.5.
 
 \begin{figure}[htbp]
     \centering
@@ -480,18 +480,18 @@ All our networks are trained on square crops of size $7 \times 64 \times 64$ vox
     \label{fig:stitchingoverlap}
 \end{figure}
 
-The idea of using a configurable overlap size originated from the following observation. In Figure \ref{fig:stitchingoverlap0}, several sharp artefacts can be seen at tile borders, possibly because only part of the structure is visible, leading the network to classify it as a tunnel. This led us to the idea that if we use larger overlaps and aggregate them, these effects on tile borders will get suppressed. As can be seen in Figure \ref{fig:stitchingoverlap10}, using a larger overlap suppresses some of these artefacts. For aggregating the overlaps, a simple averaging was chosen due to its simplicity.
+The idea of using a configurable overlap size originated from the following observation. In Fig. \ref{fig:stitchingoverlap0}, several sharp artefacts can be seen at tile borders, possibly because only part of the structure is visible, leading the network to classify it as a tunnel. This led us to the idea that if we use larger overlaps and aggregate them, these effects on tile borders will get suppressed. As can be seen in Fig. \ref{fig:stitchingoverlap10}, using a larger overlap suppresses some of these artefacts. For aggregating the overlaps, a simple averaging was chosen due to its simplicity.
 
 % todo in discussion mention that maybe this was not the best idea, maybe we
 % should have chosen larger context. The context x precision tradeoff.
 % TODO: consider drawing there
 
-Even after this step, some leftover artefacts may remain, some of which are linked to noisy input, while others serve as evidence that it is not a perfect solution to the artefacts caused by partial context. Some of these false TNTs at the border of tiles are relatively small compared to real tunnels, which leads us to the final piece of the inference - the postprocessing.
+Even after this step, some leftover artefacts may remain, some of which are linked to noisy input, while others serve as evidence that it is not a perfect solution to the artefacts caused by partial context. Some of these false TNTs at the border of tiles are relatively small compared to real tunnels, which leads us to the final piece of the inference --- the postprocessing.
 
 \section{Postprocessing}
 \label{sec:postprocessing}
 
-As mentioned in the previous section, even after applying the overlap strategy, some artefacts remain. Moreover, some artefacts actually closely resemble thin structures but are not true tunnels. Many of these false tunnels are small and not connected to any cell, nor are they significantly present at multiple depth slices. Therefore, an easy way to filter would be by using their volume.
+As mentioned in the previous section, even after applying the overlap strategy, some artefacts remain. Moreover, some artefacts actually closely resemble thin structures but are not true tunnels. Many of these false tunnels are small and not connected to any pillar, nor are they significantly present at multiple z-slices. Therefore, an easy way to filter would be by using their volume.
 
 \begin{figure}[htbp]
     \begin{center}
@@ -502,11 +502,11 @@ As mentioned in the previous section, even after applying the overlap strategy, 
     \label{fig:histogramoflabelsizes}
 \end{figure}
 
-The value of 100 pixels, realising that some of the tiny tunnels might get removed, but as will be shown later, the network tends to find more tunnels than the biologist. Hence, I believe this to be a reasonable assumption to make. The Figure \ref{fig:histogramoflabelsizes} shows a histogram of the distribution of labels' volumes. Removing components with a volume smaller than 100 voxels removed just a small number of all tunnels.
+The value of 100 voxels, realising that some of the tiny tunnels might get removed, but as will be shown later, the network tends to find more tunnels than what is available in the reference annotations. Hence, I believe this to be a reasonable assumption to make. Figure \ref{fig:histogramoflabelsizes} shows a histogram of the distribution of labels' volumes. Removing components with a volume smaller than 100 voxels removed just a small number of all tunnels.
 
 \chapter{Implementation}
 
-The high-level logic of the training loop is discussed in Section \ref{sec:trainingloop}, and the inference is discussed in \ref{sec:runningthenetwork}. This chapter addresses some of the technical details of the implementation. The complete code, written in Python and Bash, is available in the thesis's archive along with several trained networks and a full user's reference.
+The high-level logic of the training loop is discussed in Section \ref{sec:optimisers}, and the inference is discussed in \ref{sec:runningthenetwork}. This chapter addresses some of the technical details of the implementation. The complete code, written in Python and Bash, is available in the thesis's archive along with several trained networks and a full user's reference.
 
 Although the Python programming language is an interpreted and dynamically typed language, and therefore is comparatively slower than other lower-level languages traditionally used in image processing, such as C++, its nature allows it to rapidly prototype new applications. Moreover, many packages call code written in other languages, such as C++, Fortran or C, to alleviate the performance problem. Lastly, Python has become a widely adopted language in the area of neural networks, and many researchers publish their code in Python; thus, Python was chosen to handle the implementation part.
 
