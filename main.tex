@@ -540,7 +540,7 @@ This chapter discusses how the different networks were evaluated on the entire d
 
 \section{Metrics}
 % todo : consider citation
-For evaluating the resulting predictions, we decided to use Dice scores as they are commonly used in many biomedical papers, but the end user is not interested in the quality of the scores on cutouts around tunnels, or how every neural network was trained; it is crucial to know how the neural network performs on the whole image.
+For evaluating the resulting predictions, we decided to use Dice scores as they are commonly used in many biomedical papers, but the end user is not interested in the quality of the scores on crops around tunnels, or how every neural network was trained; it is crucial to know how the neural network performs on the whole image.
 
 As described in Section \ref{sec:runningthenetwork}, the images are tiled and then stitched together with a configurable amount of overlap. Later in Section \ref{sec:postprocessing}, the postprocessing of the predictions is discussed. The first two metrics we will discuss are calculated as the Dice scores of the binarised output (with and without preprocessing) and the binary reference annotations. Furthermore, we will conduct a detailed analysis of segmentation performance, particularly focusing on how well the network identifies and delineates individual tunnels within the images. 
 
@@ -665,14 +665,14 @@ In general, all models performed the best at the third quadrant (top left) and t
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.7\textwidth]{resources/evaluations/eval_dice_mean_by_quad_arch.png}
+    \includegraphics[width=0.93\textwidth]{resources/evaluations/eval_dice_mean_by_quad_arch.png}
     \caption{Evaluation metrics for various folds. Each bar represents the average of three model runs. Error bars represent the sample standard deviation.}
     \label{fig:evalquadsdepth}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.7\textwidth]{resources/evaluations/postprocess_overall_dice_by_quad_arch.png}
+    \includegraphics[width=0.93\textwidth]{resources/evaluations/postprocess_overall_dice_by_quad_arch.png}
     \caption{Postprocess overall metric for various folds. Each bar represents the average of three model runs. Error bars represent the sample standard deviation.}
     \label{fig:postprocessoverallquadsdepth}
 \end{figure}
@@ -774,6 +774,8 @@ Looking at the advanced metrics, the overall Dice metric in Fig. \ref{fig:eval-d
     \caption{Tunnel dice metric. Each bar represents the average of three model runs. Error bars represent the sample standard deviation.}
     \label{fig:eval-diff-arch-tunnel-quads}
 \end{figure}
+
+\clearpage
 
 \subsection*{Benchmarks}
 The neural network was trained and run on a computational server with AMD EPYC 7702P 64 Core CPU, 504 GB of memory, and the A100-SXM4-80GB Nvidia GPU. Table \ref{table:benchmarks} shows the inference time of the network and memory requirements. The number of parameters and the estimated size were gathered using the \texttt{torch-info} package, while the peak memory time was gathered using \texttt{PyTorch} utilities.
@@ -925,6 +927,6 @@ In the future, it might be interesting to refine the post-processing, e.g. using
 
 \appendix
 \chapter{Digital Archive}
-The complete source code for the U-Net-like neural network model, which includes the necessary training, evaluation, and inference scripts, is attached as an accompanying digital appendix. This archive also features automation scripts to streamline data processing and model execution. To facilitate understanding and setup, the archive includes a comprehensive \texttt{README} file that details the environment configuration, explains the project structure, and provides step-by-step instructions for running the code.
+The complete source code for the U-Net-like neural network model, which includes the necessary training, evaluation, and inference scripts, is attached as an accompanying digital appendix. This archive also features automation scripts to streamline data processing and model execution. To facilitate understanding and setup, the archive includes a comprehensive \texttt{README} file that details the environment configuration, explains the project structure, and provides step-by-step instructions for running the code. Finally, the archive also contains all image data, including the used data splits and the evaluation dataset.
 
 \end{document}
