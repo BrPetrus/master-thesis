@@ -68,7 +68,7 @@
         The study demonstrates the feasibility of using U-Net-like architectures for segmenting nanoscale curvilinear structures. The resulting segmentation capability offers a basis for automating the quantitative analysis of TNT morphogenesis and dynamics.
     },
     thanks      = {%
-        I am very grateful to my advisor, Assoc. Prof. RNDr. Martin Maška, Ph.D., for his sustained mentorship, constructive critiques, and ready availability throughout the whole time.
+        I am very grateful to my advisor, Assoc. Prof. Martin Maška, Ph.D., for his sustained mentorship, constructive critiques, and ready availability throughout the whole time.
 
         I am also grateful to Prof. Osamu Shimmi (University of Tartu, Estonia) and Dr Ngan Vi Tran (University of Tartu, Estonia) for providing the dataset analysed in this thesis.
 
@@ -139,7 +139,7 @@
 
 Semantic segmentation is a critical task in computer vision that involves assigning a specific class label to every image element in a given image. This thesis focuses on the segmentation of tunnelling nanotubes (TNTs), which are cell membrane protrusions observed during cell morphogenesis in \textit{Drosophila} wings. While the exact function of these structures remains under investigation, their image-based analysis is currently limited by the difficulty of manually annotating them in three-dimensional space.
 
-The dataset for this research, provided by Prof Osamu Shimmi from the University of Tartu, captures a cellular structure known as the Interplanar Amida Network (IPAN). This network consists of vertical "pillars" connected by horizontal TNTs, captured using fluorescence microscopy. The image data presents significant challenges for automated analysis: it is heavily anisotropic, and while the dataset spans twenty frames, reference annotations were provided for only two time frames. As such, the dataset is sparsely annotated.
+The dataset for this research, provided by Prof. Osamu Shimmi from the University of Tartu, captures a cellular structure known as the Interplanar Amida Network (IPAN). This network consists of vertical "pillars" connected by horizontal TNTs, captured using fluorescence microscopy. The image data presents significant challenges for automated analysis: it is heavily anisotropic, and while the dataset spans twenty frames, reference annotations were provided for only two time frames. As such, the dataset is sparsely annotated.
 
 To address these challenges, we adapted the U-Net architecture, a standard for biomedical segmentation, to better handle the specific constraints of our image data. An anisotropic version of a U-Net-like architecture called AnisoUNet, which utilises anisotropic kernels, is introduced. Additionally, we investigate an attention mechanism to improve the network's performance. The performance of our network is extensively evaluated using a 4-fold cross-validation, and its design choices are justified using an ablation study.
 
@@ -149,7 +149,7 @@ Chapter 1 provides an overview of the biological context and image data preproce
 \chapter{Image Data / Biological Background}
 \label{sec:data}
 % todo: probably add some more examples
-During cell morphogenesis, growth of protrusions has been observed using fluorescent microscopy. Their effect on the growth is still not fully understood, but has sparked multiple theories. Some researchers speculate they could be used in long-range signalling or are involved in the transportation of organelles \parencite{Tran2024Programmed}. 
+During cell morphogenesis, growth of protrusions has been observed using fluorescence microscopy. Their effect on the growth is still not fully understood, but has sparked multiple theories. Some researchers speculate they could be used in long-range signalling or are involved in the transportation of organelles \parencite{Tran2024Programmed}. 
 
 Our collaborators from the Institute of Molecular and Cell Biology at the University of Tartu in Estonia were involved in studying one of such places where these cell membrane protrusions are present --- the \textit{Drosophila} wings --- and the findings are available in \parencite{Tran2024Programmed}. They have used in vivo imaging to study the cellular structures.
 \begin{figure}[tb]
@@ -163,7 +163,7 @@ Our collaborators from the Institute of Molecular and Cell Biology at the Univer
 
 During the development of the larva, specifically in the pre-pupal stage, the pupal wing is formed. Afterwards, the single-layer wing separates into two individual layers of epithelial cells, as shown in Fig. \ref{fig:wingsdiagram}. The nearly microtubule-mediated vertical protrusions connecting the layers will be referred to as pillars, whereas the approximately horizontal protrusions will be called tunnelling nanotubes (TNTs).
 
-In \parencite{Tran2024Programmed}, the authors refer to the overall structure as Interplanar Amida Network (IPAN). They note that IPAN is dynamic and can change significantly in just half an hour, during which the TNTs may connect with different vertical pillars or completely disappear, while some TNTs exhibit stability. While the authors delve into greater depth regarding what exactly happens during the creation and disappearance of these structures, they are limited to a qualitative investigation. The goal of this thesis was to explore U-Net-like models for segmenting tunnelling nanotubes in these 3D images, thereby helping researchers analyse TNT properties in a qualitative fashion. 
+In \parencite{Tran2024Programmed}, the authors refer to the overall structure as Interplanar Amida Network (IPAN). They note that IPAN is dynamic and can change significantly in just half an hour, during which the TNTs may connect with different vertical pillars or completely disappear, while some TNTs exhibit stability. While the authors delve into greater depth regarding what exactly happens during the creation and disappearance of these structures, they are limited to a qualitative investigation. The goal of this thesis was to explore U-Net-like models for segmenting tunnelling nanotubes in these 3D images, thereby helping researchers analyse TNT properties in a quantitative fashion. 
 
 Although multiple datasets were acquired, we obtained sparse reference annotations for only one of them; hence, we will focus on this one in this work. In Fig. \ref{fig:dataexamples}, a single z-slice and a volume visualisation of the image data are shown. The whole dataset comprises twenty frames and was captured by using a single fluorescent dye. Each frame consists of seven $512 \times 512$ grayscale, 16-bit images. Each of the z-slices represents a region of $56.32 \times 56.32 \, \mu m$ and the slices are $1 \, \mu m$ apart, meaning that each voxel is about $1 \times 0.11 \times 0.11 \, \mu m$ in size. Since the dye is activated in cell membranes, the pillars in our data appear hollow. 
 
@@ -173,7 +173,7 @@ The biologists created a protocol which they followed by annotating the samples.
 
 After preprocessing is done, the protocol states that, by picking random frames, at least 100 instances of tunnels must be annotated, and each frame must be fully annotated. Also, segments originating from the surrounding tissue should be ignored. According to this protocol, two frames were picked — the 0th and 17th frames — to label. The reference annotations for a single slice of the 0th frame are shown in Fig. \ref{fig:gt-slice-3}. Overall, 127 tunnels are fully annotated.
 
-Sometimes it is rather challenging to decide if the protrusion is a TNT or not. In Fig. \ref{fig:gt-slice-3}, two protrusion-like structures are highlighted using yellow circles. Although their structure appears essentially the same as that of a TNT, it is unclear why they were not labelled too. This illustrates a possible difficulty in assessing the segmentation accuracy
+Sometimes it is rather challenging to decide if the protrusion is a TNT or not. In Fig. \ref{fig:gt-slice-3}, two protrusion-like structures are highlighted using yellow circles. Although their structure appears essentially the same as that of a TNT, it is unclear why they were not labelled too. This illustrates a possible difficulty in assessing the segmentation accuracy.
 
 Afterwards, the labels were manually checked, and two cases of label duplication were identified and corrected by assigning a unique number to the new connected component.
 
@@ -218,7 +218,7 @@ The afore-mentioned U-Net architecture was first described in a seminal paper by
 
 The first paper that explicitly mentions the segmentation of TNTs is by Hodneland et al. \parencite{Hodneland2006Automated}, who were also examining protrusions connecting cells. However, in their case, the tunnels form long, straight lines, unlike our TNTs, which are not always straight. The authors describe a multistep algorithm that employs two channels — one for staining cell membranes and TNTs, and the other for staining cytoplasmic compartments — to segment the TNTs. Since our data was captured in a single channel only, this approach cannot be used.
 
-The other paper, which mentions explicitly tunnelling nanotubes, is \parencite{Ceran2022TNTdetect}. In this paper, the authors developed a tool for segmenting TNTs called TNT.AI. It involves a two-step procedure. In the first step, a classification network works on tiles to identify where TNT is possible, and then a second network is used to finely segment the TNTs pixel-wise. Unfortunately, they do not go into details about their networks. I tried to contact one of the authors to get the code and image data, but they did not respond. In the paper, they discuss using a U-Net-like architecture for the segmentation part, which is composed of ResNet blocks. 
+The other paper, which mentions explicitly tunnelling nanotubes, is \parencite{Ceran2022TNTdetect}. In this paper, the authors developed a tool for segmenting TNTs called TNT.AI. It involves a two-step procedure. In the first step, a classification network works on tiles to identify where a TNT is likely present, and then a second network is used to finely segment the TNTs pixel-wise. Unfortunately, they do not go into details about their networks. I tried to contact one of the authors to get the code and image data, but they did not respond. In the paper, they discuss using a U-Net-like architecture for the segmentation part, which is composed of ResNet blocks. 
 
 As neither of these papers provided working code examples or was applicable to our image data, we decided to look at the tunnels as an example of curvilinear structure. Bibiloni et al. \parencite{bibiloni2016curvilinear} provide a complete definition of curvilinear structures based on their geometric and photometric characteristics. However, they also provide a simpler, rough definition, which is enough for our purposes. They can be defined as thin, long, line-like regions with different intensities than their neighbouring pixels \parencite{bibiloni2016curvilinear}. Some examples of curvilinear structures include river finding, blood vessel segmentation, or lung airways segmentation \parencite{kong2018roadsensing, Mou2021}. Our TNTs mostly fit this description as their shape is thinner compared to the vertical protrusion, and they are clearly different in intensity from the background.
 
@@ -232,7 +232,7 @@ In this chapter, the various architectures that were used are described.
 \section{U-Net and BasicUNet}
 \label{sec:unet}
 
-Chapter \ref{sec:research} introduces the U-Net architecture in conjunction with its uses in related works. The main idea was as follows: in other tasks, such as image classification, we typically have an encoder followed by a neck, which culminates in a classification head. The authors speculated on how to extend this mechanism to achieve pixel-wise classification, or in other words, semantic segmentation. They propose placing several upsampling layers after the encoder part to upsample the extracted features.
+Chapter \ref{sec:research} introduces the U-Net architecture in conjunction with its uses in related works. The main idea was as follows: in other tasks, such as image classification, we typically have an encoder followed by a neck, which culminates in a classification head. The authors speculated on how to extend this mechanism to achieve pixel-wise classification, or in other words, semantic segmentation. They propose placing several upsampling layers after the encoder part to upsample the extracted features \parencite{Ronneberger2015}.
 
 The overall diagram is shown in Fig. \ref{fig:unetdiagram}. All convolutional layers use a $3 \times 3$ kernel followed by a Batch normalisation and ReLU operation, while downsampling and upsampling operations use $2 \times 2$ kernels.
 
@@ -268,7 +268,7 @@ Overall, such a network with anisotropic pooling operations is referred to as An
 
 This section discusses the channel and spatial attention module (hereafter referred to as CSAM), as mentioned in \parencite{Mou2021}. 
 
-\begin{figure}[tbh]
+\begin{figure}[tbp]
    \centering
     \begin{subfigure}{\textwidth}
         \includegraphics[width=\textwidth]{resources/architecture_diagrams/csam.png}
@@ -276,7 +276,7 @@ This section discusses the channel and spatial attention module (hereafter refer
     \begin{subfigure}{\textwidth}
         \includegraphics[width=\textwidth]{resources/architecture_diagrams/csam_descp_croped.png}
     \end{subfigure}
-    \caption{The Channel and Spatial Attention Module is inserted in the bottleneck part of a U-Net neural network. N is equal to $D \times W \times H$, and C stands for the number of channels. F denotes the input features of size $N \times C$. In the top part is SAM, and CAB is at the bottom. Q, K, J, and V are features created by applying the specific convolutions. Adapted from \parencite{Mou2021}}
+    \caption{The Channel and Spatial Attention Module is inserted in the bottleneck part of a U-Net neural network. N is equal to $D \times W \times H$, and C stands for the number of channels. F denotes the input features of size $N \times C$. In the top part is SAM, and CAB is at the bottom. Q, K, J, and V are features created by applying the specific convolutions. Adapted from \parencite{Mou2021}.}
     %todo: check if my implementation is correctly doing this
     \label{fig:csammodule}
 \end{figure}
@@ -310,7 +310,7 @@ Let us look at it in more detail. The SE block, shown in Fig. \ref{fig:seblock},
     \begin{center}
         \includegraphics[width=\linewidth]{resources/architecture_diagrams/seblock.png}
     \end{center}
-    \caption{A squeeze-and-excitation block. The input data $X$ is processed to create $\tilde{X}$. First, the data is truncated by a $F_{tr}$ operation to form features $U$. The rescale operation $F_scale$ rescales the channels according to their importance learnt in the excitation ($F_{ex}$, typically a convolutional layer) and squeeze operations ($F _ {sq} $, typically a global average pooling). Taken from \parencite{Hu2018}}
+    \caption{A squeeze-and-excitation block. The input data $X$ is processed to create $\tilde{X}$. First, the data is truncated by a $F_{tr}$ operation to form features $U$. The rescale operation $F_{scale}$ rescales the channels according to their importance learnt in the excitation ($F_{ex}$, typically a convolutional layer) and squeeze operations ($F _ {sq} $, typically a global average pooling). Taken from \parencite{Hu2018}}
     \label{fig:seblock}
 \end{figure}
 
@@ -367,11 +367,11 @@ This is still quite challenging to do correctly, as not every tunnel lies neatly
 Finally, during the training, we need to know when to stop. For this purpose, during each run, approximately 30\% of the crops for training are randomly picked and form the validation set.
 
 \section{Loss functions}
-Since we can view finding tunnelling nanotubes as a binary classification problem applied at every pixel, it naturally comes to using a binary cross-entropy loss to train the network to segment the images. However, our dataset is heavily imbalanced, as it contains a significantly higher number of negative examples. To somewhat help the training pay more attention to the tunnels, the cross-entropy was weighted by a factor of 50, which was estimated as the ratio of voxels classified as background and voxels assigned to some tunnel by the biologist. The weighted BCE loss is defined as in \parencite{Jadon2020loss,PyTorchBCE}, where $y$ stands for prediction, $\hat{y}$ is the true label, and $\beta$ is the weight:
+Since we can view finding tunnelling nanotubes as a binary classification problem applied at every voxel, it naturally comes to using a binary cross-entropy loss to train the network to segment the images. However, our dataset is heavily imbalanced, as it contains a significantly higher number of negative examples. To somewhat help the training pay more attention to the tunnels, the cross-entropy was weighted by a factor of 50, which was estimated as the ratio of voxels classified as background and voxels assigned to some tunnel by the biologist. The weighted BCE loss is defined as in \parencite{Jadon2020loss,PyTorchBCE}, where $y$ stands for prediction, $\hat{y}$ is the true label, and $\beta$ is the weight:
 
-\[ L_{BCE}(y, \hat{y}) = -(\beta y \log(\hat{y}) + (1-y)\log(1-\hat{y}) \, .\]
+\[ L_{BCE}(y, \hat{y}) = -(\beta y \log(\hat{y}) + (1-y)\log(1-\hat{y})) \, .\]
 
-To further improve the performance of the training, we drew inspiration from the CS-Net paper, which uses Dice loss. Some papers claim that the combination of Dice loss and cross-entropy loss leads to better performance in many segmentation tasks \parencite{ma2020segmentationlossodyssey}. This is defined as taking $L_{Dice} = 1 - \text{Dice}$, meaning that as we obtain segmentation results closer to the ideal mask, we approach 0. The loss function was defined using as \parencite{ma2020segmentationlossodyssey}:
+To further improve the performance of the training, we drew inspiration from the CS-Net paper \parencite{Mou2021}, which uses Dice loss. Some papers claim that the combination of Dice loss and cross-entropy loss leads to better performance in many segmentation tasks \parencite{ma2020segmentationlossodyssey}. This is defined as taking $L_{Dice} = 1 - \text{Dice}$, meaning that as we obtain segmentation results closer to the ideal mask, we approach 0. The loss function was defined as \parencite{ma2020segmentationlossodyssey}:
 \[ L_{Dice}=1-\frac{2\sum_{i=1}^{N}{g_i \cdot s_i}}{\sum_{i=1}^{N}{g_i^2}+\sum_{i=1}^{N}{s_i^2}} \]
 where $g_i$ is the binary indicator for the foreground and $s_i$ is the probability of assigning the pixel to the foreground class.
 
@@ -386,7 +386,7 @@ We used a linear combination of the losses, as mentioned in \parencite{ma2020seg
 
 During the development of the training loop shown in Algorithm \ref{alg:training}, we observed that setting the learning rate to 0.0001 and weight decay to 0.0001 provided a stable learning. As such, we maintained a constant learning rate during training and did not experiment with these values any further. We chose to use an adaptive gradient algorithm for training the neural networks called AdamW, which is a variant of the commonly used Adam optimiser \parencite{loshchilov2019}.
 
-Regularisation is a common technique in machine learning that reduces overfitting by discouraging values with large magnitudes \parencite{Bishop2024DeepLearning}. One of the standard regularisation techniques in deep learning is weight decay, also known as L2 normalisation, which penalises large weights \parencite{Bishop2024DeepLearning}. However, while L2 normalisation and weight decay are the same, this is not true for the Adam optimiser. The authors argue that using their version, called AdamW, achieves better generalisation performance as it properly decouples the weight decay \parencite{loshchilov2019}. Since we have a sparse dataset, we wanted to include the weight decay regularisation technique. However, no significant difference in the training performance was observed.
+Regularisation is a common technique in machine learning that reduces overfitting by penalising large weights \parencite{Bishop2024DeepLearning}. One of the standard regularisation techniques in deep learning is weight decay and L2 normalisations, which are equal for standard stochastic gradient descent. However, this is not true for the Adam optimiser. In \parencite{loshchilov2019}, the authors argue that using their version, called AdamW, achieves better generalisation performance as it properly decouples the weight decay from optimisation steps. Due to the sparse dataset, the AdamW optimiser with weight decay as a regularisation technique was utilised to train the networks. However, no significant difference in the training performance was observed compared to the standard Adam optimiser.
 
 \begin{algorithm}
     \small  
@@ -439,7 +439,7 @@ In each batch, a different set of transforms is used. This works by setting a ra
     \item{Random spatial crop which always crops to the preset size of $7 \times 64 \times 64$ from any other size.}
 \end{itemize}
 
-A potential issue with using small tiles centred at tunnels is that we may introduce unwanted bias into the network, as it might learn to always try to find the tunnel in the middle. The design designation behind using random spatial crop was to try to suppress this, as the program now randomly finds a crop of the wanted size, which reduces this problem.
+A potential issue with using small tiles centred at tunnels is that we may introduce unwanted bias into the network, as it might learn to always try to find the tunnel in the middle. The design behind using a random spatial crop was to try to suppress this issue, as the program now randomly selects a crop of the desired size, which reduces this problem.
 
 \section{Inference on large images}
 \label{sec:runningthenetwork}
@@ -493,7 +493,7 @@ As mentioned in the previous section, even after applying the overlap strategy, 
     \label{fig:histogramoflabelsizes}
 \end{figure}
 
-The value of 100 voxels, realising that some of the tiny tunnels might get removed, but as will be shown later, the network tends to find more tunnels than what is available in the reference annotations. Hence, I believe this to be a reasonable assumption to make. Figure \ref{fig:histogramoflabelsizes} shows a histogram of the distribution of labels' volumes. Removing components with a volume smaller than 100 voxels removed just a small number of all tunnels.
+The value of 100 voxels was chosen, realising that some of the tiny tunnels might get removed, but as will be shown later, the network tends to find more tunnels than what is available in the reference annotations. Hence, I believe this to be a reasonable assumption to make. Figure \ref{fig:histogramoflabelsizes} shows a histogram of the distribution of labels' volumes. Removing components with a volume smaller than 100 voxels removes just a small number of all reference tunnels. In Fig. \ref{fig:stitchingoverlap}(b), the effect of postprocessing on cleaning up artefacts is shown.
 
 \clearpage
 \newpage
@@ -573,7 +573,7 @@ We define a mapping between the predictions and the tunnels in the reference ann
 In Fig. \ref{fig:matchingdiagram}, we can see a schematic of a situation with three pillars and several predictions. In Fig. \ref{fig:matchingdiagram}(a) a network predicted a single true positive (TP), false positive (FP), and false negative (FN).
 In Fig. \ref{fig:matchingdiagram}(b), a situation where a single prediction covers both tunnels is more complicated. This might be present near a cluster of pillars and tunnels, where a clear separation is difficult to see. The tunnels might theoretically even cross each other. While discarding these results is possible, we will consider such a situation a success and label it as finding two TPs.
 
-Mathematically, the mapping is implemented by examining the tunnels in the following manner. After the postprocessing defined in Section \ref{sec:postprocessing} the predictions form a set $P$, whose elements are the binary masks of each connected component. Likewise, we can view the reference annotations as a set $L$, where each element is also a binary mask for each instance of a tunnel. Given these two sets, we define a mapping between the two sets as a set of tuples $(l,p)$, where $l$ and $p$ form a pair describing which predicted component matched a tunnel in the reference annotation. The set of all possible matches is defined as:
+Mathematically, the mapping is implemented by examining the tunnels in the following manner. After the postprocessing, defined in Section \ref{sec:postprocessing}, the predictions form a set $P$, whose elements are the binary masks of each connected component. Likewise, we can view the reference annotations as a set $L$, where each element is also a binary mask for each instance of a tunnel. Given these two sets, we define a mapping between the two sets as a set of tuples $(l,p)$, where $l$ and $p$ form a pair describing which predicted component matched a tunnel in the reference annotation. The set of all possible matches is defined as:
 
 \begin{align*}
  \text{mapping}(P,L)= \{(l,\hat{p})|(\forall l \in L, \hat{p} = \text{argmax}_{p \in P} \text{recall}(p,l)) \\
@@ -603,7 +603,7 @@ Next, we will use the matches defined above. In these cases, the matches are tak
 \begin{itemize}
     \item{Postprocessed matches (voxel level): Look at the performance derived from all the matches.}
     \item{Postprocessed clean matches (voxel level): Look at the performance of just the clean matches.}
-    \item{Tunnel metric (tunnel level): Here the performance is calculated from the tunnels instead of pixels.}
+    \item{Tunnel metric (tunnel level): Here the performance is calculated from the tunnels instead of voxels.}
 \end{itemize}
 % todo: as an example, show the quad with all sorts of tunnels connected together.
 
@@ -618,7 +618,7 @@ In general, it is accepted that the ability to teach deeper networks has helped 
 
 % todo: talk about this in the discussion
 
-Taking the aforementioned AnisoUNet3D architecture, we considered five different depths. The shallowest one has exactly two downsampling layers, so it is referenced as a network with depth equal to 2, and the deepest one has six downsampling layers. Six downsampling layers were chosen, as this is sufficient to reduce the original size of 7x64x64 to 7x1x1; therefore, a deeper network is not feasible.
+Taking the aforementioned AnisoUNet3D architecture, we considered five different depths. The shallowest one has exactly two downsampling layers, so it is referenced as a network with depth equal to two, and the deepest one has six downsampling layers. Six downsampling layers were chosen, as this is sufficient to reduce the original size of 7x64x64 to 7x1x1; therefore, a deeper network is not feasible.
 
 For the overlap hyperparameter, we considered the values 0px, 10px, 20px, 30px, and 40px. The value 40px was chosen arbitrarily, as in this case, the neighbouring cells already share more than half of the volume.
 
@@ -658,10 +658,10 @@ First of all, the performance differences across various depths are not that sub
 
 However, it must be noted that the error bars are large and complicate any conclusion, as they show that the performance varies quite dramatically. This led us to investigate what could be causing this variety, and one possible explanation is the various performances on folds.
 
-Taking a look at Fig. \ref{fig:evalquadsdepth} here, we can see the same metrics, but this time it is further divided among the various quadrants on which the network was tested. What is immediately evident to us is that the error bars are less varied, due to the performance differences across quadrants. Interestingly, in some cases, such as the models with size downsampling layers for the first quadrant, there are substantial performance differences, but no apparent reason for this was found. Since, in this case, all bars represent averages of three numbers, it is plausible that, due to bad luck, the network may not achieve as good a performance as in other runs. Another possible reason is that the deeper variants have significantly more parameters and are overfitting on the sparse dataset.
+Taking a look at Fig. \ref{fig:evalquadsdepth} here, we can see the same metrics, but this time it is further divided among the various quadrants on which the network was tested. What is immediately evident to us is that the error bars are less varied, due to the performance differences across quadrants. Interestingly, in some cases, such as the models with six downsampling layers for the first quadrant, there are substantial performance differences, but no apparent reason for this was found. Since, in this case, all bars represent averages of three numbers, it is plausible that, due to bad luck, the network may not achieve as good a performance as in other runs. Another possible reason is that the deeper variants have significantly more parameters and are overfitting on the sparse dataset.
 % TODO talk in discussion
 
-In general, all models performed the best at the third quadrant (top left) and the third quadrant (bottom left), while the performance was lower on the second quadrant (top right) and the fourth quadrant (bottom right). Looking at the means and error bars now, it seems that the model with three downsampling layers performs best or close to best in all quadrants, whereas having more layers can sometimes reach similar performance it might also lead to worse (like in case of three downsampling steps in the third quadrant); hence, we cannot say that for our input size, the increased depth helps dramatically. However, our previous decision to choose the network of depth three in the following studies still stands, as although the performance difference is not substantial, this network consistently outperforms the smaller network, and at the same time, has many fewer parameters than the larger networks.
+In general, all models performed the best at the first quadrant (top left) and the third quadrant (bottom left), while the performance was lower on the second quadrant (top right) and the fourth quadrant (bottom right). Looking at the means and error bars now, it seems that the model with three downsampling layers performs best or close to best in all quadrants, whereas having more layers can sometimes reach similar performance(like in case of three downsampling steps in the third quadrant) it might also lead to worse; hence, we cannot say that for our input size, the increased depth helps dramatically. However, our previous decision to choose the network of depth three in the following studies still stands, as although the performance difference is not substantial, this network consistently outperforms the smaller network, and at the same time, has many fewer parameters than the larger networks.
 
 \begin{figure}[H]
     \centering
@@ -686,27 +686,27 @@ We decided to study the following architectures: a basic implementation of UNet 
 
 \subsection*{Metrics}
 
-Moving on to the results, Figs. \ref{fig:eval-diff-arch-dice}- \ref{fig:eval-diff-arch-tunnel} show the same metrics we discussed in Section \ref{sec:ablationstudy} aggregated across all the cross folds, while \ref{fig:eval-diff-arch-dice-quads}-\ref{fig:eval-diff-arch-tunnel-quads} show the performance for each quadrant. The means and standard deviations of all metrics were calculated exactly the same as in the previous section; again, every combination was trained three times.
+Moving on to the results, Figs. \ref{fig:eval-diff-arch-dice}- \ref{fig:eval-diff-arch-tunnel} show metrics aggregated across all the cross folds, while \ref{fig:eval-diff-arch-dice-quads}-\ref{fig:eval-diff-arch-tunnel-quads} show the performance for each quadrant. The means and standard deviations of all metrics were calculated exactly the same as in the previous section; again, every combination was trained three times.
 
 We can again see large error bars in all figures, especially when looking at the tunnel metrics in Fig. \ref{fig:eval-diff-arch-tunnel}. Like in the previous section, this is caused by the difference in performance across the folds and will be discussed after analysing the averages across folds.
 
 We can clearly see that the BasicUNet architecture is performing worse in every metric than the rest of the architectures, which points to the fact that the reduced depth and isotropic kernels are not suitable for highly anisotropic data such as ours, and shows that anisotropic kernels in the pooling operations greatly help the network learn.
 
-While it is difficult to assess the overall trends due to the error bars, the various attention mechanisms do not provide much improvement for the AnisoUNet neural network. The average values of the evaluation metric for the CSAM and USENet variants are slightly higher for the 3D versions, while they lower the average performance in the 2D case. Moreover, the 2D version of AnisoUNet slightly outperforms the 3D version. The same is happening for the AnisoUNet-CSAM variant, but it is not true for the UseNet variant.
+While it is difficult to assess the overall trends due to the error bars, the various attention mechanisms do not provide much improvement for the AnisoUNet neural network. The average values of the evaluation metric for the CSAM and USENet variants are slightly higher for the 3D versions, whereas it is less clear in the 2D case. Moreover, the 2D version of AnisoUNet slightly outperforms the 3D version. The same is happening for the AnisoUNet-CSAM variant.
 
 Moving to the advanced metric, we can observe that postprocessing is slightly improving the Dice score, indicating that the removal of all small components helps eliminate artefacts. While comparing Figs. \ref{fig:eval-diff-arch-clean} and \ref{fig:eval-diff-arch-all}, we can see that the networks reach higher performance when looking at the correctly identified tunnels. This means that the tunnel's accuracy is hindered by finding false tunnels and/or not fully segmenting real tunnels. It is also clear that the difference in performance between the cleanly matched and all matches is not substantial.
 
 Finally, the Tunnel metric shows that the performance is even more varied across the folds. Interestingly, the 2D versions have a higher average performance than the 3D versions, but at the same time, they exhibit much greater variation in their performance.
 
-Moving to the evaluations per quadrant, in Figure \ref{fig:eval-diff-arch-dice-quads}, we can see that all neural architectures perform the best on the first and third quadrant, whereas the second quadrant is the most problematic. There does not seem to be a clear winner between the architectures, as a particular attention mechanism outperforms the standard AnisoUNet in one quadrant but is then surpassed in another. Lastly, the difference between the 2D and 3D variants is not dramatic in most quadrants; they differ substantially in the second quadrant, where the 2D versions outperform the 3D ones.
+Moving to the evaluations per quadrant, in Figure \ref{fig:eval-diff-arch-dice-quads}, we can see that the majority of neural architectures perform the best on the first and third quadrant, whereas the second quadrant is more problematic. There does not seem to be a clear winner between the architectures, as a particular attention mechanism outperforms the standard AnisoUNet in one quadrant but is then surpassed in another. Lastly, the difference between the 2D and 3D variants is not dramatic in most quadrants; they differ substantially in the second quadrant, where the 2D versions outperform the 3D ones.
 
-Looking at the advanced metrics, the overall Dice metric in Fig. \ref{fig:eval-diff-arch-dice-overall-quads} shows that, again, the postprocessing consistently improves the performance of all models. Moving to the cleanly matched in Fig. \ref{fig:eval_diff_arch_clean_match_dice_quads} and all matches in Fig. \ref{fig:eval_diff_arch_matched_dice_quads}, it is clear that the networks are achieving substantially better performance compared to the overall score. Again, this suggests that the neural networks have issues with noise and false positives. Interestingly, the noteworthy performance difference between the second quadrant and the rest seems to disappear here. A possible explanation is that while the neural network performs similarly on clear data, its ability to handle noise and differentiate between real tunnels and artefacts varies. Lastly, the tunnel metric in Fig. \ref{fig:eval-diff-arch-tunnel-quads} shows that the networks struggled to correctly identify what is and what is not a tunnel in the second quadrant. The best performance was achieved by the 2D version of AnisoUNet, reaching a Dice score of $0.772$. Again, it appears that the 2D version tends to outperform the 3D version in this task as well. It is also noteworthy that in this metric, the performance of a given network can vary substantially, as in the case of 2D UseNet in the third quadrant. No clear explanation was found, and it is likely caused by random fluctuations in the training performance, as these bars were generated from three values.
+Looking at the advanced metrics, the overall Dice metric in Fig. \ref{fig:eval-diff-arch-dice-overall-quads} shows that, again, the postprocessing consistently improves the performance of all models. Moving to the cleanly matched in Fig. \ref{fig:eval_diff_arch_clean_match_dice_quads} and all matches in Fig. \ref{fig:eval_diff_arch_matched_dice_quads}, it is clear that the networks are achieving substantially better performance compared to the overall score. Again, this suggests that the neural networks have issues with noise and false positives. Interestingly, the noteworthy performance difference between the second quadrant and the rest seems to disappear here. A possible explanation is that while the neural network performs similarly on clear data, its ability to handle noise and differentiate between real tunnels and artefacts varies. Lastly, the tunnel metric in Fig. \ref{fig:eval-diff-arch-tunnel-quads} shows that the networks struggled to correctly identify what is and what is not a tunnel in the second quadrant. The best performance was achieved by the 2D version of AnisoUNet, reaching a Dice score of $0.772$. Again, it appears that the 2D version tends to outperform the 3D version in this task as well. It is also noteworthy that in this metric, the performance of a given network can vary substantially, as in the case of 2D UseNet in the third quadrant. No clear systematic explanation was found, and it is likely caused by random fluctuations in the training performance, as these bars were generated from three values.
 
 \begin{figure}[htbp]
     \begin{center}
         \includegraphics[width=0.8\textwidth]{resources/evaluations/diffarchs/eval_dice_mean_architecture_comparison.png}
     \end{center}
-    \caption{Evaluation metrics for various folds. Each bar represents the average of three model runs. Error bars represent the sample standard deviation.}
+    \caption{Evaluation metrics. Each bar represents the average of twelve model runs across the 4-fold cross-validation. Error bars represent the sample standard deviation.}
     \label{fig:eval-diff-arch-dice}
 \end{figure}
 \begin{figure}[htbp]
@@ -841,6 +841,8 @@ Figure \ref{fig:qualitative-quad2} shows the neural network prediction for vario
 
 Continuing with the analysis in the third quadrant, where the 2D UseNet performance varied quite substantially. Figure \ref{fig:qualitative-quad3} shows that due to probably bad luck during the training, one of the models (reaching a tunnel Dice score of 0.7) managed to correctly match two of the three tunnels, while the last one failed to match any (tunnel Dice score is about 0.47), due to the poor prediction shown in the blue colour. The poorer prediction on the stitched images lead to missed opportunities with matching.
 
+Finally, we take a look at the first quadrant, which reached the highest scores. In Fig. \ref{fig:qualitative-quad1}, a part of the dataset with minimal artefacts is shown. As can be seen, our networks tend to have a problem with oversegmentation and mark small structures as tunnels even though they are not. While the CSAM and UseNet variants do not improve the prediction by AnisoUNet, the prediction by AnisoUNet looks decent.
+
 \begin{figure}[htbp]
     \centering
     \begin{subfigure}[b]{0.3\textwidth}
@@ -867,8 +869,6 @@ Continuing with the analysis in the third quadrant, where the 2D UseNet performa
     \caption{Predictions on part of the third quadrant. (a) The original image (contrast-enhanced) with reference annotations. Different colours correspond to different tunnels. (b) and (c) Predictions of two different UseNet models. Red means that a tunnel from reference was not matched to any predicted tunnel, while blue means that a predicted tunnel did not match any reference tunnel.}
     \label{fig:qualitative-quad3}
 \end{figure}
-
-Finally, we take a look at the first quadrant, which reached the highest scores. In Fig. \ref{fig:qualitative-quad1}, a part of the dataset with minimal artefacts is shown. As can be seen, our networks tend to have a problem with oversegmentation and mark small structures as tunnels even though they are not. While the CSAM and UseNet variants do not improve the prediction by AnisoUNet, the prediction by AnisoUNet looks decent.
 
 \begin{figure}[htbp]
     \centering
