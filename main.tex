@@ -566,7 +566,7 @@ We define a mapping between the predictions and the tunnels in the reference ann
         \end{overpic}
         \label{fig:matchingmultiple}
     \end{subfigure}
-    \caption{Three vertical pillars, shown as black circles, are connected by TNTs, shown as black regions between black circles. (a) The network found two tunnels. Identifying a real tunnel correctly is considered a true positive (TP) and is shown in blue, while the second prediction, in red, is a false positive. (b) The network predicts a single tunnel, which covers both real tunnels. This is considered to be a TP.}
+    \caption{Three vertical pillars, shown as black circles, are connected by TNTs, shown as black regions between black circles. (a) The network found two tunnels. Identifying a real tunnel correctly is considered a true positive (TP) and is shown in blue, while the second prediction, in red, is a false positive. (b) The network predicts a single tunnel $p_1$, which covers both real tunnels $t_1$ and $t_2$. This is considered to be a TP.}
     \label{fig:matchingdiagram}
 \end{figure}
 
@@ -577,7 +577,7 @@ Mathematically, the mapping is implemented by examining the tunnels in the follo
 
 \begin{align*}
  \text{mapping}(P,L)= \{(l,\hat{p})|(\forall l \in L, \hat{p} = \text{argmax}_{p \in P} \text{recall}(p,l)) \\
- \land \, \text{recall}(\hat{p},l) > 0.5 \}
+ \land \, \text{recall}(\hat{p},l) > 0.5 \} \, .
 \end{align*}
 
 The decisive factor is how much of the label is covered by the prediction, which is equivalent to the recall score, and we set it to 0.5, as more than half of the label must be covered. This definition formalises the mapping shown in Fig. \ref{fig:matchingdiagram}.
@@ -927,6 +927,6 @@ In the future, it might be interesting to refine the post-processing, e.g. using
 
 \appendix
 \chapter{Digital Archive}
-The complete source code for the U-Net-like neural network model, which includes the necessary training, evaluation, and inference scripts, is attached as an accompanying digital appendix. This archive also features automation scripts to streamline data processing and model execution. To facilitate understanding and setup, the archive includes a comprehensive \texttt{README} file that details the environment configuration, explains the project structure, and provides step-by-step instructions for running the code. Finally, the archive also contains all image data, including the used data splits and the evaluation dataset.
+The complete source code for the U-Net-like neural network model, which includes the necessary training, evaluation, and inference scripts, is attached as an accompanying digital appendix in a form of a zip file. This archive also features automation scripts to streamline the training and evaluation. To facilitate understanding and setup, the archive includes a comprehensive \texttt{README} file that details the environment configuration, explains the project structure, and provides step-by-step instructions for running the code. Finally, the archive also contains all image data, including the used data splits and the evaluation dataset.
 
 \end{document}
