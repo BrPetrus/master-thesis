@@ -70,7 +70,7 @@
     thanks      = {%
         I am very grateful to my advisor, Assoc. Prof. Martin Maška, Ph.D., for his sustained mentorship, constructive critiques, and ready availability throughout the whole time.
 
-        I am also grateful to Prof. Osamu Shimmi (University of Tartu, Estonia) and Dr Ngan Vi Tran (University of Tartu, Estonia) for providing the dataset analysed in this thesis.
+        I am also grateful to Prof. Osamu Shimmi (University of Tartu, Estonia) and Dr. Ngan Vi Tran (University of Tartu, Estonia) for providing the dataset analysed in this thesis.
 
         I want to thank my friends for providing me with a great deal of encouragement. My deepest gratitude goes to my partner, Tereza Zuskinová, who has offered me unconditional support that carried me through the most challenging part of this research.
     },
@@ -149,7 +149,7 @@ Chapter 1 provides an overview of the biological context and image data preproce
 \chapter{Image Data / Biological Background}
 \label{sec:data}
 % todo: probably add some more examples
-During cell morphogenesis, growth of protrusions has been observed using fluorescence microscopy. Their effect on the growth is still not fully understood, but has sparked multiple theories. Some researchers speculate they could be used in long-range signalling or are involved in the transportation of organelles \parencite{Tran2024Programmed}. 
+During cell morphogenesis, growth of cell membrane protrusions can been observed using fluorescence microscopy. Their effect on the growth is still not fully understood, but has sparked multiple theories. Some researchers speculate they could be used in long-range signalling or are involved in the transportation of organelles \parencite{Tran2024Programmed}. 
 
 Our collaborators from the Institute of Molecular and Cell Biology at the University of Tartu in Estonia were involved in studying one of such places where these cell membrane protrusions are present --- the \textit{Drosophila} wings --- and the findings are available in \parencite{Tran2024Programmed}. They have used in vivo imaging to study the cellular structures.
 \begin{figure}[tb]
@@ -322,6 +322,8 @@ Let us look at it in more detail. The SE block, shown in Fig. \ref{fig:seblock},
     \label{fig:usenet}
 \end{figure}
 
+\clearpage
+
 While the authors in \parencite{Hu2018} talk about placing this object after the truncating operation, and give concrete examples of where to place it in Inception and ResNet blocks, the U-Net architecture is not mentioned. We briefly experimented with placing a single SE block in the bottleneck part of the U-Net, similarly to how the CSAM was used; however, this was later replaced by using the architecture described in \parencite{Rundo2019}. In their work, they suggested a different placement of the SE blocks inside a U-Net-like architecture. It is called USE-Net, and the placement is visible in Fig. \ref{fig:usenet}. The authors place an SE block before the concatenation and at every step of the upsampling. 
 
 This is the last architecture we will explore in this work and will be referred to as the AnisoUNet-UseNet variant. 
@@ -367,7 +369,7 @@ This is still quite challenging to do correctly, as not every tunnel lies neatly
 Finally, during the training, we need to know when to stop. For this purpose, during each run, approximately 30\% of the crops for training are randomly picked and form the validation set.
 
 \section{Loss functions}
-Since we can view finding tunnelling nanotubes as a binary classification problem applied at every voxel, it naturally comes to using a binary cross-entropy loss to train the network to segment the images. However, our dataset is heavily imbalanced, as it contains a significantly higher number of negative examples. To somewhat help the training pay more attention to the tunnels, the cross-entropy was weighted by a factor of 50, which was estimated as the ratio of voxels classified as background and voxels assigned to some tunnel by the biologist. The weighted BCE loss is defined as in \parencite{Jadon2020loss,PyTorchBCE}, where $y$ stands for prediction, $\hat{y}$ is the true label, and $\beta$ is the weight:
+Since we can view finding tunnelling nanotubes as a binary classification problem applied at every voxel, it naturally comes to using a binary cross-entropy loss to train the network to segment the images. However, our dataset is heavily imbalanced, as it contains a significantly higher number of negative examples. To somewhat help the training pay more attention to the tunnels, the cross-entropy was weighted by a factor of 50, which was estimated as the ratio of voxels classified as background and voxels assigned to some tunnel by the biologist. The weighted BCE loss is defined as in \parencite{Jadon2020loss,PyTorchBCE}, where $\hat{y}$ stands for prediction, $y$ is the true label, and $\beta$ is the weight:
 
 \[ L_{BCE}(y, \hat{y}) = -(\beta y \log(\hat{y}) + (1-y)\log(1-\hat{y})) \, .\]
 
@@ -624,10 +626,6 @@ For the overlap hyperparameter, we considered the values 0px, 10px, 20px, 30px, 
 
 As the overlap is a hyperparameter used during the inference on the whole images, this means that only five different architectures must be trained to perform this analysis. Since we are doing 4-fold cross-validation, we are training 20 models. Finally, since neural networks employ randomness, each combination of a fold and architecture is repeated three times, leading to training 60 models for this hyperparameter study.
 
-Figure \ref{fig:parametersearchstudy} showcases the Dice score of the various networks. Every number is the mean performance across the 4-fold cross-validation and three independent runs. Overall, the highest number is highlighted, corresponding to the version with three downsampling layers and a 10px overlap. Therefore, all subsequent models will use these values for the hyperparameters.
-
-% TODO: tripple check, i had very different numbers before
-
 \begin{figure}[htbp]
     \begin{center}
         \includegraphics[width=0.7\textwidth]{resources/evaluations/eval_dice_mean_heatmap.png}
@@ -635,6 +633,10 @@ Figure \ref{fig:parametersearchstudy} showcases the Dice score of the various ne
     \caption{Evaluation Dice score for various depths of the network. The best value is highlighted in yellow.}
     \label{fig:parametersearchstudy}
 \end{figure}
+
+Figure \ref{fig:parametersearchstudy} showcases the Dice score of the various networks. Every number is the mean performance across the 4-fold cross-validation and three independent runs. Overall, the highest number is highlighted, corresponding to the version with three downsampling layers and a 10px overlap. Therefore, all subsequent models will use these values for the hyperparameters.
+
+% TODO: tripple check, i had very different numbers before
 
 What we can also see from this hyperparameter search is that the effect of the number of downsampling layers is rather marginal. Another effect that is visible is that while changing between 10 pixels to 20 or 30 pixels does minimal change in the performance, the difference between 0 pixels and all others is visible in every case. Also, it is interesting to see that although the changes are not dramatically different, the network with three downsampling layers consistently beats the others.
 
@@ -835,7 +837,7 @@ Figure \ref{fig:qualitative-quad2} shows the neural network prediction for vario
         \end{overpic}
         \label{fig:quad2csam2d}
     \end{subfigure}
-    \caption{Predictions on the second quadrant. (a) The original image (contrast-enhanced) with binarised reference annotations in magenta. (b) The prediction of BasicUNet, (c) 3D version of CSAM variant, (d) shows the 2D version of CSAM. Green represents TP, red stands for FP and blue for FN.}
+    \caption{Predictions on the second quadrant. (a) The original image (contrast-enhanced) with binarised reference annotations in magenta. (b) The prediction of BasicUNet, (c) 3D version of CSAM variant, (d) 2D version of CSAM. Green represents TP, red stands for FP and blue for FN.}
     \label{fig:qualitative-quad2}
 \end{figure}
 
